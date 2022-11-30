@@ -26,7 +26,7 @@
 
         <slf4j.version>1.7.21</slf4j.version>
         <netty.version>4.1.42.Final</netty.version>
-        <junit.version>4.13.1</junit.version>
+        <junit.version>5.9.1</junit.version>
         <log4j.version>2.17.1</log4j.version>
         <mockito.version>4.0.0</mockito.version>
         <hessian.version>4.0.7</hessian.version>
@@ -37,7 +37,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.9.1</version>
+                <version>${junit.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

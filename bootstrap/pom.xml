@@ -11,6 +11,14 @@
 
     <artifactId>z-rpc-bootstarp</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>cn.zcn</groupId>
+            <artifactId>z-rpc-remoting</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
