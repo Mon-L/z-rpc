@@ -1,7 +1,7 @@
 package cn.zcn.rpc.remoting.protocol.v1;
 
-import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.ProtocolDecoder;
+import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.protocol.*;
 import cn.zcn.rpc.remoting.utils.CRC32Util;
 import io.netty.buffer.ByteBuf;
@@ -28,7 +28,7 @@ public class RpcProtocolDecoder implements ProtocolDecoder {
         short type = byteBuf.readShort();
 
         if (type == CommandType.REQUEST.getValue() || type == CommandType.REQUEST_ONEWAY.getValue()) {
-            if (byteBuf.readableBytes() < RpcProtocolV1.MIN_REQUEST_LENGTH) {
+            if (byteBuf.readableBytes() < RpcProtocolV1.MIN_REQUEST_LENGTH - 4) {
                 byteBuf.resetReaderIndex();
                 return;
             }
@@ -80,7 +80,7 @@ public class RpcProtocolDecoder implements ProtocolDecoder {
                 byteBuf.resetReaderIndex();
             }
         } else if (type == CommandType.RESPONSE.getValue()) {
-            if (byteBuf.readableBytes() < RpcProtocolV1.MIN_RESPONSE_LENGTH) {
+            if (byteBuf.readableBytes() < RpcProtocolV1.MIN_RESPONSE_LENGTH - 4) {
                 byteBuf.resetReaderIndex();
                 return;
             }
@@ -108,12 +108,16 @@ public class RpcProtocolDecoder implements ProtocolDecoder {
                     byte[] clazz = new byte[clazzLength];
                     byteBuf.readBytes(clazz);
                     command.setClazz(clazz);
+                } else {
+                    command.setClazz(new byte[0]);
                 }
 
                 if (contentLength > 0) {
                     byte[] content = new byte[contentLength];
                     byteBuf.readBytes(content);
                     command.setContent(content);
+                } else {
+                    command.setContent(new byte[0]);
                 }
 
                 if (hasCRC32) {

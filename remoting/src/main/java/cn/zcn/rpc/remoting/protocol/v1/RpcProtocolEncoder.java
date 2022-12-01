@@ -39,10 +39,14 @@ public class RpcProtocolEncoder implements ProtocolEncoder {
 
         if (command.getClazz() != null) {
             out.writeShort(command.getClazz().length);
+        } else {
+            out.writeShort(0);
         }
 
         if (command.getContent() != null) {
             out.writeInt(command.getContent().length);
+        } else {
+            out.writeInt(0);
         }
 
         if (command.getClazz() != null) {
