@@ -9,7 +9,6 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.DecoderException;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -62,7 +61,7 @@ public class MessageDecoderTest {
     }
 
     @Test
-    public void testDecodeThenSuccessful() {
+    public void testDecodeThenSuccessful() throws Exception {
         ProtocolCode protocolCode = ProtocolCode.from((byte) 1, (byte) 1);
 
         Protocol protocol = Mockito.mock(Protocol.class);
@@ -76,12 +75,7 @@ public class MessageDecoderTest {
         byteBuf.writeByte(0);
         channel.writeInbound(byteBuf.retain());
 
-        try {
-            Mockito.verify(protocolDecoder, Mockito.times(1))
-                    .decode(Mockito.any(), Mockito.any(), Mockito.any());
-        } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail("Should not reach here!");
-        }
+        Mockito.verify(protocolDecoder, Mockito.times(1))
+                .decode(Mockito.any(), Mockito.any(), Mockito.any());
     }
 }

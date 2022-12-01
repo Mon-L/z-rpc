@@ -75,7 +75,7 @@ public class DefaultInvocationContext implements InvocationContext {
 
     @Override
     public void writeAndFlushResponse(Object obj, RpcStatus status) {
-        if (obj == null) {
+        if (obj == null || request.getCommandType() == CommandType.REQUEST_ONEWAY) {
             return;
         }
 

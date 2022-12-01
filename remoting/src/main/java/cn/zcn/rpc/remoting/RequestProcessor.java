@@ -4,6 +4,7 @@ import cn.zcn.rpc.remoting.config.Options;
 import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.exception.SerializationException;
+import cn.zcn.rpc.remoting.exception.ServiceException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
 import cn.zcn.rpc.remoting.protocol.RequestCommand;
 import cn.zcn.rpc.remoting.protocol.ResponseCommand;
@@ -79,7 +80,13 @@ public class RequestProcessor extends AbstractLifecycle {
                                 command.getId(), invocationContext.getRemoteHost(),
                                 command.getTimeout(), System.currentTimeMillis() - invocationContext.getReadyTimeMillis());
                     } else {
-                        handler.run(invocationContext, obj);
+                        try {
+                            handler.run(invocationContext, obj);
+                        } catch (Throwable t) {
+                            ServiceException serviceException = new ServiceException(t.getMessage());
+                            serviceException.setStackTrace(t.getStackTrace());
+                            invocationContext.writeAndFlushResponse(serviceException, RpcStatus.SERVICE_ERROR);
+                        }
                     }
                 } else {
                     LOGGER.debug("RequestHandler can not be found by {}. Request id:{}, Remote host:{}",

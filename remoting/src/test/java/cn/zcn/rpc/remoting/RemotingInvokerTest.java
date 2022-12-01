@@ -3,16 +3,18 @@ package cn.zcn.rpc.remoting;
 import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.connection.AbstractEventLoopGroupTest;
 import cn.zcn.rpc.remoting.connection.Connection;
+import cn.zcn.rpc.remoting.exception.RemotingException;
+import cn.zcn.rpc.remoting.exception.ServiceException;
 import cn.zcn.rpc.remoting.exception.TransportException;
-import cn.zcn.rpc.remoting.protocol.ProtocolCode;
-import cn.zcn.rpc.remoting.protocol.RequestCommand;
-import cn.zcn.rpc.remoting.protocol.ResponseCommand;
+import cn.zcn.rpc.remoting.protocol.*;
+import cn.zcn.rpc.remoting.serialization.Serializer;
 import cn.zcn.rpc.remoting.test.TestUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.UnpooledByteBufAllocator;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.local.LocalAddress;
 import io.netty.channel.local.LocalChannel;
 import io.netty.channel.local.LocalServerChannel;
@@ -30,11 +32,16 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
     private Url url;
     private ServerBootstrap server;
     private RemotingInvoker remotingInvoker;
-    private boolean sendResponse = true;
+    private boolean testTimeoutCase = false;
+    private boolean testServiceExceptionCase = false;
 
     @BeforeEach
     public void before() {
         this.url = new Url.Builder(new LocalAddress(TestUtils.getLocalAddressId())).build();
+
+        ProtocolManager protocolManager = new ProtocolManager();
+        SerializerManager serializerManager = new SerializerManager();
+        Serializer serializer = serializerManager.getSerializer(serializerManager.getDefaultSerializerCode());
 
         this.server = new ServerBootstrap()
                 .channel(LocalServerChannel.class)
@@ -42,26 +49,36 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
                 .childHandler(new ChannelInitializer<LocalChannel>() {
                     @Override
                     protected void initChannel(LocalChannel channel) {
-
-                        channel.pipeline().addLast(new ChannelDuplexHandler() {
+                        channel.pipeline().addLast(new MessageDecoder(protocolManager));
+                        channel.pipeline().addLast(new MessageEncoder(protocolManager));
+                        channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                                ByteBuf byteBuf = (ByteBuf) msg;
-
-                                if (sendResponse) {
-                                    //把请求ID写回去
-                                    ctx.channel().writeAndFlush(byteBuf.readInt());
+                                if (testTimeoutCase) {
+                                    return;
                                 }
-                            }
 
-                            @Override
-                            public void write(ChannelHandlerContext ctx, Object id, ChannelPromise promise) throws Exception {
-                                if (id instanceof Integer) {
-                                    //把请求ID转化城字节数组并写回客户端
-                                    ByteBuf out = UnpooledByteBufAllocator.DEFAULT.heapBuffer();
-                                    out.writeInt((int) id);
-                                    ctx.write(out, promise);
+                                RequestCommand req = (RequestCommand) msg;
+
+                                ResponseCommand resp = new ResponseCommand(req.getProtocolCode());
+                                resp.setCommandCode(CommandCode.RESPONSE);
+                                resp.setCommandType(CommandType.RESPONSE);
+                                resp.setId(req.getId());
+                                resp.setSerializer(serializerManager.getDefaultSerializerCode());
+                                resp.setProtocolSwitch(ProtocolSwitch.parse((byte) 0));
+                                resp.setClazz(new byte[0]);
+
+                                if (testServiceExceptionCase) {
+                                    resp.setStatus(RpcStatus.SERVICE_ERROR);
+                                    ServiceException serviceException = new ServiceException("service error");
+                                    byte[] bytes = serializer.serialize(serviceException);
+                                    resp.setContent(bytes);
+                                } else {
+                                    resp.setStatus(RpcStatus.OK);
+                                    resp.setContent(new byte[0]);
                                 }
+
+                                ctx.writeAndFlush(resp);
                             }
                         });
                     }
@@ -73,24 +90,17 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
                 .handler(new ChannelInitializer<LocalChannel>() {
                     @Override
                     protected void initChannel(LocalChannel channel) {
-                        channel.pipeline().addLast(new ChannelDuplexHandler() {
+                        channel.pipeline().addLast(new MessageDecoder(protocolManager));
+                        channel.pipeline().addLast(new MessageEncoder(protocolManager));
+                        channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                                ByteBuf in = (ByteBuf) msg;
-                                Integer id = in.readInt();
-                                InvokePromise<ResponseCommand> promise = ctx.channel().attr(Connection.CONNECTION_KEY).get().removePromise(id);
-                                if (promise != null) {
-                                    promise.setSuccess(new ResponseCommand(ProtocolCode.from((byte) 1, (byte) 1)));
-                                }
-                            }
+                                ResponseCommand resp = (ResponseCommand) msg;
 
-                            @Override
-                            public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-                                if (msg instanceof RequestCommand) {
-                                    //把请求ID转化成字节数组并发送到服务端
-                                    ByteBuf out = UnpooledByteBufAllocator.DEFAULT.heapBuffer();
-                                    out.writeInt(((RequestCommand) msg).getId());
-                                    ctx.write(out, promise);
+                                InvokePromise<ResponseCommand> promise = ctx.channel().attr(Connection.CONNECTION_KEY).get().removePromise(resp.getId());
+                                if (promise != null) {
+                                    promise.cancelTimeout();
+                                    promise.setSuccess(resp);
                                 }
                             }
                         });
@@ -109,8 +119,8 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
 
         try {
             assertTrue(future.await(1, TimeUnit.SECONDS));
-        } catch (Throwable t) {
-            fail("Should not reach here.", t);
+        } catch (InterruptedException e) {
+            fail("Should not reach here.", e);
         }
 
         remotingInvoker.stop();
@@ -127,8 +137,8 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
             assertTrue(future.await(1, TimeUnit.SECONDS));
             assertInstanceOf(TransportException.class, future.cause());
             assertInstanceOf(ConnectException.class, future.cause().getCause());
-        } catch (Throwable t) {
-            fail("Should not reach here.", t);
+        } catch (InterruptedException e) {
+            fail("Should not reach here.", e);
         }
 
         remotingInvoker.stop();
@@ -143,8 +153,8 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
 
         try {
             assertTrue(future.await(3000, TimeUnit.MILLISECONDS));
-        } catch (Throwable t) {
-            fail("Should not reach here.", t);
+        } catch (InterruptedException e) {
+            fail("Should not reach here.", e);
         }
 
         remotingInvoker.stop();
@@ -161,8 +171,8 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
             assertTrue(future.await(1, TimeUnit.SECONDS));
             assertInstanceOf(TransportException.class, future.cause());
             assertInstanceOf(ConnectException.class, future.cause().getCause());
-        } catch (Throwable t) {
-            fail("Should not reach here.", t);
+        } catch (InterruptedException e) {
+            fail("Should not reach here.", e);
         }
 
         remotingInvoker.stop();
@@ -170,7 +180,7 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
 
     @Test
     public void testInvokeThenTimeout() {
-        sendResponse = false;
+        testTimeoutCase = true;
 
         Channel sc = this.server.bind(url.getAddress()).syncUninterruptibly().channel();
         remotingInvoker.start();
@@ -179,8 +189,28 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
 
         try {
             assertFalse(future.await(3000, TimeUnit.MILLISECONDS));
-        } catch (Throwable t) {
-            fail("Should not reach here.", t);
+        } catch (InterruptedException e) {
+            fail("Should not reach here.", e);
+        }
+
+        remotingInvoker.stop();
+        sc.close().awaitUninterruptibly();
+    }
+
+    @Test
+    public void testInvokeThrowServiceException() {
+        testServiceExceptionCase = true;
+
+        Channel sc = this.server.bind(url.getAddress()).syncUninterruptibly().channel();
+        remotingInvoker.start();
+
+        Future<Void> future = remotingInvoker.invoke(url, new Object(), 3000);
+
+        try {
+            assertTrue(future.await(3000, TimeUnit.MILLISECONDS));
+            assertInstanceOf(RemotingException.class, future.cause());
+        } catch (InterruptedException e) {
+            fail("Should not reach here.", e);
         }
 
         remotingInvoker.stop();

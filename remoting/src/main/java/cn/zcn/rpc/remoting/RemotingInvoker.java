@@ -194,10 +194,23 @@ public class RemotingInvoker extends AbstractLifecycle {
                     try {
                         ResponseCommand response = future.get();
                         if (response.getStatus() == RpcStatus.OK) {
-                            promise.setSuccess((T) deserialize(response));
+                            if (response.getContent() != null) {
+                                promise.setSuccess((T) deserialize(response));
+                            } else {
+                                promise.setSuccess(null);
+                            }
                         } else {
-                            //TODO get cause from response
-                            promise.setFailure(new RemotingException("Remoting server error."));
+                            RemotingException exception;
+                            if (response.getContent() != null) {
+                                Throwable cause = (Throwable) deserialize(response);
+                                exception = new RemotingException("Remoting server error. ResponseStatus: {0}, ErrorMsg: {1}",
+                                        response.getStatus().name(), cause.getMessage());
+                                exception.setStackTrace(cause.getStackTrace());
+                            } else {
+                                exception = new RemotingException("Remoting server error. ResponseStatus: {0}", response.getStatus().name());
+                            }
+
+                            promise.setFailure(exception);
                         }
                     } catch (Throwable t) {
                         promise.setFailure(t);

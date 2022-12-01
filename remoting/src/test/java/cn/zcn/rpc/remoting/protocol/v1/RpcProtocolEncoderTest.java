@@ -1,7 +1,7 @@
 package cn.zcn.rpc.remoting.protocol.v1;
 
-import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.ProtocolEncoder;
+import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.protocol.*;
 import cn.zcn.rpc.remoting.test.TestingChannelHandlerContext;
 import cn.zcn.rpc.remoting.utils.CRC32Util;
@@ -11,13 +11,13 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 public class RpcProtocolEncoderTest {
 
@@ -75,8 +75,7 @@ public class RpcProtocolEncoderTest {
         try {
             protocolEncoder.encode(context, req, out);
         } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail("Should not reach here!");
+            fail("Should not reach here!", e);
         }
 
         byte[] bytes = new byte[out.readableBytes()];
@@ -123,8 +122,7 @@ public class RpcProtocolEncoderTest {
         try {
             protocolEncoder.encode(context, req, out);
         } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail("Should not reach here!");
+            fail("Should not reach here!", e);
         }
 
         byte[] bytes = new byte[out.readableBytes()];

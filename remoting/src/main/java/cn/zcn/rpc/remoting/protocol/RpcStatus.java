@@ -9,7 +9,8 @@ public enum RpcStatus {
     UNSUPPORTED_SERIALIZER((short) 0x0004, "Unsupported Serializer"),
     SERIALIZATION_ERROR((short) 0x0005, "Serialization error"),
     DESERIALIZATION_ERROR((short) 0x0006, "deserialization error"),
-    NO_REQUEST_PROCESSOR((short) 0x0007, "No request processor");
+    NO_REQUEST_PROCESSOR((short) 0x0007, "No request processor"),
+    SERVICE_ERROR((short) 0x0008, "Service error");
 
     private final short value;
     private final String reasonPhrase;
