@@ -1,6 +1,7 @@
 package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.config.ServerOptions;
+import cn.zcn.rpc.remoting.exception.ServiceException;
 import cn.zcn.rpc.remoting.protocol.*;
 import cn.zcn.rpc.remoting.utils.NetUtil;
 
@@ -60,17 +61,30 @@ public class DefaultInvocationContext implements InvocationContext {
         return System.currentTimeMillis() - readyTimeMillis > timeout;
     }
 
+    @Override
+    public int getRemainingTime() {
+        long elapsed = System.currentTimeMillis() - readyTimeMillis;
+        if (elapsed > timeout) {
+            return 0;
+        }
+
+        return (int) (timeout - elapsed);
+    }
+
     public void setTimeoutMillis(int timeoutMillis) {
         this.timeout = timeoutMillis;
     }
 
     @Override
-    public void writeAndFlushSuccessfullyResponse(Object obj) {
-        if (obj == null) {
-            return;
-        }
-
+    public void writeAndFlushResponse(Object obj) {
         writeAndFlushResponse(obj, RpcStatus.OK);
+    }
+
+    @Override
+    public void writeAndFlushException(Throwable throwable) {
+        ServiceException serviceException = new ServiceException(throwable.getMessage());
+        serviceException.setStackTrace(throwable.getStackTrace());
+        writeAndFlushResponse(serviceException, RpcStatus.SERVICE_ERROR);
     }
 
     @Override
@@ -83,18 +97,20 @@ public class DefaultInvocationContext implements InvocationContext {
             throw new IllegalArgumentException("RpcStatus should not be null.");
         }
 
-        CommandFactory commandFactory = ctx.getProtocol().getCommandFactory();
-        Command response = commandFactory.createResponseCommand(request, status);
+        if (!isTimeout()) {
+            CommandFactory commandFactory = ctx.getProtocol().getCommandFactory();
+            Command response = commandFactory.createResponseCommand(request, status);
 
-        response.setClazz(obj.getClass().getName().getBytes(ctx.getOptions().getOption(ServerOptions.CHARSET)));
+            response.setClazz(obj.getClass().getName().getBytes(ctx.getOptions().getOption(ServerOptions.CHARSET)));
 
-        try {
-            byte[] content = ctx.getSerializer().serialize(obj);
-            response.setContent(content);
-        } catch (Throwable t) {
-            response = commandFactory.createResponseCommand(request, RpcStatus.SERIALIZATION_ERROR);
+            try {
+                byte[] content = ctx.getSerializer().serialize(obj);
+                response.setContent(content);
+            } catch (Throwable t) {
+                response = commandFactory.createResponseCommand(request, RpcStatus.SERIALIZATION_ERROR);
+            }
+
+            ctx.writeAndFlush(response);
         }
-
-        ctx.writeAndFlush(response);
     }
 }

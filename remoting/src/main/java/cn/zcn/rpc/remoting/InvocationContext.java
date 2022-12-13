@@ -35,12 +35,22 @@ public interface InvocationContext {
     boolean isTimeout();
 
     /**
-     * 发送成功响应
+     * 获取超时剩余时间
      */
-    void writeAndFlushSuccessfullyResponse(Object obj);
+    int getRemainingTime();
 
     /**
-     * 发送错误响应
+     * 返回成功响应
+     */
+    void writeAndFlushResponse(Object obj);
+
+    /**
+     * 返回异常
+     */
+    void writeAndFlushException(Throwable throwable);
+
+    /**
+     * 返回响应
      */
     void writeAndFlushResponse(Object obj, RpcStatus status);
 }

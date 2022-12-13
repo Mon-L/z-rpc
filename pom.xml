@@ -13,6 +13,7 @@
         <module>remoting</module>
         <module>bootstrap</module>
         <module>all</module>
+        <module>registry</module>
     </modules>
 
     <properties>

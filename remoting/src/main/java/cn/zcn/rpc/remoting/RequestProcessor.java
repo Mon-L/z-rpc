@@ -4,10 +4,9 @@ import cn.zcn.rpc.remoting.config.Options;
 import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.exception.SerializationException;
-import cn.zcn.rpc.remoting.exception.ServiceException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
+import cn.zcn.rpc.remoting.protocol.CommandType;
 import cn.zcn.rpc.remoting.protocol.RequestCommand;
-import cn.zcn.rpc.remoting.protocol.ResponseCommand;
 import cn.zcn.rpc.remoting.protocol.RpcStatus;
 import cn.zcn.rpc.remoting.serialization.Serializer;
 import cn.zcn.rpc.remoting.utils.NamedThreadFactory;
@@ -49,26 +48,25 @@ public class RequestProcessor extends AbstractLifecycle {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void execute(RpcContext rpcContext, RequestCommand command) {
-        DefaultInvocationContext invocationContext = new DefaultInvocationContext(command, rpcContext);
+    public void execute(RpcContext rpcContext, RequestCommand requestCommand) {
+        DefaultInvocationContext invocationContext = new DefaultInvocationContext(requestCommand, rpcContext);
         invocationContext.setReadyTimeMillis(System.currentTimeMillis());
-        invocationContext.setTimeoutMillis(command.getTimeout());
+        invocationContext.setTimeoutMillis(requestCommand.getTimeout());
 
         executor.execute(() -> {
             invocationContext.setStartTimeMillis(System.currentTimeMillis());
 
-            Protocol protocol = rpcContext.getProtocol();
             Serializer serializer = rpcContext.getSerializer();
             try {
                 //deserialize class
-                String clazz = new String(command.getClazz(), options.getOption(RpcOptions.CHARSET));
+                String clazz = new String(requestCommand.getClazz(), options.getOption(RpcOptions.CHARSET));
 
                 //deserialize content
                 Object obj;
                 try {
-                    obj = serializer.deserialize(command.getContent(), clazz);
+                    obj = serializer.deserialize(requestCommand.getContent(), clazz);
                 } catch (SerializationException e) {
-                    rpcContext.writeAndFlush(createResponseCommand(protocol, command, RpcStatus.DESERIALIZATION_ERROR));
+                    writeAndFlushWithRpcStatus(rpcContext, requestCommand, RpcStatus.DESERIALIZATION_ERROR);
                     return;
                 }
 
@@ -77,30 +75,31 @@ public class RequestProcessor extends AbstractLifecycle {
                     if (handler.ignoredTimeoutRequest() && invocationContext.isTimeout()) {
                         //discard timeout request
                         LOGGER.warn("Request is discarded. request id[{}]. Remote host:{}, Timeout ms:{}, Total wait ms{}",
-                                command.getId(), invocationContext.getRemoteHost(),
-                                command.getTimeout(), System.currentTimeMillis() - invocationContext.getReadyTimeMillis());
+                                requestCommand.getId(), invocationContext.getRemoteHost(),
+                                requestCommand.getTimeout(), System.currentTimeMillis() - invocationContext.getReadyTimeMillis());
                     } else {
                         try {
                             handler.run(invocationContext, obj);
                         } catch (Throwable t) {
-                            ServiceException serviceException = new ServiceException(t.getMessage());
-                            serviceException.setStackTrace(t.getStackTrace());
-                            invocationContext.writeAndFlushResponse(serviceException, RpcStatus.SERVICE_ERROR);
+                            invocationContext.writeAndFlushException(t);
                         }
                     }
                 } else {
                     LOGGER.debug("RequestHandler can not be found by {}. Request id:{}, Remote host:{}",
-                            clazz, command.getId(), invocationContext.getRemoteHost());
-                    rpcContext.writeAndFlush(createResponseCommand(protocol, command, RpcStatus.NO_REQUEST_PROCESSOR));
+                            clazz, requestCommand.getId(), invocationContext.getRemoteHost());
+
+                    writeAndFlushWithRpcStatus(rpcContext, requestCommand, RpcStatus.NO_REQUEST_PROCESSOR);
                 }
             } catch (Throwable t) {
-                rpcContext.writeAndFlush(createResponseCommand(protocol, command, RpcStatus.INTERNAL_SERVER_ERROR));
+                writeAndFlushWithRpcStatus(rpcContext, requestCommand, RpcStatus.INTERNAL_SERVER_ERROR);
             }
         });
     }
 
-    private ResponseCommand createResponseCommand(Protocol protocol, RequestCommand requestCommand, RpcStatus rpcStatus) {
-        return protocol.getCommandFactory().createResponseCommand(requestCommand, rpcStatus);
+    private void writeAndFlushWithRpcStatus(RpcContext rpcContext, RequestCommand req, RpcStatus rpcStatus) {
+        if (req.getCommandType() != CommandType.REQUEST_ONEWAY) {
+            rpcContext.writeAndFlush(rpcContext.getProtocol().getCommandFactory().createResponseCommand(req, rpcStatus));
+        }
     }
 
     public void registerRequestHandler(RequestHandler<?> handler) {

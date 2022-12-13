@@ -5,9 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class RpcOptions implements Options {
-
-    private final ConcurrentMap<Option<?>, Object> options = new ConcurrentHashMap<>();
+public class RpcOptions extends OptionsImpl {
 
     public static final Option<Boolean> NETTY_EPOLL = Option.valueOf("rpc.netty.epoll", true);
 
@@ -36,19 +34,4 @@ public class RpcOptions implements Options {
     public static final Option<Integer> PROCESSOR_WORKER_QUEEN_SIZE = Option.valueOf("rpc.processor.worker.queen.size", 1024);
 
     public static final Option<Integer> CONNECT_TIMEOUT_MILLIS = Option.valueOf("rpc.connect.timeout", 10000);
-
-    @Override
-    @SuppressWarnings({"unchecked"})
-    public <T> T getOption(Option<T> option) {
-        Object value = options.get(option);
-        if (value == null) {
-            return option.getDefaultValue();
-        }
-
-        return (T) value;
-    }
-
-    public <T> void setOption(Option<T> option, T value) {
-        options.put(option, value);
-    }
 }

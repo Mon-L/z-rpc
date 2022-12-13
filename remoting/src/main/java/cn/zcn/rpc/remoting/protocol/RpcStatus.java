@@ -10,7 +10,8 @@ public enum RpcStatus {
     SERIALIZATION_ERROR((short) 0x0005, "Serialization error"),
     DESERIALIZATION_ERROR((short) 0x0006, "deserialization error"),
     NO_REQUEST_PROCESSOR((short) 0x0007, "No request processor"),
-    SERVICE_ERROR((short) 0x0008, "Service error");
+    SERVICE_ERROR((short) 0x0008, "Service error"),
+    HANDLE_TIMEOUT((short) 0x0009, "Handle request timeout");
 
     private final short value;
     private final String reasonPhrase;

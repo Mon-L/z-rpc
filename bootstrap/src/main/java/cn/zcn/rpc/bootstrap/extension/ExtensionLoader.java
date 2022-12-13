@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *  }
  * }
  *
- * 使用配置文件暴露扩展。文件名必须为接口全类名。e.g. cn.zcn.rpc.bootstrap.register.Register。
+ * 使用配置文件暴露扩展。文件名必须为接口全类名。e.g. cn.zcn.rpc.bootstrap.register.Registry。
  * 文件内容如下：
  *   cn.zcn.rpc.bootstrap.register.ARegister
  *   cn.zcn.rpc.bootstrap.register.BRegister

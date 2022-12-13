@@ -23,6 +23,17 @@
             <artifactId>z-rpc-remoting</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>cn.zcn</groupId>
+            <artifactId>z-rpc-bootstarp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.zcn</groupId>
+            <artifactId>z-rpc-registry-consul</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
