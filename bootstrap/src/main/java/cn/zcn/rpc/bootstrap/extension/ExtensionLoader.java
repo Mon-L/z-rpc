@@ -3,6 +3,8 @@ package cn.zcn.rpc.bootstrap.extension;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
@@ -53,8 +55,8 @@ public class ExtensionLoader<T> {
             throw new IllegalArgumentException("ExtensionPoint class should not be null.");
         }
 
-        if (!clazz.isInterface()) {
-            throw new IllegalArgumentException("ExtensionPoint class " + clazz.getName() + " should be an interface.");
+        if (!clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
+            throw new IllegalArgumentException("ExtensionPoint class " + clazz.getName() + " should be interface or abstract class.");
         }
 
         ExtensionPoint point = clazz.getDeclaredAnnotation(ExtensionPoint.class);
@@ -82,8 +84,12 @@ public class ExtensionLoader<T> {
         this.type = type;
     }
 
-    @SuppressWarnings({"unchecked"})
     public T getExtension(String name) {
+        return getExtension(name, null, null);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public T getExtension(String name, Class<?>[] argType, Object[] args) {
         if (name == null) {
             throw new IllegalArgumentException("Extension name should not be null.");
         }
@@ -100,7 +106,7 @@ public class ExtensionLoader<T> {
         if (holder.instance == null) {
             synchronized (holder) {
                 if (holder.instance == null) {
-                    createExtension(holder, name);
+                    createExtension(holder, name, argType, args);
                 }
             }
         }
@@ -120,14 +126,19 @@ public class ExtensionLoader<T> {
         return holder;
     }
 
-    private void createExtension(InstanceHolder holder, String name) {
+    private void createExtension(InstanceHolder holder, String name, Class<?>[] argType, Object[] args) {
         Class<?> klass = cachedClasses.get(name);
         if (klass == null) {
             throw new ExtensionException("Extension can not be found. Extension point:{0}", type.getName());
         }
 
         try {
-            holder.instance = klass.newInstance();
+            if (argType.length == 0) {
+                holder.instance = klass.newInstance();
+            } else {
+                Constructor<?> constructor = klass.getConstructor(argType);
+                holder.instance = constructor.newInstance(args);
+            }
         } catch (Exception e) {
             throw new ExtensionException(e, "Error occurred when create extension instance");
         }
@@ -170,9 +181,6 @@ public class ExtensionLoader<T> {
                     throw new ExtensionException("Extension class is not subtype of interface. Extension Class:{0}, Interface:{1}", className, type.getName());
                 }
 
-                //是否有无参构造函数
-                klass.getConstructor();
-
                 //是否有 @Extension 注解
                 Extension anno = klass.getDeclaredAnnotation(Extension.class);
                 if (anno == null) {
@@ -182,7 +190,7 @@ public class ExtensionLoader<T> {
                 classes.put(anno.name(), klass);
             }
             return classes;
-        } catch (ClassNotFoundException | NoSuchMethodException e) {
+        } catch (ClassNotFoundException e) {
             throw new ExtensionException(e, e.getMessage());
         }
     }

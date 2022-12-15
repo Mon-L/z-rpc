@@ -51,13 +51,23 @@ public class ExtensionLoaderTest {
     }
 
     @Test
-    public void testGetExtensionThenSuccess() {
+    public void testGetExtensionWithInterfaceThenSuccess() {
         ExtensionLoader<Flyable> ext = ExtensionLoader.getExtensionLoader(Flyable.class);
         assertNotNull(ext);
 
         Flyable instance = ext.getExtension("foo");
         assertNotNull(instance);
         assertTrue(Flyable.class.isAssignableFrom(instance.getClass()));
+    }
+
+    @Test
+    public void testGetExtensionWithAbstractClassThenSuccess() {
+        ExtensionLoader<AbstractRegistry> ext = ExtensionLoader.getExtensionLoader(AbstractRegistry.class);
+        assertNotNull(ext);
+
+        AbstractRegistry instance = ext.getExtension("foo", new Class<?>[]{int.class}, new Object[]{1});
+        assertNotNull(instance);
+        assertTrue(AbstractRegistry.class.isAssignableFrom(instance.getClass()));
     }
 
     @Test
@@ -74,21 +84,8 @@ public class ExtensionLoaderTest {
     }
 
     @Test
-    public void testWithoutNoArgsConstructor() {
-        ExtensionLoader<Flyable3> ext = ExtensionLoader.getExtensionLoader(Flyable3.class);
-        assertNotNull(ext);
-
-        assertThrows(ExtensionException.class, new Executable() {
-            @Override
-            public void execute() throws Throwable {
-                ext.getExtension("WithoutNoArgsConstructor");
-            }
-        });
-    }
-
-    @Test
     public void testWithoutImplementSpecifiedInterface() {
-        ExtensionLoader<Flyable4> ext = ExtensionLoader.getExtensionLoader(Flyable4.class);
+        ExtensionLoader<Flyable3> ext = ExtensionLoader.getExtensionLoader(Flyable3.class);
         assertNotNull(ext);
 
         assertThrows(ExtensionException.class, new Executable() {
@@ -135,21 +132,18 @@ public class ExtensionLoaderTest {
         void fly();
     }
 
-    @Extension(name = "WithoutNoArgsConstructor")
-    public static class FlyImplWithoutNoArgsConstructor implements Flyable3 {
-
-        public FlyImplWithoutNoArgsConstructor(int i) {
-
-        }
-
-        @Override
-        public void fly() {
+    @ExtensionPoint
+    public abstract static class AbstractRegistry {
+        public AbstractRegistry(int i) {
 
         }
     }
 
-    @ExtensionPoint
-    public interface Flyable4 {
-        void fly();
+    @Extension(name = "foo")
+    public static class FooRegistry extends AbstractRegistry {
+
+        public FooRegistry(int i) {
+            super(i);
+        }
     }
 }
