@@ -37,6 +37,7 @@ public class ProviderBootstrap extends AbstractLifecycle {
         providerRequestHandler.resolve();
 
         this.remotingServer = new RemotingServer(providerConfig.getHost(), providerConfig.getPort());
+        configRemotingServer(remotingServer);
 
         //register rpc handler
         remotingServer.registerRequestHandler(providerRequestHandler);
@@ -46,6 +47,10 @@ public class ProviderBootstrap extends AbstractLifecycle {
 
         //register interfaces
         register();
+    }
+
+    protected void configRemotingServer(RemotingServer remotingServer) {
+        //do nothing
     }
 
     private void checkConfig() {

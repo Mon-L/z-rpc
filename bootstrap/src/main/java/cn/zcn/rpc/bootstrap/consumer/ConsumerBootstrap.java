@@ -1,6 +1,7 @@
 package cn.zcn.rpc.bootstrap.consumer;
 
 import cn.zcn.rpc.remoting.RemotingClient;
+import cn.zcn.rpc.remoting.config.ClientOptions;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
 import org.slf4j.Logger;
@@ -19,7 +20,12 @@ public class ConsumerBootstrap extends AbstractLifecycle {
     @Override
     protected void doStart() throws LifecycleException {
         remotingClient = new RemotingClient();
+        configRemotingClient(remotingClient);
         remotingClient.start();
+    }
+
+    protected void configRemotingClient(RemotingClient remotingClient) {
+        remotingClient.option(ClientOptions.USE_CRC32, true);
     }
 
     @SuppressWarnings({"unchecked"})

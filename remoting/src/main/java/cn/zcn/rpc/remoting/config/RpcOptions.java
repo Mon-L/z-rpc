@@ -32,6 +32,4 @@ public class RpcOptions extends OptionsImpl {
     public static final Option<Integer> PROCESSOR_KEEPALIVE = Option.valueOf("rpc.processor.keepalive", 60);
 
     public static final Option<Integer> PROCESSOR_WORKER_QUEEN_SIZE = Option.valueOf("rpc.processor.worker.queen.size", 1024);
-
-    public static final Option<Integer> CONNECT_TIMEOUT_MILLIS = Option.valueOf("rpc.connect.timeout", 10000);
 }

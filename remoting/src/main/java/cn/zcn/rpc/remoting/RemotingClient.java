@@ -95,9 +95,14 @@ public class RemotingClient extends AbstractLifecycle {
         LOGGER.warn("Prepare to stop remoting client.");
 
         this.remotingInvoker.stop();
-        
+
+        boolean syncShutdown = options.getOption(ClientOptions.SYNC_SHUTDOWN);
         if (this.workerGroup != null) {
-            this.workerGroup.shutdownGracefully();
+            if (syncShutdown) {
+                this.workerGroup.shutdownGracefully().awaitUninterruptibly();
+            } else {
+                this.workerGroup.shutdownGracefully();
+            }
         }
 
         if (this.requestProcessor != null) {

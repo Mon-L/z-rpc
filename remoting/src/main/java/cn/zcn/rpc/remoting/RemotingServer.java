@@ -138,9 +138,7 @@ public class RemotingServer extends AbstractLifecycle {
             }
         }
 
-        if (this.requestProcessor != null) {
-            this.requestProcessor.stop();
-        }
+        this.requestProcessor.stop();
 
         return true;
     }
