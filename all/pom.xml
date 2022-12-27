@@ -34,6 +34,11 @@
             <artifactId>z-rpc-registry-consul</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>cn.zcn</groupId>
+            <artifactId>z-rpc-registry-nacos</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -14,6 +14,36 @@ import java.util.Properties;
  */
 public class RpcConfigs {
 
+    /**
+     * 注册中心地址
+     */
+    public static final String registry = "registry";
+
+    /**
+     * 代理方式
+     */
+    public static final String PROXY = "proxy";
+
+    /**
+     * 路由算法
+     */
+    public static final String ROUTER = "router";
+
+    /**
+     * 负载均衡算法
+     */
+    public static final String LOADBALANCER = "loadBalancer";
+
+    /**
+     * 请求超时时间，单位秒
+     */
+    public static final String TIMEOUT = "timeout";
+
+    /**
+     * 忽略超时请求
+     */
+    public static final String IGNORE_TIMEOUT_REQUEST = "ignoreTimeoutRequest";
+
     private static final String[] CONFIG_PATH = new String[]{
             "META-INF/rpc-config.properties", "rpc-config.properties"};
 
@@ -71,6 +101,17 @@ public class RpcConfigs {
     }
 
     /**
+     * 获取字符串配置，如果配置不存在返回默认值
+     *
+     * @param key key
+     * @return value
+     */
+    public static String getString(String key, String defaultValue) {
+        String val = getString(key);
+        return val == null ? defaultValue : val;
+    }
+
+    /**
      * 获取布尔值配置，如果配置不存在返回 null
      *
      * @param key key
@@ -82,6 +123,17 @@ public class RpcConfigs {
     }
 
     /**
+     * 获取布尔值配置，如果配置不存在返回默认值
+     *
+     * @param key key
+     * @return value
+     */
+    public static Boolean getBool(String key, boolean defaultValue) {
+        String val = getConfigs().getProperty(key);
+        return val == null ? defaultValue : Boolean.valueOf(val);
+    }
+
+    /**
      * 获取整型配置，如果配置不存在返回 null
      *
      * @param key key
@@ -90,5 +142,16 @@ public class RpcConfigs {
     public static Integer getInteger(String key) {
         String val = getConfigs().getProperty(key);
         return val == null ? null : Integer.valueOf(val);
+    }
+
+    /**
+     * 获取整型配置，如果配置不存在返回默认值
+     *
+     * @param key key
+     * @return value
+     */
+    public static Integer getInteger(String key, int defaultValue) {
+        String val = getConfigs().getProperty(key);
+        return val == null ? defaultValue : Integer.parseInt(val);
     }
 }

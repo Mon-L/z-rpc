@@ -1,4 +1,4 @@
-package cn.zcn.rpc.bootstrap;
+package cn.zcn.rpc.bootstrap.registry;
 
 import java.util.Objects;
 

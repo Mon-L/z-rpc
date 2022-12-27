@@ -13,6 +13,7 @@
 
     <modules>
         <module>registry-consul</module>
+        <module>registry-nacos</module>
     </modules>
 
     <properties>

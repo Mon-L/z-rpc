@@ -34,7 +34,7 @@ public class RpcProtocolCommandFactory implements CommandFactory {
         }
 
         ResponseCommand response = new ResponseCommand(protocolCode);
-        response.setId(response.getId());
+        response.setId(request.getId());
         response.setCommandCode(CommandCode.RESPONSE);
         response.setProtocolSwitch(request.getProtocolSwitch());
         response.setSerializer(request.getSerializer());

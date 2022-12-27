@@ -106,7 +106,7 @@ public class ExtensionLoaderTest {
         void fly();
     }
 
-    @Extension(name = "foo")
+    @Extension("foo")
     public static class FlyImpl implements Flyable {
         @Override
         public void fly() {
@@ -139,7 +139,7 @@ public class ExtensionLoaderTest {
         }
     }
 
-    @Extension(name = "foo")
+    @Extension("foo")
     public static class FooRegistry extends AbstractRegistry {
 
         public FooRegistry(int i) {

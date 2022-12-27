@@ -52,16 +52,16 @@ public class ExtensionLoader<T> {
     @SuppressWarnings({"unchecked"})
     public static <S> ExtensionLoader<S> getExtensionLoader(Class<S> clazz) {
         if (clazz == null) {
-            throw new IllegalArgumentException("ExtensionPoint class should not be null.");
+            throw new ExtensionException("ExtensionPoint class should not be null.");
         }
 
         if (!clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
-            throw new IllegalArgumentException("ExtensionPoint class " + clazz.getName() + " should be interface or abstract class.");
+            throw new ExtensionException("ExtensionPoint class " + clazz.getName() + " should be interface or abstract class.");
         }
 
         ExtensionPoint point = clazz.getDeclaredAnnotation(ExtensionPoint.class);
         if (point == null) {
-            throw new IllegalArgumentException("ExtensionPoint class must be annotated by " + ExtensionPoint.class.getSimpleName());
+            throw new ExtensionException("ExtensionPoint class must be annotated by " + ExtensionPoint.class.getSimpleName());
         }
 
         ExtensionLoader<S> loader = (ExtensionLoader<S>) EXTENSION_LOADERS.get(clazz);
@@ -91,7 +91,13 @@ public class ExtensionLoader<T> {
     @SuppressWarnings({"unchecked"})
     public T getExtension(String name, Class<?>[] argType, Object[] args) {
         if (name == null) {
-            throw new IllegalArgumentException("Extension name should not be null.");
+            throw new ExtensionException("Extension name should not be null.");
+        }
+
+        if ((argType == null && args != null)
+                || (argType != null && args == null)
+                || (argType != null && argType.length != args.length)) {
+            throw new ExtensionException("Length of argType and length of args must be equals.");
         }
 
         if (cachedClasses == null) {
@@ -129,11 +135,11 @@ public class ExtensionLoader<T> {
     private void createExtension(InstanceHolder holder, String name, Class<?>[] argType, Object[] args) {
         Class<?> klass = cachedClasses.get(name);
         if (klass == null) {
-            throw new ExtensionException("Extension can not be found. Extension point:{0}", type.getName());
+            throw new ExtensionException("Extension can not be found. Extension point:{0}, Extension name:{1}", type.getName(), name);
         }
 
         try {
-            if (argType.length == 0) {
+            if (argType == null || argType.length == 0) {
                 holder.instance = klass.newInstance();
             } else {
                 Constructor<?> constructor = klass.getConstructor(argType);
@@ -187,7 +193,7 @@ public class ExtensionLoader<T> {
                     throw new ExtensionException("Extension class {0} must be annotated by {1}", className, Extension.class.getSimpleName());
                 }
 
-                classes.put(anno.name(), klass);
+                classes.put(anno.value(), klass);
             }
             return classes;
         } catch (ClassNotFoundException e) {

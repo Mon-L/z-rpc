@@ -55,7 +55,7 @@ public class RpcContext {
             if (!future.isSuccess()) {
                 LOGGER.error("Failed to send response. Request id:{}", response.getId());
             } else {
-                LOGGER.error("Sent response. Request id:{}", response.getId());
+                LOGGER.debug("Sent response. Request id:{}", response.getId());
             }
         });
     }

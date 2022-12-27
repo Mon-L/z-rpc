@@ -12,5 +12,5 @@ public interface RequestHandler<T> {
      */
     boolean ignoredTimeoutRequest();
 
-    void run(InvocationContext ctx, T request);
+    void run(InvocationContext ctx, T obj);
 }

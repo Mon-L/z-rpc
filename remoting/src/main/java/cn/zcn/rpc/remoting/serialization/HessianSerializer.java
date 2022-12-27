@@ -15,7 +15,6 @@ public class HessianSerializer implements Serializer {
 
     @Override
     public byte[] serialize(Object obj) throws SerializationException {
-
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Hessian2Output hessian = new Hessian2Output(out);
         hessian.setSerializerFactory(serializerFactory);

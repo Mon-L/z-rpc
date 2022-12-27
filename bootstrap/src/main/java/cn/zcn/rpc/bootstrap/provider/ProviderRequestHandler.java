@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * RPC 请求处理
+ * RPC 请求处理器
  */
 public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
 
@@ -24,38 +24,40 @@ public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
         private final Map<String, Method> methods = new HashMap<>();
     }
 
+    private final ProviderConfig providerConfig;
     private final Supplier<Boolean> isServerStarted;
     private final Map<String, InterfaceMetadata> interfaces = new HashMap<>();
 
-    public ProviderRequestHandler(Supplier<Boolean> isServerStarted) {
+    public ProviderRequestHandler(ProviderConfig providerConfig, Supplier<Boolean> isServerStarted) {
+        this.providerConfig = providerConfig;
         this.isServerStarted = isServerStarted;
     }
 
     /**
      * 解析服务提供者注册的接口，获取可被调用的方法
      */
-    public void resolve(Collection<InterfaceConfig> interfaceConfigs) {
-        for (InterfaceConfig config : interfaceConfigs) {
+    public void resolve() {
+        for (ProviderInterfaceConfig config : providerConfig.getInterfaceConfigs()) {
             InterfaceMetadata interMetadata = new InterfaceMetadata();
-            interMetadata.instance = config.getInstance();
+            interMetadata.instance = config.getImpl();
 
-            Class<?> clazz = config.getInterfaceClazz();
+            Class<?> clazz = config.getInterfaceClass();
             for (Method m : clazz.getMethods()) {
                 interMetadata.methods.put(MethodSignatureUtil.getMethodSignature(m), m);
             }
 
-            interfaces.put(config.getId(), interMetadata);
+            interfaces.put(config.getInterfaceClass().getName(), interMetadata);
         }
     }
 
     @Override
     public String acceptableClass() {
-        return ProviderRequestHandler.class.getName();
+        return RpcRequest.class.getName();
     }
 
     @Override
     public boolean ignoredTimeoutRequest() {
-        return false;
+        return providerConfig.isIgnoreTimeoutRequest();
     }
 
     @Override
@@ -64,7 +66,7 @@ public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
 
         RpcResponse response = new RpcResponse();
         if (!isServerStarted.get()) {
-            response.setException(new RpcException("RpcProvider was stopped."));
+            response.setException(new RpcException("ProviderBootstrap was stopped."));
             return;
         }
 

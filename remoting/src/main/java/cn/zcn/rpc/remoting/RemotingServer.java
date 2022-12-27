@@ -36,8 +36,9 @@ public class RemotingServer extends AbstractLifecycle {
     private RpcInboundHandler rpcInboundHandler;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
-    private RequestProcessor requestProcessor;
     private ChannelFuture channelFuture;
+
+    private final RequestProcessor requestProcessor = new RequestProcessor(options);
 
     public RemotingServer(String host, int port) {
         this.host = host;
@@ -56,7 +57,7 @@ public class RemotingServer extends AbstractLifecycle {
             }
         } catch (Throwable t) {
             stop();
-            throw new LifecycleException("Failed to start remoting server!", t);
+            throw new LifecycleException(t, "Failed to start remoting server!");
         }
     }
 
@@ -78,7 +79,6 @@ public class RemotingServer extends AbstractLifecycle {
                     new NamedThreadFactory("netty-server-worker-group"));
         }
 
-        this.requestProcessor = new RequestProcessor(options);
         this.requestProcessor.start();
 
         this.rpcInboundHandler = new RpcInboundHandler(options, protocolManager, serializerManager, requestProcessor);

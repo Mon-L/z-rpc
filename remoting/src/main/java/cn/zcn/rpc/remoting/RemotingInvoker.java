@@ -243,6 +243,9 @@ public class RemotingInvoker extends AbstractLifecycle {
 
                 if (connFuture.isSuccess()) {
                     Connection conn = connFuture.get();
+
+                    System.out.printf("remotingInvoker, conn:%s, id:%s\n", conn.hashCode(), req.getId());
+
                     try {
                         invokePromise.setTimeout(timer.newTimeout(timeout -> {
                             /*

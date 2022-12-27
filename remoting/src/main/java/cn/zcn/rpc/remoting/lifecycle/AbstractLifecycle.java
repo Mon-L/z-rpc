@@ -17,7 +17,7 @@ public abstract class AbstractLifecycle implements Lifecycle {
                 if (e instanceof LifecycleException) {
                     throw e;
                 } else {
-                    throw new LifecycleException("Failed to start {0}. Error Msg: {1}", toString(), e.getMessage(), e);
+                    throw new LifecycleException(e, "Failed to start {0}. Error Msg: {1}", toString(), e.getMessage());
                 }
             }
         }
@@ -38,4 +38,9 @@ public abstract class AbstractLifecycle implements Lifecycle {
     protected abstract void doStart() throws LifecycleException;
 
     protected abstract void doStop() throws LifecycleException;
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName();
+    }
 }

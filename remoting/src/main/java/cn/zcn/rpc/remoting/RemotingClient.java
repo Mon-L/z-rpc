@@ -6,6 +6,7 @@ import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.exception.RemotingException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
 import cn.zcn.rpc.remoting.protocol.MessageDecoder;
+import cn.zcn.rpc.remoting.protocol.MessageEncoder;
 import cn.zcn.rpc.remoting.utils.NamedThreadFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -78,7 +79,7 @@ public class RemotingClient extends AbstractLifecycle {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new MessageDecoder(protocolManager));
+                        pipeline.addLast(new MessageEncoder(protocolManager));
                         pipeline.addLast(new MessageDecoder(protocolManager));
                         pipeline.addLast(connectionEventHandler);
                         pipeline.addLast(rpcInboundHandler);
@@ -93,6 +94,8 @@ public class RemotingClient extends AbstractLifecycle {
     protected void doStop() throws LifecycleException {
         LOGGER.warn("Prepare to stop remoting client.");
 
+        this.remotingInvoker.stop();
+        
         if (this.workerGroup != null) {
             this.workerGroup.shutdownGracefully();
         }
@@ -100,8 +103,6 @@ public class RemotingClient extends AbstractLifecycle {
         if (this.requestProcessor != null) {
             this.requestProcessor.stop();
         }
-
-        this.remotingInvoker.stop();
 
         LOGGER.warn("Remoting client has stopped.");
     }
