@@ -85,9 +85,17 @@ public class RpcProtocolDecoder implements ProtocolDecoder {
                 return;
             }
 
-            ResponseCommand command = new ResponseCommand(protocolCode);
+            CommandCode commandCode = CommandCode.valueOf(byteBuf.readShort());
 
-            command.setCommandCode(CommandCode.valueOf(byteBuf.readShort()));
+            ResponseCommand command;
+
+            if (commandCode == CommandCode.HEARTBEAT) {
+                command = new HeartbeatAckCommand(protocolCode);
+            } else {
+                command = new ResponseCommand(protocolCode);
+            }
+
+            command.setCommandCode(commandCode);
             command.setId(byteBuf.readInt());
             command.setSerializer(byteBuf.readByte());
             command.setProtocolSwitch(ProtocolSwitch.parse(byteBuf.readByte()));

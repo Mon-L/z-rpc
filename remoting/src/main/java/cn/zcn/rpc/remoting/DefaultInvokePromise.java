@@ -32,8 +32,9 @@ public class DefaultInvokePromise implements InvokePromise<ResponseCommand> {
     }
 
     @Override
-    public Promise<ResponseCommand> setSuccess(ResponseCommand result) {
-        return promise.setSuccess(result);
+    public InvokePromise<ResponseCommand> setSuccess(ResponseCommand result) {
+        promise.setSuccess(result);
+        return this;
     }
 
     @Override
@@ -42,8 +43,9 @@ public class DefaultInvokePromise implements InvokePromise<ResponseCommand> {
     }
 
     @Override
-    public Promise<ResponseCommand> setFailure(Throwable cause) {
-        return promise.setFailure(cause);
+    public InvokePromise<ResponseCommand> setFailure(Throwable cause) {
+        promise.setFailure(cause);
+        return this;
     }
 
     @Override
@@ -57,43 +59,51 @@ public class DefaultInvokePromise implements InvokePromise<ResponseCommand> {
     }
 
     @Override
-    public Promise<ResponseCommand> addListener(GenericFutureListener<? extends Future<? super ResponseCommand>> listener) {
-        return promise.addListener(listener);
+    public InvokePromise<ResponseCommand> addListener(GenericFutureListener<? extends Future<? super ResponseCommand>> listener) {
+        promise.addListener(listener);
+        return this;
     }
 
     @Override
-    public Promise<ResponseCommand> addListeners(GenericFutureListener<? extends Future<? super ResponseCommand>>... listeners) {
-        return promise.addListeners(listeners);
+    public InvokePromise<ResponseCommand> addListeners(GenericFutureListener<? extends Future<? super ResponseCommand>>... listeners) {
+        promise.addListeners(listeners);
+        return this;
     }
 
     @Override
-    public Promise<ResponseCommand> removeListener(GenericFutureListener<? extends Future<? super ResponseCommand>> listener) {
-        return promise.removeListener(listener);
+    public InvokePromise<ResponseCommand> removeListener(GenericFutureListener<? extends Future<? super ResponseCommand>> listener) {
+        promise.removeListener(listener);
+        return this;
     }
 
     @Override
-    public Promise<ResponseCommand> removeListeners(GenericFutureListener<? extends Future<? super ResponseCommand>>... listeners) {
-        return promise.removeListeners(listeners);
+    public InvokePromise<ResponseCommand> removeListeners(GenericFutureListener<? extends Future<? super ResponseCommand>>... listeners) {
+        promise.removeListeners(listeners);
+        return this;
     }
 
     @Override
-    public Promise<ResponseCommand> await() throws InterruptedException {
-        return promise.await();
+    public InvokePromise<ResponseCommand> await() throws InterruptedException {
+        promise.await();
+        return this;
     }
 
     @Override
-    public Promise<ResponseCommand> awaitUninterruptibly() {
-        return promise.awaitUninterruptibly();
+    public InvokePromise<ResponseCommand> awaitUninterruptibly() {
+        promise.awaitUninterruptibly();
+        return this;
     }
 
     @Override
-    public Promise<ResponseCommand> sync() throws InterruptedException {
-        return promise.sync();
+    public InvokePromise<ResponseCommand> sync() throws InterruptedException {
+        promise.sync();
+        return this;
     }
 
     @Override
-    public Promise<ResponseCommand> syncUninterruptibly() {
-        return promise.syncUninterruptibly();
+    public InvokePromise<ResponseCommand> syncUninterruptibly() {
+        promise.syncUninterruptibly();
+        return this;
     }
 
     @Override

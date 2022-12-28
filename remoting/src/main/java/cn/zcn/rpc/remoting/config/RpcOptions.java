@@ -1,11 +1,13 @@
 package cn.zcn.rpc.remoting.config;
 
+import io.netty.util.AttributeKey;
+
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public class RpcOptions extends OptionsImpl {
+
+    public static final AttributeKey<Options> OPTIONS_ATTRIBUTE_KEY = AttributeKey.valueOf("options");
 
     public static final Option<Boolean> NETTY_EPOLL = Option.valueOf("rpc.netty.epoll", true);
 

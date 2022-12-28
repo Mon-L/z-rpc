@@ -2,6 +2,7 @@ package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.config.ClientOptions;
 import cn.zcn.rpc.remoting.config.Option;
+import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.exception.RemotingException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
@@ -19,10 +20,13 @@ import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.NettyRuntime;
 import io.netty.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 public class RemotingClient extends AbstractLifecycle {
 
@@ -30,7 +34,6 @@ public class RemotingClient extends AbstractLifecycle {
 
     private final ClientOptions options = new ClientOptions();
     private final ProtocolManager protocolManager = new ProtocolManager();
-    private final SerializerManager serializerManager = new SerializerManager();
 
     private EventLoopGroup workerGroup;
     private RequestProcessor requestProcessor;
@@ -63,8 +66,10 @@ public class RemotingClient extends AbstractLifecycle {
 
         this.requestProcessor = new RequestProcessor(options);
         this.requestProcessor.start();
-        this.rpcInboundHandler = new RpcInboundHandler(options, protocolManager, serializerManager, requestProcessor);
+        this.rpcInboundHandler = new RpcInboundHandler(options, protocolManager, requestProcessor);
+
         ConnectionEventHandler connectionEventHandler = new ConnectionEventHandler();
+        IdleStateEventHandler idleStateEventHandler = new IdleStateEventHandler(protocolManager);
 
         Bootstrap bootstrap = new Bootstrap()
                 .channel(channelClazz)
@@ -78,15 +83,24 @@ public class RemotingClient extends AbstractLifecycle {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
+                        socketChannel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).set(options);
+
                         ChannelPipeline pipeline = socketChannel.pipeline();
                         pipeline.addLast(new MessageEncoder(protocolManager));
                         pipeline.addLast(new MessageDecoder(protocolManager));
+
+                        if (options.getOption(ClientOptions.CHECK_IDLE_STATE)) {
+                            int idleTime = options.getOption(ClientOptions.HEARTBEAT_INTERVAL_MILLIS);
+                            pipeline.addLast(new IdleStateHandler(idleTime, idleTime, 0, TimeUnit.MILLISECONDS));
+                            pipeline.addLast(idleStateEventHandler);
+                        }
+
                         pipeline.addLast(connectionEventHandler);
                         pipeline.addLast(rpcInboundHandler);
                     }
                 });
 
-        this.remotingInvoker = new RemotingInvoker(options, protocolManager, serializerManager, bootstrap);
+        this.remotingInvoker = new RemotingInvoker(options, protocolManager, bootstrap);
         this.remotingInvoker.start();
     }
 
@@ -138,10 +152,6 @@ public class RemotingClient extends AbstractLifecycle {
 
     public ProtocolManager getProtocolManager() {
         return protocolManager;
-    }
-
-    public SerializerManager getSerializerManager() {
-        return serializerManager;
     }
 
     public void registerRequestHandler(RequestHandler<?> handler) {

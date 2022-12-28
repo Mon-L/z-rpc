@@ -51,7 +51,7 @@ public class RpcContext {
     }
 
     public void writeAndFlush(ICommand response) {
-        channelContext.writeAndFlush(response).addListener((ChannelFutureListener) future -> {
+        channelContext.channel().writeAndFlush(response).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) {
                 LOGGER.error("Failed to send response. Request id:{}", response.getId());
             } else {

@@ -9,12 +9,9 @@ import cn.zcn.rpc.remoting.exception.*;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
 import cn.zcn.rpc.remoting.protocol.*;
 import cn.zcn.rpc.remoting.serialization.Serializer;
-import cn.zcn.rpc.remoting.utils.IDGenerator;
-import cn.zcn.rpc.remoting.utils.NamedThreadFactory;
 import cn.zcn.rpc.remoting.utils.NetUtil;
+import cn.zcn.rpc.remoting.utils.TimerHolder;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.util.HashedWheelTimer;
-import io.netty.util.Timer;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -31,16 +28,13 @@ public class RemotingInvoker extends AbstractLifecycle {
     private final Options options;
     private final EventExecutor eventExecutor;
     private final ProtocolProvider protocolManager;
-    private final SerializerProvider serializerManager;
     private final Bootstrap bootstrap;
 
-    private Timer timer;
     private ConnectionGroupManager connectionGroupManager;
 
-    public RemotingInvoker(Options options, ProtocolProvider protocolProvider, SerializerProvider serializerProvider, Bootstrap bootstrap) {
+    public RemotingInvoker(Options options, ProtocolProvider protocolProvider, Bootstrap bootstrap) {
         this.options = options;
         this.protocolManager = protocolProvider;
-        this.serializerManager = serializerProvider;
         this.bootstrap = bootstrap;
         this.eventExecutor = bootstrap.config().group().next();
     }
@@ -49,19 +43,12 @@ public class RemotingInvoker extends AbstractLifecycle {
     protected void doStart() throws LifecycleException {
         this.connectionGroupManager = new ConnectionGroupManager(bootstrap);
         this.connectionGroupManager.start();
-
-        this.timer = new HashedWheelTimer(new NamedThreadFactory("remoting-invoker-timer"), 10,
-                TimeUnit.MILLISECONDS);
     }
 
     @Override
     protected void doStop() throws LifecycleException {
         if (connectionGroupManager != null) {
             this.connectionGroupManager.stop();
-        }
-
-        if (this.timer != null) {
-            this.timer.stop();
         }
     }
 
@@ -89,15 +76,14 @@ public class RemotingInvoker extends AbstractLifecycle {
         CommandFactory commandFactory = protocol.getCommandFactory();
         RequestCommand req = commandFactory.createRequestCommand(commandType, CommandCode.REQUEST);
 
-        req.setId(IDGenerator.getInstance().nextId());
         req.setTimeout(timeoutMillis);
 
         byte[] clazz = payload.getClass().getName().getBytes(options.getOption(ClientOptions.CHARSET));
         req.setClazz(clazz);
 
-        byte serializer = serializerManager.getDefaultSerializerCode();
+        byte serializer = SerializerManager.getInstance().getDefaultSerializerCode();
         req.setSerializer(serializer);
-        req.setContent(serializerManager.getSerializer(serializer).serialize(payload));
+        req.setContent(SerializerManager.getInstance().getSerializer(serializer).serialize(payload));
 
         ProtocolSwitch protocolSwitch = ProtocolSwitch.parse((byte) 0);
         if (options.getOption(ClientOptions.USE_CRC32)) {
@@ -108,7 +94,7 @@ public class RemotingInvoker extends AbstractLifecycle {
     }
 
     private Object deserialize(ResponseCommand responseCommand) throws SerializationException {
-        Serializer serializer = serializerManager.getSerializer(responseCommand.getSerializer());
+        Serializer serializer = SerializerManager.getInstance().getSerializer(responseCommand.getSerializer());
         if (serializer == null) {
             throw new SerializationException("Unknown serializer with " + responseCommand.getSerializer());
         }
@@ -142,8 +128,7 @@ public class RemotingInvoker extends AbstractLifecycle {
                     try {
                         conn.getChannel().writeAndFlush(req).addListener(future -> {
                             if (!future.isSuccess()) {
-                                LOGGER.error("Unexpected exception when write request. Request id:{}, Remoting address:{}", req.getId(),
-                                        NetUtil.getRemoteAddress(conn.getChannel()), future.cause());
+                                LOGGER.error("Unexpected exception when write request. Request id:{}, Remoting address:{}", req.getId(), NetUtil.getRemoteAddress(conn.getChannel()), future.cause());
                                 promise.setFailure(future.cause());
                             } else {
                                 promise.setSuccess(null);
@@ -153,8 +138,7 @@ public class RemotingInvoker extends AbstractLifecycle {
                         connectionGroup.releaseConnection(conn);
                     }
                 } else {
-                    promise.setFailure(new TransportException(connFuture.cause(), "Failed to acquire connection. Request id:{0}, Remoting address:{1}",
-                            req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
+                    promise.setFailure(new TransportException(connFuture.cause(), "Failed to acquire connection. Request id:{0}, Remoting address:{1}", req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
                 }
             });
 
@@ -203,8 +187,7 @@ public class RemotingInvoker extends AbstractLifecycle {
                             RemotingException exception;
                             if (response.getContent() != null) {
                                 Throwable cause = (Throwable) deserialize(response);
-                                exception = new RemotingException("Remoting server error. ResponseStatus: {0}, ErrorMsg: {1}",
-                                        response.getStatus().name(), cause.getMessage());
+                                exception = new RemotingException("Remoting server error. ResponseStatus: {0}, ErrorMsg: {1}", response.getStatus().name(), cause.getMessage());
                                 exception.setStackTrace(cause.getStackTrace());
                             } else {
                                 exception = new RemotingException("Remoting server error. ResponseStatus: {0}", response.getStatus().name());
@@ -222,8 +205,7 @@ public class RemotingInvoker extends AbstractLifecycle {
 
             //判断请求是否已超时
             if (getRemainingTime(startMillis, timeoutMillis) <= 0) {
-                invokePromise.setFailure(new TimeoutException("Send request timeout. Request id:{0}, Remoting address:{1}",
-                        req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
+                invokePromise.setFailure(new TimeoutException("Send request timeout. Request id:{0}, Remoting address:{1}", req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
                 return promise;
             }
 
@@ -231,8 +213,7 @@ public class RemotingInvoker extends AbstractLifecycle {
                 long remainingTime = getRemainingTime(startMillis, timeoutMillis);
                 if (remainingTime <= 0) {
                     //请求已超时，返回超时异常
-                    invokePromise.setFailure(new TimeoutException("Send request timeout. Request id:{0}, Remoting address:{1}",
-                            req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
+                    invokePromise.setFailure(new TimeoutException("Send request timeout. Request id:{0}, Remoting address:{1}", req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
 
                     //释放连接
                     if (connFuture.isSuccess()) {
@@ -243,18 +224,14 @@ public class RemotingInvoker extends AbstractLifecycle {
 
                 if (connFuture.isSuccess()) {
                     Connection conn = connFuture.get();
-
-                    System.out.printf("remotingInvoker, conn:%s, id:%s\n", conn.hashCode(), req.getId());
-
                     try {
-                        invokePromise.setTimeout(timer.newTimeout(timeout -> {
+                        invokePromise.setTimeout(TimerHolder.getTimer().newTimeout(timeout -> {
                             /*
                              * 请求已超时，移除 promise，返回超时异常
                              */
                             InvokePromise<?> p = conn.removePromise(req.getId());
                             if (p != null) {
-                                p.setFailure(new TimeoutException("Wait for response timeout. Request id:{0}, Remoting address:{1}",
-                                        req.getId(), NetUtil.getRemoteAddress(conn.getChannel())));
+                                p.setFailure(new TimeoutException("Wait for response timeout. Request id:{0}, Remoting address:{1}", req.getId(), NetUtil.getRemoteAddress(conn.getChannel())));
                             }
                         }, timeoutMillis, TimeUnit.MILLISECONDS));
 
@@ -272,16 +249,14 @@ public class RemotingInvoker extends AbstractLifecycle {
                                     p.setFailure(future.cause());
                                 }
 
-                                LOGGER.error("Unexpected exception when write request. Request id:{}, Remoting address:{}", req.getId(),
-                                        NetUtil.getRemoteAddress(conn.getChannel()), future.cause());
+                                LOGGER.error("Unexpected exception when write request. Request id:{}, Remoting address:{}", req.getId(), NetUtil.getRemoteAddress(conn.getChannel()), future.cause());
                             }
                         });
                     } finally {
                         connectionGroup.releaseConnection(conn);
                     }
                 } else {
-                    invokePromise.setFailure(new TransportException(connFuture.cause(), "Failed to acquire connection. Request id:{0}, Remoting address{1}",
-                            req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
+                    invokePromise.setFailure(new TransportException(connFuture.cause(), "Failed to acquire connection. Request id:{0}, Remoting address{1}", req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
                 }
             });
         } catch (Throwable t) {

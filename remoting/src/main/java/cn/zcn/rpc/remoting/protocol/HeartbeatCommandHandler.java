@@ -21,20 +21,21 @@ public class HeartbeatCommandHandler implements CommandHandler<Command> {
             HeartbeatCommand heartbeatCommand = (HeartbeatCommand) command;
 
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Received heartbeat with id[{}] from [{}]", heartbeatCommand.getId(), NetUtil.getRemoteHost(context.getChannelContext().channel()));
+                LOGGER.debug("Received heartbeat with id[{}] from [{}]", heartbeatCommand.getId(),
+                        NetUtil.getRemoteHost(context.getChannelContext().channel()));
             }
 
-            HeartbeatAckCommand heartbeatAckCommand = context.getProtocol().getCommandFactory().createHeartbeatAckCommand();
-            heartbeatAckCommand.setId(heartbeatCommand.getId());
+            HeartbeatAckCommand heartbeatAckCommand = context.getProtocol().getCommandFactory()
+                    .createHeartbeatAckCommand(heartbeatCommand);
 
-            context.getChannelContext().writeAndFlush(heartbeatAckCommand).addListener(future -> {
+            context.getChannelContext().channel().writeAndFlush(heartbeatAckCommand).addListener(future -> {
                 if (future.isSuccess()) {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("Sent heartbeat ack with id[{}] to [{}] successfully!", heartbeatCommand.getId(),
                                 NetUtil.getRemoteHost(context.getChannelContext().channel()));
                     }
                 } else {
-                    LOGGER.debug("Failed to send heartbeat ack with id[{}] to [{}] successfully!", heartbeatCommand.getId(),
+                    LOGGER.debug("Failed to send heartbeat ack with id[{}] to [{}]!", heartbeatCommand.getId(),
                             NetUtil.getRemoteHost(context.getChannelContext().channel()));
                 }
             });
@@ -46,7 +47,8 @@ public class HeartbeatCommandHandler implements CommandHandler<Command> {
                 future.setSuccess(heartbeatAckCommand);
                 future.cancelTimeout();
             } else {
-                LOGGER.warn("Cannot find heartbeat invokeFuture. Id={}, From {}", heartbeatAckCommand.getId(), NetUtil.getRemoteHost(context.getChannelContext().channel()));
+                LOGGER.warn("Cannot find heartbeat invokeFuture. Id={}, From {}", heartbeatAckCommand.getId(),
+                        NetUtil.getRemoteHost(context.getChannelContext().channel()));
             }
         } else {
             throw new IllegalArgumentException("Can not process command , command class [" + command.getClass().getName() + "]");

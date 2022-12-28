@@ -1,6 +1,8 @@
 package cn.zcn.rpc.remoting.protocol.v1;
 
+import cn.zcn.rpc.remoting.SerializerManager;
 import cn.zcn.rpc.remoting.protocol.*;
+import cn.zcn.rpc.remoting.utils.IDGenerator;
 
 public class RpcProtocolCommandFactory implements CommandFactory {
 
@@ -12,17 +14,27 @@ public class RpcProtocolCommandFactory implements CommandFactory {
 
     @Override
     public HeartbeatCommand createHeartbeatCommand() {
-        return new HeartbeatCommand(protocolCode);
+        HeartbeatCommand heartbeatCommand = new HeartbeatCommand(protocolCode);
+        heartbeatCommand.setId(IDGenerator.getInstance().nextId());
+        heartbeatCommand.setProtocolSwitch(ProtocolSwitch.parse((byte) 0));
+        heartbeatCommand.setSerializer(SerializerManager.getInstance().getDefaultSerializerCode());
+        return heartbeatCommand;
     }
 
     @Override
-    public HeartbeatAckCommand createHeartbeatAckCommand() {
-        return new HeartbeatAckCommand(protocolCode);
+    public HeartbeatAckCommand createHeartbeatAckCommand(ICommand request) {
+        HeartbeatAckCommand heartbeatAckCommand = new HeartbeatAckCommand(protocolCode);
+        heartbeatAckCommand.setId(request.getId());
+        heartbeatAckCommand.setSerializer(request.getSerializer());
+        heartbeatAckCommand.setProtocolSwitch(request.getProtocolSwitch());
+        heartbeatAckCommand.setStatus(RpcStatus.OK);
+        return heartbeatAckCommand;
     }
 
     @Override
     public RequestCommand createRequestCommand(CommandType commandType, CommandCode commandCode) {
         RequestCommand request = new RequestCommand(protocolCode, commandType);
+        request.setId(IDGenerator.getInstance().nextId());
         request.setCommandCode(commandCode);
         return request;
     }

@@ -1,9 +1,6 @@
 package cn.zcn.rpc.remoting;
 
-import cn.zcn.rpc.remoting.protocol.CommandCode;
-import cn.zcn.rpc.remoting.protocol.CommandFactory;
-import cn.zcn.rpc.remoting.protocol.ICommand;
-import cn.zcn.rpc.remoting.protocol.ProtocolCode;
+import cn.zcn.rpc.remoting.protocol.*;
 import io.netty.util.AttributeKey;
 
 /**
@@ -41,6 +38,9 @@ public interface Protocol {
      * @return {@link CommandHandler}
      */
     CommandHandler<ICommand> getCommandHandler(CommandCode cmd);
+
+
+    HeartbeatTrigger getHeartbeatTrigger();
 
     /**
      * 注册命令处理器

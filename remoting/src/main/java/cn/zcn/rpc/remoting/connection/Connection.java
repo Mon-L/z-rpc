@@ -2,6 +2,8 @@ package cn.zcn.rpc.remoting.connection;
 
 import cn.zcn.rpc.remoting.InvokePromise;
 import cn.zcn.rpc.remoting.Url;
+import cn.zcn.rpc.remoting.config.Option;
+import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.exception.TransportException;
 import cn.zcn.rpc.remoting.protocol.ResponseCommand;
 import cn.zcn.rpc.remoting.utils.NetUtil;
@@ -27,6 +29,12 @@ public class Connection {
     private static final Logger LOGGER = LoggerFactory.getLogger(Connection.class);
 
     private final Channel channel;
+
+    /**
+     * 心跳失败次数
+     */
+    private int heartbeatFailures = 0;
+
     private final ConcurrentMap<Integer, InvokePromise<ResponseCommand>> promises = new ConcurrentHashMap<>();
 
     public Connection(Channel channel) {
@@ -51,6 +59,14 @@ public class Connection {
         });
     }
 
+    public int getHeartbeatFailures() {
+        return heartbeatFailures;
+    }
+
+    public void setHeartbeatFailures(int failures) {
+        heartbeatFailures = failures;
+    }
+
     public InvokePromise<ResponseCommand> removePromise(Integer id) {
         return promises.remove(id);
     }
@@ -65,6 +81,10 @@ public class Connection {
 
     public Channel getChannel() {
         return channel;
+    }
+
+    public <T> T getOption(Option<T> option) {
+        return channel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).get().getOption(option);
     }
 
     public Map<Integer, InvokePromise<ResponseCommand>> getInvokeFutures() {

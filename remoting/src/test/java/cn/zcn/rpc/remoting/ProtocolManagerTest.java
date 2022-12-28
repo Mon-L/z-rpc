@@ -1,9 +1,6 @@
 package cn.zcn.rpc.remoting;
 
-import cn.zcn.rpc.remoting.protocol.CommandCode;
-import cn.zcn.rpc.remoting.protocol.CommandFactory;
-import cn.zcn.rpc.remoting.protocol.ICommand;
-import cn.zcn.rpc.remoting.protocol.ProtocolCode;
+import cn.zcn.rpc.remoting.protocol.*;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.Before;
@@ -78,6 +75,11 @@ public class ProtocolManagerTest {
 
         @Override
         public CommandHandler<ICommand> getCommandHandler(CommandCode cmd) {
+            return null;
+        }
+
+        @Override
+        public HeartbeatTrigger getHeartbeatTrigger() {
             return null;
         }
 

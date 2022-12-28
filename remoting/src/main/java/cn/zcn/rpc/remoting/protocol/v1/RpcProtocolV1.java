@@ -6,6 +6,7 @@ import cn.zcn.rpc.remoting.ProtocolEncoder;
 import cn.zcn.rpc.remoting.protocol.*;
 
 /**
+ * <pre>
  * Request
  * 0           1           2           3           4           5           6           7           8           9           10
  * +-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
@@ -17,7 +18,7 @@ import cn.zcn.rpc.remoting.protocol.*;
  * +                                                                       +-----------+-----------+-----------+-----------+
  * |                                                                       |                    crc32                      |
  * +-----------------------------------------------------------------------------------------------------------------------+
- * <p>
+ *
  * Response
  * 0           1           2           3           4           5           6           7           8           9           10
  * +-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
@@ -29,6 +30,7 @@ import cn.zcn.rpc.remoting.protocol.*;
  * +                                                                       +-----------+-----------+-----------+-----------+
  * |                                                                       |                   crc32                       |
  * +-----------------------------------------------------------------------------------------------------------------------+
+ * </pre>
  */
 public class RpcProtocolV1 extends AbstractProtocol {
 
@@ -39,15 +41,19 @@ public class RpcProtocolV1 extends AbstractProtocol {
 
     private final ProtocolDecoder decoder = new RpcProtocolDecoder();
     private final ProtocolEncoder encoder = new RpcProtocolEncoder();
-    private final CommandFactory commandFactory;
+    private final CommandFactory commandFactory = new RpcProtocolCommandFactory(PROTOCOL_CODE);
+    private final HeartbeatTrigger heartbeatTrigger = new DefaultHeartbeatTrigger(commandFactory);
 
     public RpcProtocolV1() {
         super(PROTOCOL_CODE);
         registerCommandHandler(CommandCode.HEARTBEAT, new HeartbeatCommandHandler());
         registerCommandHandler(CommandCode.REQUEST, new RequestCommandHandler());
         registerCommandHandler(CommandCode.RESPONSE, new ResponseCommandHandler());
+    }
 
-        this.commandFactory = new RpcProtocolCommandFactory(getProtocolCode());
+    @Override
+    public HeartbeatTrigger getHeartbeatTrigger() {
+        return heartbeatTrigger;
     }
 
     @Override

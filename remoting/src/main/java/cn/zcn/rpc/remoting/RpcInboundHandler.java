@@ -23,13 +23,11 @@ class RpcInboundHandler extends ChannelInboundHandlerAdapter {
 
     private final Options options;
     private final ProtocolProvider protocolProvider;
-    private final SerializerProvider serializerProvider;
     private final RequestProcessor requestProcessor;
 
-    RpcInboundHandler(RpcOptions options, ProtocolProvider protocolProvider, SerializerProvider serializerProvider, RequestProcessor requestProcessor) {
+    RpcInboundHandler(RpcOptions options, ProtocolProvider protocolProvider, RequestProcessor requestProcessor) {
         this.options = options;
         this.protocolProvider = protocolProvider;
-        this.serializerProvider = serializerProvider;
         this.requestProcessor = requestProcessor;
     }
 
@@ -43,7 +41,7 @@ class RpcInboundHandler extends ChannelInboundHandlerAdapter {
         try {
             command = (ICommand) msg;
 
-            Serializer serializer = serializerProvider.getSerializer(command.getSerializer());
+            Serializer serializer = SerializerManager.getInstance().getSerializer(command.getSerializer());
             if (serializer != null) {
                 rpcContext.setSerializer(serializer);
             } else {

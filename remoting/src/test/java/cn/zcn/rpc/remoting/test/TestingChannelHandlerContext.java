@@ -18,17 +18,17 @@ public class TestingChannelHandlerContext implements ChannelHandlerContext {
 
     @Override
     public Channel channel() {
-        return null;
+        return channel;
     }
 
     @Override
     public EventExecutor executor() {
-        return null;
+        return channel.eventLoop().next();
     }
 
     @Override
     public String name() {
-        return null;
+        return "testing";
     }
 
     @Override

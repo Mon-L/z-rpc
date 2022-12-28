@@ -8,7 +8,13 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-class SerializerManager implements SerializerProvider {
+public class SerializerManager {
+
+    private static final SerializerManager instance = new SerializerManager();
+
+    public static SerializerManager getInstance() {
+        return instance;
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SerializerManager.class);
 
@@ -16,7 +22,7 @@ class SerializerManager implements SerializerProvider {
 
     private volatile byte defaultSerializerCode;
 
-    SerializerManager() {
+    private SerializerManager() {
         registerSerializer((byte) 1, new HessianSerializer());
 
         setDefaultSerializerCode((byte) 1);
@@ -52,12 +58,10 @@ class SerializerManager implements SerializerProvider {
         serializers.remove(code);
     }
 
-    @Override
     public Serializer getSerializer(byte code) {
         return serializers.get(code);
     }
 
-    @Override
     public byte getDefaultSerializerCode() {
         return defaultSerializerCode;
     }

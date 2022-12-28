@@ -1,6 +1,7 @@
 package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.config.Option;
+import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.config.ServerOptions;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
@@ -31,7 +32,6 @@ public class RemotingServer extends AbstractLifecycle {
     private final ServerOptions options = new ServerOptions();
 
     private final ProtocolManager protocolManager = new ProtocolManager();
-    private final SerializerManager serializerManager = new SerializerManager();
 
     private RpcInboundHandler rpcInboundHandler;
     private EventLoopGroup bossGroup;
@@ -81,7 +81,7 @@ public class RemotingServer extends AbstractLifecycle {
 
         this.requestProcessor.start();
 
-        this.rpcInboundHandler = new RpcInboundHandler(options, protocolManager, serializerManager, requestProcessor);
+        this.rpcInboundHandler = new RpcInboundHandler(options, protocolManager, requestProcessor);
         ConnectionEventHandler connectionEventHandler = new ConnectionEventHandler();
 
         ServerBootstrap server = new ServerBootstrap();
@@ -95,7 +95,9 @@ public class RemotingServer extends AbstractLifecycle {
                 .childOption(ChannelOption.SO_RCVBUF, options.getOption(ServerOptions.SO_RCVBUF))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
-                    protected void initChannel(SocketChannel socketChannel) throws Exception {
+                    protected void initChannel(SocketChannel socketChannel) {
+                        socketChannel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).set(options);
+
                         ChannelPipeline pipeline = socketChannel.pipeline();
                         pipeline.addLast(new MessageDecoder(protocolManager));
                         pipeline.addLast(new MessageEncoder(protocolManager));
@@ -149,10 +151,6 @@ public class RemotingServer extends AbstractLifecycle {
 
     public ProtocolManager getProtocolManager() {
         return protocolManager;
-    }
-
-    public SerializerManager getSerializerManager() {
-        return serializerManager;
     }
 
     public <T> void option(Option<T> option, T value) {

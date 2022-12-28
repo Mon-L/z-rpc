@@ -16,8 +16,6 @@ public class ResponseCommandHandler implements CommandHandler<ResponseCommand> {
     public void handle(RpcContext context, ResponseCommand command) {
         Connection conn = context.getChannelContext().channel().attr(Connection.CONNECTION_KEY).get();
 
-        System.out.printf("ResponseCommandHandler, conn:%s, id:%s\n", conn.hashCode(), command.getId());
-
         InvokePromise<ResponseCommand> promise = conn.removePromise(command.getId());
         if (promise != null) {
             promise.cancelTimeout();

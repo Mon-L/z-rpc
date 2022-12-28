@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *  }
  * }
  *
- * 使用 {@link Extension} 定义扩展，并实现对应的接口。
+ * 使用 {@link Extension} 定义扩展，并实现对应的接口。扩展类都是单例。
  * {@code
  *  @Extension("impl1")
  *  public FlyableImpl implement Flyable{
