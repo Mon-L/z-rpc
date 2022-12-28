@@ -65,16 +65,19 @@ public class ConnectionGroupManager extends AbstractLifecycle {
             }
         }
 
+        long now = System.currentTimeMillis();
         Iterator<ConnectionGroup> iter = connectionGroups.values().iterator();
         while (iter.hasNext()) {
             ConnectionGroup group = iter.next();
 
-            //清理没有可用连接且长时间没被访问过的连接组
-            if (group.getActiveCount() <= 0 && System.currentTimeMillis() - group.getLastAcquiredTime() > 300000) {
+            //清理没有可用连接或者空闲时间超过十分钟的连接组
+            // 1000 * 60 * 10 = 600000
+            if (group.getActiveCount() <= 0 || now - group.getLastAcquiredTime() > 600000) {
                 iter.remove();
                 pendingCloseConnectionGroups.add(group);
 
-                LOGGER.info("Remove connection group. Url:{}", group.getURL().toString());
+                LOGGER.info("Remove connection group. Url:{}, Active connection num:{}, Idle time:{}ms.",
+                        group.getURL().toString(), group.getActiveCount(), now - group.getLastAcquiredTime());
             }
         }
     }
@@ -82,7 +85,7 @@ public class ConnectionGroupManager extends AbstractLifecycle {
     private void closeConnectionGroup(ConnectionGroup group) {
         group.close().addListener(future -> {
             if (future.isSuccess()) {
-                LOGGER.info("Connection group was closed. Url:{}", group.getURL().toString());
+                LOGGER.info("Closed Connection group successfully. Url:{}", group.getURL().toString());
             } else {
                 LOGGER.warn("Failed to close connection group. Url:{} " + group.getURL().toString());
             }
@@ -109,6 +112,8 @@ public class ConnectionGroupManager extends AbstractLifecycle {
             if (exist != null) {
                 closeConnectionGroup(group);
                 group = exist;
+            } else {
+                LOGGER.debug("Add connection group. Url:{}", url);
             }
         }
         return group;
