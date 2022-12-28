@@ -1,6 +1,7 @@
 package cn.zcn.rpc.remoting;
 
 import java.net.SocketAddress;
+import java.util.Objects;
 
 public class Url {
 
@@ -29,6 +30,21 @@ public class Url {
     @Override
     public String toString() {
         return this.address.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Url)) return false;
+
+        Url url = (Url) o;
+
+        return Objects.equals(address, url.address);
+    }
+
+    @Override
+    public int hashCode() {
+        return address != null ? address.hashCode() : 0;
     }
 
     public final static class Builder {

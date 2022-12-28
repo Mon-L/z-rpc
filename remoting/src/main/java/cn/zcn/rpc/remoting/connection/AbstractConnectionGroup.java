@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class AbstractConnectionGroup implements ConnectionGroup {
 
-    private volatile long lastAcquiredTimeMillis;
+    private volatile long lastAcquiredTimeMillis = System.currentTimeMillis();
 
     protected final Url url;
     protected final Bootstrap bootstrap;
