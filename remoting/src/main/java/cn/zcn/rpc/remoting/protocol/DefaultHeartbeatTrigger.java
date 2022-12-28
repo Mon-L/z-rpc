@@ -51,20 +51,20 @@ public class DefaultHeartbeatTrigger implements HeartbeatTrigger {
                     conn.setHeartbeatFailures(0);
 
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Received heartbeat ack.Remoting address:{}", NetUtil.getRemoteAddress(ctx.channel()));
+                        LOGGER.debug("Received heartbeat ack. Id:{}, From:{}", heartbeatCommand.getId(), NetUtil.getRemoteAddress(ctx.channel()));
                     }
                 } else {
                     conn.setHeartbeatFailures(conn.getHeartbeatFailures() + 1);
 
-                    LOGGER.debug("Received heartbeat ack but error. Error status:{}, Remoting address:{}",
-                            responseCommand.getStatus().name(), NetUtil.getRemoteAddress(ctx.channel()));
+                    LOGGER.debug("Received heartbeat ack but error. Error status:{}, Id:{}, From:{}",
+                            responseCommand.getStatus().name(), heartbeatCommand.getId(), NetUtil.getRemoteAddress(ctx.channel()));
                 }
             } else {
                 conn.setHeartbeatFailures(conn.getHeartbeatFailures() + 1);
 
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Exception occurred heartbeat ack. Error Msg:{}, Remoting address:{}",
-                            future.cause().getMessage(), NetUtil.getRemoteAddress(ctx.channel()));
+                    LOGGER.debug("Exception occurred heartbeat ack. Error Msg:{}, Id:{}, To:{}",
+                            future.cause().getMessage(), heartbeatCommand.getId(), NetUtil.getRemoteAddress(ctx.channel()));
                 }
             }
         });
@@ -72,7 +72,7 @@ public class DefaultHeartbeatTrigger implements HeartbeatTrigger {
         promise.setTimeout(TimerHolder.getTimer().newTimeout(timeout -> {
             InvokePromise<ResponseCommand> p = conn.removePromise(heartbeatCommand.getId());
             if (p != null) {
-                p.setFailure(new TimeoutException("Wait for heartbeat ack timeout. Request id:{0}, Remoting address:{1}",
+                p.setFailure(new TimeoutException("Wait for heartbeat ack timeout. Id:{0}, To:{1}",
                         heartbeatCommand.getId(), NetUtil.getRemoteAddress(ctx.channel())));
             }
         }, HEARTBEAT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS));
@@ -86,10 +86,13 @@ public class DefaultHeartbeatTrigger implements HeartbeatTrigger {
                 InvokePromise<ResponseCommand> p = conn.removePromise(heartbeatCommand.getId());
                 p.cancelTimeout();
 
-                LOGGER.error("Failed to send heartbeat. Remoting address:{}", NetUtil.getRemoteAddress(ctx.channel()));
+                //心跳失败次数加一
+                conn.setHeartbeatFailures(conn.getHeartbeatFailures() + 1);
+
+                LOGGER.error("Failed to send heartbeat. Id:{}, To:{}", heartbeatCommand.getId(), NetUtil.getRemoteAddress(ctx.channel()));
             } else {
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Sent heartbeat.Remoting address:{}", NetUtil.getRemoteAddress(ctx.channel()));
+                    LOGGER.debug("Sent heartbeat. Id:{}, To:{}", heartbeatCommand.getId(), NetUtil.getRemoteAddress(ctx.channel()));
                 }
             }
         });

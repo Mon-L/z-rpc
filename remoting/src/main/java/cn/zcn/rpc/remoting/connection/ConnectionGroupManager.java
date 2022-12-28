@@ -36,7 +36,7 @@ public class ConnectionGroupManager extends AbstractLifecycle {
     @Override
     protected void doStop() throws LifecycleException {
         connectionGroupCleaner.shutdown();
-        
+
         Iterator<ConnectionGroup> iter = connectionGroups.values().iterator();
         while (iter.hasNext()) {
             pendingCloseConnectionGroups.add(iter.next());
@@ -69,7 +69,7 @@ public class ConnectionGroupManager extends AbstractLifecycle {
         while (iter.hasNext()) {
             ConnectionGroup group = iter.next();
 
-            //清理长时间没被访问过且没有可用连接的连接组
+            //清理没有可用连接且长时间没被访问过的连接组
             if (group.getActiveCount() <= 0 && System.currentTimeMillis() - group.getLastAcquiredTime() > 300000) {
                 iter.remove();
                 pendingCloseConnectionGroups.add(group);

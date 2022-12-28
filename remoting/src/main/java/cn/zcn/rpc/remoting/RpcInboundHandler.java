@@ -50,15 +50,12 @@ class RpcInboundHandler extends ChannelInboundHandlerAdapter {
             }
 
             CommandHandler<ICommand> commandHandler = protocol.getCommandHandler(command.getCommandCode());
-
             if (commandHandler == null) {
                 rpcContext.writeAndFlush(createResponseCommand(protocol, command, RpcStatus.UNSUPPORTED_COMMAND));
                 return;
             }
 
             commandHandler.handle(rpcContext, command);
-
-            channelContext.fireChannelRead(msg);
         } catch (Throwable t) {
             LOGGER.error(t.getMessage(), t);
 

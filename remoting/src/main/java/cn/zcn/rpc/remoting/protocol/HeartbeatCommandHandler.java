@@ -21,7 +21,7 @@ public class HeartbeatCommandHandler implements CommandHandler<Command> {
             HeartbeatCommand heartbeatCommand = (HeartbeatCommand) command;
 
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Received heartbeat with id[{}] from [{}]", heartbeatCommand.getId(),
+                LOGGER.debug("Received heartbeat. Id:{}, From:{}", heartbeatCommand.getId(),
                         NetUtil.getRemoteHost(context.getChannelContext().channel()));
             }
 
@@ -31,11 +31,11 @@ public class HeartbeatCommandHandler implements CommandHandler<Command> {
             context.getChannelContext().channel().writeAndFlush(heartbeatAckCommand).addListener(future -> {
                 if (future.isSuccess()) {
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Sent heartbeat ack with id[{}] to [{}] successfully!", heartbeatCommand.getId(),
+                        LOGGER.debug("Sent heartbeat ack successfully. Id:{}, To:{}", heartbeatCommand.getId(),
                                 NetUtil.getRemoteHost(context.getChannelContext().channel()));
                     }
                 } else {
-                    LOGGER.debug("Failed to send heartbeat ack with id[{}] to [{}]!", heartbeatCommand.getId(),
+                    LOGGER.debug("Failed to send heartbeat ack. Id:{}, To:{}", heartbeatCommand.getId(),
                             NetUtil.getRemoteHost(context.getChannelContext().channel()));
                 }
             });
@@ -47,7 +47,7 @@ public class HeartbeatCommandHandler implements CommandHandler<Command> {
                 future.setSuccess(heartbeatAckCommand);
                 future.cancelTimeout();
             } else {
-                LOGGER.warn("Cannot find heartbeat invokeFuture. Id={}, From {}", heartbeatAckCommand.getId(),
+                LOGGER.warn("Cannot find heartbeat invokeFuture. Id:{}, From:{}", heartbeatAckCommand.getId(),
                         NetUtil.getRemoteHost(context.getChannelContext().channel()));
             }
         } else {
