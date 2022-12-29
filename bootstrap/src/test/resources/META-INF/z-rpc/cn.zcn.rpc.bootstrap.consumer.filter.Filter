@@ -1,0 +1,4 @@
+cn.zcn.rpc.bootstrap.consumer.filter.FilterChainBuilderTest$Filter1
+cn.zcn.rpc.bootstrap.consumer.filter.FilterChainBuilderTest$Filter2
+cn.zcn.rpc.bootstrap.consumer.filter.FilterChainBuilderTest$Filter3
+cn.zcn.rpc.bootstrap.consumer.filter.FilterChainBuilderTest$SuspendFilter

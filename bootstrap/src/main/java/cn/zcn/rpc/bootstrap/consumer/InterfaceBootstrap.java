@@ -75,7 +75,9 @@ public class InterfaceBootstrap extends AbstractLifecycle {
     }
 
     public Object createProxy() {
-        Invoker invoker = new DefaultInvoker(interfaceConfig, remotingClient, providersHolder);
+        DefaultInvoker invoker = new DefaultInvoker(interfaceConfig, remotingClient, providersHolder);
+        invoker.init();
+
         Proxy proxy = ExtensionLoader.getExtensionLoader(Proxy.class).getExtension(interfaceConfig.getProxy());
         return proxy.createProxy(interfaceConfig.getInterfaceClass(), invoker);
     }

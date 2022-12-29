@@ -4,6 +4,7 @@ import cn.zcn.rpc.bootstrap.InterfaceConfig;
 import cn.zcn.rpc.bootstrap.RpcConfigs;
 import cn.zcn.rpc.bootstrap.registry.RegistryConfig;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -37,9 +38,14 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
     private String loadBalancer = RpcConfigs.getString(RpcConfigs.LOADBALANCER, "random");
 
     /**
-     * 请求超时时间，单位秒
+     * 请求超时时间，单位毫秒
      */
-    private int timeout = RpcConfigs.getInteger(RpcConfigs.TIMEOUT, 30);
+    private int timeout = RpcConfigs.getInteger(RpcConfigs.TIMEOUT, 30000);
+
+    /**
+     * 过滤器
+     */
+    private List<String> filters = RpcConfigs.getList(RpcConfigs.FILTERS);
 
     public ConsumerInterfaceConfig(Class<?> clazz) {
         super(clazz);
@@ -91,5 +97,13 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
 
     public int getTimeout() {
         return timeout;
+    }
+
+    public List<String> getFilters() {
+        return filters;
+    }
+
+    public void setFilters(List<String> filters) {
+        this.filters = filters;
     }
 }

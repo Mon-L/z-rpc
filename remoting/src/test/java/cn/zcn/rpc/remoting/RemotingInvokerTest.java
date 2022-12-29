@@ -40,8 +40,7 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
         this.url = new Url.Builder(new LocalAddress(TestUtils.getLocalAddressId())).build();
 
         ProtocolManager protocolManager = new ProtocolManager();
-        SerializerManager serializerManager = new SerializerManager();
-        Serializer serializer = serializerManager.getSerializer(serializerManager.getDefaultSerializerCode());
+        Serializer serializer = SerializerManager.getInstance().getSerializer(SerializerManager.getInstance().getDefaultSerializerCode());
 
         this.server = new ServerBootstrap()
                 .channel(LocalServerChannel.class)
@@ -64,7 +63,7 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
                                 resp.setCommandCode(CommandCode.RESPONSE);
                                 resp.setCommandType(CommandType.RESPONSE);
                                 resp.setId(req.getId());
-                                resp.setSerializer(serializerManager.getDefaultSerializerCode());
+                                resp.setSerializer(SerializerManager.getInstance().getDefaultSerializerCode());
                                 resp.setProtocolSwitch(ProtocolSwitch.parse((byte) 0));
                                 resp.setClazz(new byte[0]);
 
@@ -107,7 +106,7 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
                     }
                 });
 
-        this.remotingInvoker = new RemotingInvoker(new RpcOptions(), new ProtocolManager(), new SerializerManager(), bootstrap);
+        this.remotingInvoker = new RemotingInvoker(new RpcOptions(), new ProtocolManager(), bootstrap);
     }
 
     @Test

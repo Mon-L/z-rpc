@@ -1,9 +1,10 @@
 package cn.zcn.rpc.bootstrap;
 
+import cn.zcn.rpc.bootstrap.utils.StringUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * RPC 文件配置。优先级从高到低为:
@@ -43,6 +44,11 @@ public class RpcConfigs {
      * 忽略超时请求
      */
     public static final String IGNORE_TIMEOUT_REQUEST = "ignoreTimeoutRequest";
+
+    /**
+     * 过滤器列表
+     */
+    public static final String FILTERS = "filters";
 
     private static final String[] CONFIG_PATH = new String[]{
             "META-INF/rpc-config.properties", "rpc-config.properties"};
@@ -153,5 +159,45 @@ public class RpcConfigs {
     public static Integer getInteger(String key, int defaultValue) {
         String val = getConfigs().getProperty(key);
         return val == null ? defaultValue : Integer.parseInt(val);
+    }
+
+    /**
+     * 获取列表，多个值之间使用空格符分割。
+     * <pre>
+     * a b c  returns  [a, b, c]
+     * </pre>
+     *
+     * @param key key
+     * @return list
+     */
+    public static List<String> getList(String key) {
+        String val = getConfigs().getProperty(key);
+        if (StringUtils.isEmptyOrNull(val)) {
+            return Collections.emptyList();
+        }
+
+        List<String> list = new ArrayList<>();
+        int l = 0, r = 0, len = val.length();
+        while (r < len) {
+            if (val.charAt(r) == ' ') {
+                if (l != r) {
+                    list.add(val.substring(l, r));
+                }
+
+                //remove space
+                while (++r < len && val.charAt(r) == ' ') {
+                }
+
+                l = r;
+            } else {
+                r++;
+            }
+        }
+
+        if (l != r) {
+            list.add(val.substring(l, r));
+        }
+
+        return Collections.unmodifiableList(list);
     }
 }

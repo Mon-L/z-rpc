@@ -11,7 +11,7 @@ public class ProvidersHolder {
 
     private final List<ProviderGroup> groups = new CopyOnWriteArrayList<>();
 
-    public List<Provider> getProviderInfos() {
+    public List<Provider> getProviders() {
         List<Provider> providers = new ArrayList<>();
         int size = groups.size();
         for (int i = 0; i < size; i++) {
