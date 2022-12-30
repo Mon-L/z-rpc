@@ -16,9 +16,19 @@ import java.util.*;
 public class RpcConfigs {
 
     /**
+     * 服务提供者权重
+     */
+    public static final String WEIGHT = "weight";
+
+    /**
+     * 服务预热时间
+     */
+    public static final String WARMUP = "warmup";
+
+    /**
      * 注册中心地址
      */
-    public static final String registry = "registry";
+    public static final String REGISTRY = "registry";
 
     /**
      * 代理方式
@@ -31,9 +41,14 @@ public class RpcConfigs {
     public static final String ROUTER = "router";
 
     /**
+     * 与每个服务提供者的最大连接数, 默认值为 1
+     */
+    public static final String MAX_CONNECTION_PER_URL = "maxConnectionPerUrl";
+
+    /**
      * 负载均衡算法
      */
-    public static final String LOADBALANCER = "loadBalancer";
+    public static final String LOAD_BALANCE = "loadBalance";
 
     /**
      * 请求超时时间，单位秒

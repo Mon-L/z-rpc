@@ -11,11 +11,30 @@ import java.util.Set;
  */
 public class ProviderConfig {
 
+    /**
+     * 名称
+     */
     private String name;
 
+    /**
+     * ip
+     */
     private String host;
 
+    /**
+     * 端口
+     */
     private int port;
+
+    /**
+     * 服务权重
+     */
+    private int weight = RpcConfigs.getInteger(RpcConfigs.WEIGHT, 5);
+
+    /**
+     * 服务预热时间。默认十五分钟。
+     */
+    private int warmup = RpcConfigs.getInteger(RpcConfigs.WARMUP, 900000);
 
     private boolean ignoreTimeoutRequest = RpcConfigs.getBool(RpcConfigs.IGNORE_TIMEOUT_REQUEST, false);
 
@@ -46,7 +65,37 @@ public class ProviderConfig {
     }
 
     public ProviderConfig port(int port) {
+        if (port <= 0) {
+            throw new IllegalArgumentException("Provider port must not be negative.");
+        }
+
         this.port = port;
+        return this;
+    }
+
+    public int getWeight() {
+        return weight;
+    }
+
+    public ProviderConfig weight(int weight) {
+        if (weight < 0) {
+            throw new IllegalArgumentException("Provider weight must not be negative.");
+        }
+
+        this.weight = weight;
+        return this;
+    }
+
+    public int getWarmup() {
+        return warmup;
+    }
+
+    public ProviderConfig setWarmup(int warmup) {
+        if (warmup < 0) {
+            throw new IllegalArgumentException("Provider warmup must not be negative.");
+        }
+
+        this.warmup = warmup;
         return this;
     }
 

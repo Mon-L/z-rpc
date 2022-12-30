@@ -23,6 +23,11 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
     private Set<RegistryConfig> registryConfigs;
 
     /**
+     * 与每个服务提供者的最大连接数
+     */
+    private int maxConnectionPerUrl = RpcConfigs.getInteger(RpcConfigs.MAX_CONNECTION_PER_URL, 1);
+
+    /**
      * 代理方式
      */
     private String proxy = RpcConfigs.getString(RpcConfigs.PROXY, "jdk");
@@ -35,7 +40,7 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
     /**
      * 负载均衡器
      */
-    private String loadBalancer = RpcConfigs.getString(RpcConfigs.LOADBALANCER, "random");
+    private String loadBalance = RpcConfigs.getString(RpcConfigs.LOAD_BALANCE, "random");
 
     /**
      * 请求超时时间，单位毫秒
@@ -83,12 +88,12 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
         this.router = router;
     }
 
-    public String getLoadBalancer() {
-        return loadBalancer;
+    public String getLoadBalance() {
+        return loadBalance;
     }
 
-    public void setLoadBalancer(String loadBalancer) {
-        this.loadBalancer = loadBalancer;
+    public void setLoadBalance(String loadBalance) {
+        this.loadBalance = loadBalance;
     }
 
     public void setTimeout(int timeout) {
@@ -105,5 +110,13 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
 
     public void setFilters(List<String> filters) {
         this.filters = filters;
+    }
+
+    public int getMaxConnectionPerUrl() {
+        return maxConnectionPerUrl;
+    }
+
+    public void setMaxConnectionPerUrl(int maxConnectionPerUrl) {
+        this.maxConnectionPerUrl = maxConnectionPerUrl;
     }
 }

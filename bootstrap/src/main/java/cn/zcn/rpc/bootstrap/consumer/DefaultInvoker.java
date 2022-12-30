@@ -6,6 +6,8 @@ import cn.zcn.rpc.bootstrap.RpcResponse;
 import cn.zcn.rpc.bootstrap.consumer.filter.Filter;
 import cn.zcn.rpc.bootstrap.consumer.filter.FilterChainBuilder;
 import cn.zcn.rpc.bootstrap.consumer.filter.FilterChainNode;
+import cn.zcn.rpc.bootstrap.consumer.loadbalance.LoadBalance;
+import cn.zcn.rpc.bootstrap.extension.ExtensionLoader;
 import cn.zcn.rpc.bootstrap.registry.Provider;
 import cn.zcn.rpc.remoting.RemotingClient;
 import cn.zcn.rpc.remoting.Url;
@@ -21,6 +23,7 @@ public class DefaultInvoker implements Invoker {
     private final ConsumerInterfaceConfig interfaceConfig;
     private final ProvidersHolder providersHolder;
     private FilterChainNode filterHead;
+    private LoadBalance loadBalance;
 
     public DefaultInvoker(ConsumerInterfaceConfig interfaceConfig, RemotingClient remotingClient, ProvidersHolder providersHolder) {
         this.interfaceConfig = interfaceConfig;
@@ -29,22 +32,23 @@ public class DefaultInvoker implements Invoker {
     }
 
     public void init() {
-        RemotingInvocationFilter remotingInvocationFilter = new RemotingInvocationFilter(remotingClient);
-        remotingInvocationFilter.setTimeout(interfaceConfig.getTimeout());
-
+        RemotingInvocationFilter remotingInvocationFilter = new RemotingInvocationFilter(remotingClient, interfaceConfig);
         filterHead = FilterChainBuilder.build(remotingInvocationFilter, interfaceConfig.getFilters());
+
+        loadBalance = ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(interfaceConfig.getLoadBalance());
     }
 
     @Override
     public RpcResponse invoke(RpcRequest request) throws RpcException {
         List<Provider> allProviders = providersHolder.getProviders();
-
         if (allProviders.isEmpty()) {
             throw new RpcException("No service provider. Interface:{0}", interfaceConfig.getUniqueName());
         }
 
-        //TODO loadbalancer
-        Provider provider = allProviders.get(0);
+        Provider provider = loadBalance.select(allProviders, request);
+        if (allProviders.isEmpty()) {
+            throw new RpcException("No service provider is selected after loadBalance. Interface:{0}", interfaceConfig.getUniqueName());
+        }
 
         return filterHead.invoke(provider, request);
     }
@@ -52,10 +56,11 @@ public class DefaultInvoker implements Invoker {
     private static class RemotingInvocationFilter implements Filter {
 
         private final RemotingClient remotingClient;
-        private int timeoutMillis = -1;
+        private final ConsumerInterfaceConfig interfaceConfig;
 
-        private RemotingInvocationFilter(RemotingClient remotingClient) {
+        private RemotingInvocationFilter(RemotingClient remotingClient, ConsumerInterfaceConfig interfaceConfig) {
             this.remotingClient = remotingClient;
+            this.interfaceConfig = interfaceConfig;
         }
 
         @Override
@@ -63,7 +68,7 @@ public class DefaultInvoker implements Invoker {
             Url url = buildUrl(provider);
 
             try {
-                Future<RpcResponse> future = remotingClient.invoke(url, request, timeoutMillis);
+                Future<RpcResponse> future = remotingClient.invoke(url, request, interfaceConfig.getTimeout());
                 return future.get();
             } catch (Throwable e) {
                 if (e instanceof ExecutionException) {
@@ -75,12 +80,10 @@ public class DefaultInvoker implements Invoker {
             }
         }
 
-        private void setTimeout(int timeoutMillis) {
-            this.timeoutMillis = timeoutMillis;
-        }
-
         private Url buildUrl(Provider provider) {
-            return new Url.Builder(new InetSocketAddress(provider.getIp(), provider.getPort())).build();
+            return new Url.Builder(new InetSocketAddress(provider.getIp(), provider.getPort()))
+                    .maxConnectionNum(interfaceConfig.getMaxConnectionPerUrl())
+                    .build();
         }
     }
 }

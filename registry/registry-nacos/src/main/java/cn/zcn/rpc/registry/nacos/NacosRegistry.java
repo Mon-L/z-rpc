@@ -40,8 +40,6 @@ public class NacosRegistry extends Registry {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NacosRegistry.class);
 
-    private static final String DEFAULT_NAMESPACE = "META-INF/z-rpc";
-    private static final String DEFAULT_CLUSTER = "DEFAULT-CLUSTER";
 
     private NamingService namingService;
     private final Map<ProviderInterfaceConfig, Instance> instances = new HashMap<>();
@@ -61,7 +59,7 @@ public class NacosRegistry extends Registry {
             namespace = url.substring(slash + 1);
             serverAddr = url.substring(0, slash);
         } else {
-            namespace = DEFAULT_NAMESPACE;
+            namespace = NacosUtils.DEFAULT_NAMESPACE;
             serverAddr = url;
         }
 
@@ -85,16 +83,10 @@ public class NacosRegistry extends Registry {
     @Override
     public void register(ProviderConfig providerConfig, Collection<ProviderInterfaceConfig> providerInterfaceConfigs) throws RegistryException {
         try {
-            for (ProviderInterfaceConfig itf : providerInterfaceConfigs) {
-                Instance instance = new Instance();
-
-                instance.setServiceName(itf.getUniqueName());
-                instance.setClusterName(DEFAULT_CLUSTER);
-                instance.setIp(providerConfig.getHost());
-                instance.setPort(providerConfig.getPort());
-
-                namingService.registerInstance(itf.getUniqueName(), instance);
-                instances.put(itf, instance);
+            for (ProviderInterfaceConfig interfaceConfig : providerInterfaceConfigs) {
+                Instance instance = NacosUtils.toInstance(providerConfig, interfaceConfig);
+                namingService.registerInstance(interfaceConfig.getUniqueName(), instance);
+                instances.put(interfaceConfig, instance);
             }
         } catch (NacosException e) {
             throw new RegistryException(e, "Error occurred when register instances.");
@@ -126,10 +118,7 @@ public class NacosRegistry extends Registry {
                     NamingEvent namingEvent = (NamingEvent) event;
                     List<Provider> providers = new ArrayList<>(namingEvent.getInstances().size());
                     for (Instance instance : namingEvent.getInstances()) {
-                        Provider provider = new Provider();
-                        provider.setIp(instance.getIp());
-                        provider.setPort(instance.getPort());
-
+                        Provider provider = NacosUtils.toProvider(instance);
                         providers.add(provider);
                     }
 

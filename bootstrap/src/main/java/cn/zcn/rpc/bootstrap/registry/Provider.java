@@ -10,6 +10,21 @@ public class Provider {
     private String ip;
     private int port;
 
+    /**
+     * 服务权重
+     */
+    private int weight = 5;
+
+    /**
+     * 服务预热时间，毫秒
+     */
+    private int warmup = 0;
+
+    /**
+     * 服务启动时间
+     */
+    private long startTime = 0;
+
     public String getIp() {
         return ip;
     }
@@ -24,6 +39,30 @@ public class Provider {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public int getWeight() {
+        return weight;
+    }
+
+    public void setWeight(int weight) {
+        this.weight = weight;
+    }
+
+    public int getWarmup() {
+        return warmup;
+    }
+
+    public void setWarmup(int warmup) {
+        this.warmup = warmup;
+    }
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
     }
 
     @Override
