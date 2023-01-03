@@ -11,8 +11,9 @@ import io.netty.channel.local.LocalAddress;
 import io.netty.channel.local.LocalChannel;
 import io.netty.channel.local.LocalServerChannel;
 import io.netty.util.concurrent.Future;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -21,7 +22,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class ConnectionGroupManagerTest extends AbstractEventLoopGroupTest {
 
@@ -29,8 +31,8 @@ public class ConnectionGroupManagerTest extends AbstractEventLoopGroupTest {
     private ServerBootstrap server;
     private Bootstrap bootstrap;
 
-    @BeforeEach
-    public void before() {
+    @Before
+    public void beforeEach() {
         this.url = new Url.Builder(new LocalAddress(TestUtils.getLocalAddressId())).build();
 
         this.server = new ServerBootstrap()
@@ -59,11 +61,11 @@ public class ConnectionGroupManagerTest extends AbstractEventLoopGroupTest {
         ConnectionGroupManager manager = new ConnectionGroupManager(bootstrap);
 
         //throw exception before startup
-        assertThrows(IllegalStateException.class, () -> manager.getConnectionGroup(url));
+        assertThatThrownBy(() -> manager.getConnectionGroup(url)).isInstanceOf(IllegalStateException.class);
 
         manager.start();
 
-        assertNotNull(manager.getConnectionGroup(url));
+        assertThat(manager.getConnectionGroup(url)).isNotNull();
 
         manager.stop();
     }
@@ -83,13 +85,13 @@ public class ConnectionGroupManagerTest extends AbstractEventLoopGroupTest {
                     groups.add(manager.getConnectionGroup(url));
                     latch.countDown();
                 } catch (Exception e) {
-                    fail(e);
+                    Assert.fail(e.getMessage());
                 }
             }).start();
         }
 
-        assertTrue(latch.await(5, TimeUnit.SECONDS));
-        assertEquals(1, groups.size());
+        assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+        assertThat(groups.size()).isEqualTo(1);
 
         manager.stop();
     }
@@ -103,9 +105,9 @@ public class ConnectionGroupManagerTest extends AbstractEventLoopGroupTest {
         //acquire connection
         ConnectionGroup group = manager.getConnectionGroup(url);
         Future<Connection> conn = group.acquireConnection();
-        assertTrue(conn.awaitUninterruptibly(1500));
-        assertTrue(conn.isSuccess());
-        assertTrue(conn.getNow().isActive());
+        assertThat(conn.awaitUninterruptibly(1500)).isTrue();
+        assertThat(conn.isSuccess()).isTrue();
+        assertThat(conn.getNow().isActive()).isTrue();
 
         manager.stop();
 
@@ -114,8 +116,8 @@ public class ConnectionGroupManagerTest extends AbstractEventLoopGroupTest {
 
         //check connection group state
         conn = group.acquireConnection();
-        assertTrue(conn.awaitUninterruptibly(1500));
-        assertInstanceOf(IllegalStateException.class, conn.cause());
+        assertThat(conn.awaitUninterruptibly(1500)).isTrue();
+        assertThat(conn.cause()).isInstanceOf(IllegalStateException.class);
 
         sc.close().awaitUninterruptibly();
     }

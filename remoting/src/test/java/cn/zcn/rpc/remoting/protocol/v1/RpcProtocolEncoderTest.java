@@ -9,15 +9,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.*;
 
 public class RpcProtocolEncoderTest {
 
@@ -37,16 +35,16 @@ public class RpcProtocolEncoderTest {
         ByteBuf out = Unpooled.buffer();
         Object msg = new Object();
 
-        Assertions.assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+        assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
             @Override
             public void call() throws Throwable {
                 protocolEncoder.encode(context, msg, out);
             }
         });
 
-        Assertions.assertThat(out.readableBytes()).isEqualTo(0);
-        Assertions.assertThat(out.readerIndex()).isEqualTo(0);
-        Assertions.assertThat(out.writerIndex()).isEqualTo(0);
+        assertThat(out.readableBytes()).isEqualTo(0);
+        assertThat(out.readerIndex()).isEqualTo(0);
+        assertThat(out.writerIndex()).isEqualTo(0);
     }
 
     @Test

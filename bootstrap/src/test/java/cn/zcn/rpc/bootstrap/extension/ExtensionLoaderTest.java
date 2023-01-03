@@ -1,99 +1,84 @@
 package cn.zcn.rpc.bootstrap.extension;
 
+import org.assertj.core.api.ThrowableAssert;
+import org.junit.Test;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class ExtensionLoaderTest {
 
     @Test
     public void testInvalidExtension() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
-            @Override
-            public void execute() throws Throwable {
-                ExtensionLoader.getExtensionLoader(null);
-            }
-        });
+        assertThatThrownBy(() -> ExtensionLoader.getExtensionLoader(null)).isInstanceOf(ExtensionException.class);
 
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
             @Override
-            public void execute() throws Throwable {
+            public void call() throws Throwable {
                 //ExtensionLoaderTest 不是接口
                 ExtensionLoader.getExtensionLoader(ExtensionLoaderTest.class);
             }
-        });
+        }).isInstanceOf(ExtensionException.class);
 
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
             @Override
-            public void execute() throws Throwable {
+            public void call() throws Throwable {
                 //Runnable 没有 @ExtensionPoint 注解
                 ExtensionLoader.getExtensionLoader(Runnable.class);
             }
-        });
+        }).isInstanceOf(ExtensionException.class);
 
         ExtensionLoader<FlyableNotInExtensionFile> ext = ExtensionLoader.getExtensionLoader(FlyableNotInExtensionFile.class);
-        assertNotNull(ext);
+        assertThat(ext).isNotNull();
     }
 
     @Test
     public void testNotInExtensionFile() {
         ExtensionLoader<FlyableNotInExtensionFile> ext = ExtensionLoader.getExtensionLoader(FlyableNotInExtensionFile.class);
-        assertNotNull(ext);
+        assertThat(ext).isNotNull();
 
-        assertThrows(ExtensionException.class, new Executable() {
+        assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
             @Override
-            public void execute() throws Throwable {
+            public void call() throws Throwable {
                 ext.getExtension("foo");
             }
-        });
+        }).isInstanceOf(ExtensionException.class);
     }
 
     @Test
     public void testGetExtensionWithInterfaceThenSuccess() {
         ExtensionLoader<Flyable> ext = ExtensionLoader.getExtensionLoader(Flyable.class);
-        assertNotNull(ext);
+        assertThat(ext).isNotNull();
 
         Flyable instance = ext.getExtension("foo");
-        assertNotNull(instance);
-        assertTrue(Flyable.class.isAssignableFrom(instance.getClass()));
+        assertThat(instance).isNotNull();
+        assertThat(Flyable.class.isAssignableFrom(instance.getClass())).isTrue();
     }
 
     @Test
     public void testGetExtensionWithAbstractClassThenSuccess() {
         ExtensionLoader<AbstractRegistry> ext = ExtensionLoader.getExtensionLoader(AbstractRegistry.class);
-        assertNotNull(ext);
+        assertThat(ext).isNotNull();
 
         AbstractRegistry instance = ext.getExtension("foo", new Class<?>[]{int.class}, new Object[]{1});
-        assertNotNull(instance);
-        assertTrue(AbstractRegistry.class.isAssignableFrom(instance.getClass()));
+        assertThat(instance).isNotNull();
+        assertThat(AbstractRegistry.class.isAssignableFrom(instance.getClass())).isTrue();
     }
 
     @Test
     public void testWithoutExtensionAnnotation() {
         ExtensionLoader<Flyable2> ext = ExtensionLoader.getExtensionLoader(Flyable2.class);
-        assertNotNull(ext);
+        assertThat(ext).isNotNull();
 
-        assertThrows(ExtensionException.class, new Executable() {
-            @Override
-            public void execute() throws Throwable {
-                ext.getExtension("foo");
-            }
-        });
+        assertThatThrownBy(() -> ext.getExtension("foo")).isInstanceOf(ExtensionException.class);
     }
 
     @Test
     public void testWithoutImplementSpecifiedInterface() {
         ExtensionLoader<Flyable3> ext = ExtensionLoader.getExtensionLoader(Flyable3.class);
-        assertNotNull(ext);
+        assertThat(ext).isNotNull();
 
-        assertThrows(ExtensionException.class, new Executable() {
-            @Override
-            public void execute() throws Throwable {
-                ext.getExtension("foo");
-            }
-        });
+        assertThatThrownBy(() -> ext.getExtension("foo")).isInstanceOf(ExtensionException.class);
     }
 
     @ExtensionPoint

@@ -25,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>cn.zcn</groupId>
-            <artifactId>z-rpc-bootstarp</artifactId>
+            <artifactId>z-rpc-bootstrap</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -88,6 +88,9 @@
                             <artifactSet>
                                 <includes>
                                     <include>cn.zcn:z-rpc-remoting</include>
+                                    <include>cn.zcn:z-rpc-bootstrap</include>
+                                    <include>cn.zcn:z-rpc-registry-consul</include>
+                                    <include>cn.zcn:z-rpc-registry-nacos</include>
                                 </includes>
                             </artifactSet>
                         </configuration>

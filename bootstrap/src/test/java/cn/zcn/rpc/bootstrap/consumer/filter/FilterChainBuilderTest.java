@@ -7,15 +7,16 @@ import cn.zcn.rpc.bootstrap.RpcResponse;
 import cn.zcn.rpc.bootstrap.extension.Extension;
 import cn.zcn.rpc.bootstrap.extension.ExtensionException;
 import cn.zcn.rpc.bootstrap.registry.Provider;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class FilterChainBuilderTest {
 
@@ -61,7 +62,7 @@ public class FilterChainBuilderTest {
         }
     }
 
-    @BeforeEach
+    @Before
     public void beforeEach() {
         SEQUENCE.clear();
     }
@@ -82,11 +83,11 @@ public class FilterChainBuilderTest {
 
         FilterChainNode filterChainNode = FilterChainBuilder.build(filter, filters);
         RpcResponse response = filterChainNode.invoke(Mockito.mock(Provider.class), Mockito.mock(RpcRequest.class));
-        assertNotNull(response);
-        assertEquals(true, response.get());
-        assertEquals("filter1", SEQUENCE.get(0));
-        assertEquals("filter2", SEQUENCE.get(1));
-        assertEquals("filter3", SEQUENCE.get(2));
+        assertThat(response).isNotNull();
+        assertThat(response.get()).isEqualTo(true);
+        assertThat(SEQUENCE.get(0)).isEqualTo("filter1");
+        assertThat(SEQUENCE.get(1)).isEqualTo("filter2");
+        assertThat(SEQUENCE.get(2)).isEqualTo("filter3");
     }
 
     @Test
@@ -95,7 +96,7 @@ public class FilterChainBuilderTest {
             add("filter6");
         }};
 
-        assertThrows(ExtensionException.class, () -> FilterChainBuilder.build((provider, request, next) -> null, filters));
+        assertThatThrownBy(() -> FilterChainBuilder.build((provider, request, next) -> null, filters)).isInstanceOf(ExtensionException.class);
     }
 
     @Test
@@ -119,10 +120,10 @@ public class FilterChainBuilderTest {
          */
         FilterChainNode filterChainNode = FilterChainBuilder.build(filter, filters);
         RpcResponse response = filterChainNode.invoke(Mockito.mock(Provider.class), Mockito.mock(RpcRequest.class));
-        assertNotNull(response);
-        assertEquals(false, response.get());
-        assertEquals(2, SEQUENCE.size());
-        assertEquals("filter1", SEQUENCE.get(0));
-        assertEquals("filter2", SEQUENCE.get(1));
+        assertThat(response).isNotNull();
+        assertThat(response.get()).isEqualTo(false);
+        assertThat(SEQUENCE.size()).isEqualTo(2);
+        assertThat(SEQUENCE.get(0)).isEqualTo("filter1");
+        assertThat(SEQUENCE.get(1)).isEqualTo("filter2");
     }
 }

@@ -1,13 +1,14 @@
 package cn.zcn.rpc.bootstrap.utils;
 
-import org.junit.jupiter.api.Test;
+
+import org.junit.Test;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class MethodSignatureUtilTest {
 
@@ -26,17 +27,17 @@ public class MethodSignatureUtilTest {
             signatures.add(MethodSignatureUtil.getMethodSignature(m));
         }
 
-        assertEquals(3, signatures.size());
-        assertEquals("addUser", signatures.get(0));
-        assertEquals("addUser:java.lang.String", signatures.get(1));
-        assertEquals("addUser:java.lang.String,int,boolean,java.util.concurrent.Callable", signatures.get(2));
+        assertThat(signatures.size()).isEqualTo(3);
+        assertThat(signatures.get(0)).isEqualTo("addUser");
+        assertThat(signatures.get(1)).isEqualTo("addUser:java.lang.String");
+        assertThat(signatures.get(2)).isEqualTo("addUser:java.lang.String,int,boolean,java.util.concurrent.Callable");
     }
 
     @Test
     public void testGetMethodSignature3() {
-        assertEquals("addUser", MethodSignatureUtil.getMethodSignature("addUser", null));
-        assertEquals("addUser", MethodSignatureUtil.getMethodSignature("addUser", new String[]{}));
-        assertEquals("addUser:java.lang.String,int,boolean",
-                MethodSignatureUtil.getMethodSignature("addUser", new String[]{"java.lang.String", "int", "boolean"}));
+        assertThat(MethodSignatureUtil.getMethodSignature("addUser", null)).isEqualTo("addUser");
+        assertThat(MethodSignatureUtil.getMethodSignature("addUser", new String[]{})).isEqualTo("addUser");
+        assertThat(
+                MethodSignatureUtil.getMethodSignature("addUser", new String[]{"java.lang.String", "int", "boolean"})).isEqualTo("addUser:java.lang.String,int,boolean");
     }
 }

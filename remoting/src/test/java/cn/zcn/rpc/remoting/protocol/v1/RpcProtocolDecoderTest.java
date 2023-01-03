@@ -1,7 +1,7 @@
 package cn.zcn.rpc.remoting.protocol.v1;
 
-import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.ProtocolDecoder;
+import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.protocol.*;
 import cn.zcn.rpc.remoting.test.TestingChannelHandlerContext;
 import cn.zcn.rpc.remoting.utils.CRC32Util;
@@ -9,15 +9,15 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.*;
 
 public class RpcProtocolDecoderTest {
 
@@ -42,7 +42,7 @@ public class RpcProtocolDecoderTest {
             in.writeByte(i);
         }
 
-        Assertions.assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+        assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
             @Override
             public void call() throws Throwable {
                 protocolDecoder.decode(context, in, new ArrayList<>());
@@ -61,7 +61,7 @@ public class RpcProtocolDecoderTest {
             in.writeByte(i);
         }
 
-        Assertions.assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+        assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
             @Override
             public void call() throws Throwable {
                 protocolDecoder.decode(context, in, new ArrayList<>());
@@ -108,20 +108,20 @@ public class RpcProtocolDecoderTest {
             List<Object> out = new ArrayList<>();
             protocolDecoder.decode(context, in, out);
 
-            Assertions.assertThat(out.size()).isEqualTo(1);
+            assertThat(out.size()).isEqualTo(1);
             RequestCommand command = (RequestCommand) out.get(0);
 
-            Assertions.assertThat(command.getProtocolCode()).isEqualTo(RpcProtocolV1.PROTOCOL_CODE);
-            Assertions.assertThat(command.getCommandType()).isEqualTo(CommandType.REQUEST);
-            Assertions.assertThat(command.getCommandCode()).isEqualTo(CommandCode.REQUEST);
-            Assertions.assertThat(command.getId()).isEqualTo(1000);
-            Assertions.assertThat(command.getSerializer()).isEqualTo((byte) 6);
-            Assertions.assertThat(command.getTimeout()).isEqualTo(400);
-            Assertions.assertThat(command.getProtocolSwitch()).isEqualTo(protocolSwitch);
-            Assertions.assertThat(command.getClazz()).isEqualTo(clazz);
-            Assertions.assertThat(command.getContent()).isEqualTo(content);
+            assertThat(command.getProtocolCode()).isEqualTo(RpcProtocolV1.PROTOCOL_CODE);
+            assertThat(command.getCommandType()).isEqualTo(CommandType.REQUEST);
+            assertThat(command.getCommandCode()).isEqualTo(CommandCode.REQUEST);
+            assertThat(command.getId()).isEqualTo(1000);
+            assertThat(command.getSerializer()).isEqualTo((byte) 6);
+            assertThat(command.getTimeout()).isEqualTo(400);
+            assertThat(command.getProtocolSwitch()).isEqualTo(protocolSwitch);
+            assertThat(command.getClazz()).isEqualTo(clazz);
+            assertThat(command.getContent()).isEqualTo(content);
         } catch (Exception e) {
-            Assert.fail("Should not reach here!");
+            fail("Should not reach here!");
         }
     }
 
@@ -164,20 +164,20 @@ public class RpcProtocolDecoderTest {
             List<Object> out = new ArrayList<>();
             protocolDecoder.decode(context, in, out);
 
-            Assertions.assertThat(out.size()).isEqualTo(1);
+            assertThat(out.size()).isEqualTo(1);
             ResponseCommand command = (ResponseCommand) out.get(0);
 
-            Assertions.assertThat(command.getProtocolCode()).isEqualTo(RpcProtocolV1.PROTOCOL_CODE);
-            Assertions.assertThat(command.getCommandType()).isEqualTo(CommandType.RESPONSE);
-            Assertions.assertThat(command.getCommandCode()).isEqualTo(CommandCode.RESPONSE);
-            Assertions.assertThat(command.getId()).isEqualTo(1000);
-            Assertions.assertThat(command.getSerializer()).isEqualTo((byte) 6);
-            Assertions.assertThat(command.getProtocolSwitch()).isEqualTo(protocolSwitch);
-            Assertions.assertThat(command.getStatus()).isEqualTo(RpcStatus.OK);
-            Assertions.assertThat(command.getClazz()).isEqualTo(clazz);
-            Assertions.assertThat(command.getContent()).isEqualTo(content);
+            assertThat(command.getProtocolCode()).isEqualTo(RpcProtocolV1.PROTOCOL_CODE);
+            assertThat(command.getCommandType()).isEqualTo(CommandType.RESPONSE);
+            assertThat(command.getCommandCode()).isEqualTo(CommandCode.RESPONSE);
+            assertThat(command.getId()).isEqualTo(1000);
+            assertThat(command.getSerializer()).isEqualTo((byte) 6);
+            assertThat(command.getProtocolSwitch()).isEqualTo(protocolSwitch);
+            assertThat(command.getStatus()).isEqualTo(RpcStatus.OK);
+            assertThat(command.getClazz()).isEqualTo(clazz);
+            assertThat(command.getContent()).isEqualTo(content);
         } catch (Exception e) {
-            Assert.fail("Should not reach here!");
+            fail("Should not reach here!");
         }
     }
 
@@ -216,7 +216,7 @@ public class RpcProtocolDecoderTest {
         in.getBytes(0, msg, 0, msg.length - 1);
         in.writeInt(CRC32Util.calculate(msg));
 
-        Assertions.assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+        assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
             @Override
             public void call() throws Throwable {
                 List<Object> out = new ArrayList<>();
@@ -230,10 +230,10 @@ public class RpcProtocolDecoderTest {
         try {
             protocolDecoder.decode(context, in, new ArrayList<>());
         } catch (Exception e) {
-            Assert.fail("Should not reach here!");
+            fail("Should not reach here!");
         }
 
         //should reset reader index
-        Assertions.assertThat(in.readableBytes()).isEqualTo(readableBytes);
+        assertThat(in.readableBytes()).isEqualTo(readableBytes);
     }
 }

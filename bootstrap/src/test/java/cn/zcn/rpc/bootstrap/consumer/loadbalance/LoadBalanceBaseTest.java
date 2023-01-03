@@ -1,22 +1,19 @@
-package cn.zcn.rpc.bootstrap.loadbalance;
+package cn.zcn.rpc.bootstrap.consumer.loadbalance;
 
 import cn.zcn.rpc.bootstrap.RpcRequest;
-import cn.zcn.rpc.bootstrap.consumer.loadbalance.LoadBalance;
 import cn.zcn.rpc.bootstrap.extension.ExtensionLoader;
 import cn.zcn.rpc.bootstrap.registry.Provider;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.Before;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class LoadBalanceBaseTest {
 
     private RpcRequest request;
 
-
-    @BeforeEach
+    @Before
     public void beforeEach() {
         request = new RpcRequest();
     }

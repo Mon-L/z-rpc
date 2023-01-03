@@ -7,11 +7,12 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.DecoderException;
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 public class MessageDecoderTest {
 
@@ -33,7 +34,7 @@ public class MessageDecoderTest {
         byteBuf.writeByte(11);  //protocol version
         byteBuf.writeByte(0);
 
-        Assertions.assertThatExceptionOfType(DecoderException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+        assertThatExceptionOfType(DecoderException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
             @Override
             public void call() throws Throwable {
                 channel.writeInbound(byteBuf.retain());
@@ -52,7 +53,7 @@ public class MessageDecoderTest {
         byteBuf.writeByte(2);  //protocol version
         byteBuf.writeByte(0);
 
-        Assertions.assertThatExceptionOfType(DecoderException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+        assertThatExceptionOfType(DecoderException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
             @Override
             public void call() throws Throwable {
                 channel.writeInbound(byteBuf.retain());

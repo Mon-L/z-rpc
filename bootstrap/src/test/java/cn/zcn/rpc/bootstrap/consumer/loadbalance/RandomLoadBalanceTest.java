@@ -1,14 +1,14 @@
-package cn.zcn.rpc.bootstrap.loadbalance;
+package cn.zcn.rpc.bootstrap.consumer.loadbalance;
 
 import cn.zcn.rpc.bootstrap.registry.Provider;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class RandomLoadBalanceTest extends LoadBalanceBaseTest {
 
@@ -23,13 +23,13 @@ public class RandomLoadBalanceTest extends LoadBalanceBaseTest {
 
         int times = 10000;
         Map<Provider, Integer> counter = doSelect(times, providers, "random");
-        assertEquals(providers.size(), counter.size());
-        assertEquals(times, getSum(counter));
+        assertThat(counter.size()).isEqualTo(providers.size());
+        assertThat(getSum(counter)).isEqualTo(times);
 
         //1 : 1 : 1 : 1 : 1
         for (Provider provider : providers) {
             int countPerProvider = counter.get(provider);
-            assertTrue(((times - countPerProvider) / providers.size()) < (times / providers.size()));
+            assertThat(((times - countPerProvider) / providers.size()) < (times / providers.size())).isTrue();
 
             System.out.println(countPerProvider);
         }
@@ -44,13 +44,13 @@ public class RandomLoadBalanceTest extends LoadBalanceBaseTest {
 
         int times = 10000;
         Map<Provider, Integer> counter = doSelect(times, providers, "random");
-        assertEquals(providers.size(), counter.size());
-        assertEquals(times, getSum(counter));
+        assertThat(counter.size()).isEqualTo(providers.size());
+        assertThat(getSum(counter)).isEqualTo(times);
 
         //1 : 3 : 6
         for (Provider provider : providers) {
             int countPerProvider = counter.get(provider);
-            assertTrue(((times - countPerProvider) / 10) < (times / 10));
+            assertThat(((times - countPerProvider) / 10) < (times / 10)).isTrue();
 
             System.out.println(countPerProvider);
         }
@@ -67,9 +67,9 @@ public class RandomLoadBalanceTest extends LoadBalanceBaseTest {
         Map<Provider, Integer> counter = doSelect(times, providers, "random");
 
         //权重为零的节点无法被选中
-        assertEquals(providers.size() - 1, counter.size());
-        assertEquals(times, getSum(counter));
-        assertNull(counter.get(providers.get(1)));
+        assertThat(counter.size()).isEqualTo(providers.size() - 1);
+        assertThat(getSum(counter)).isEqualTo(times);
+        assertThat(counter.get(providers.get(1))).isNull();
 
         //1 : 0 : 1
         for (Provider provider : providers) {
@@ -90,13 +90,13 @@ public class RandomLoadBalanceTest extends LoadBalanceBaseTest {
         int times = 1000;
         Map<Provider, Integer> counter = doSelect(times, providers, "random");
 
-        assertEquals(providers.size(), counter.size());
-        assertEquals(times, getSum(counter));
+        assertThat(counter.size()).isEqualTo(providers.size());
+        assertThat(getSum(counter)).isEqualTo(times);
 
         //1 : 1 : 2
         for (Provider provider : providers) {
             int countPerProvider = counter.get(provider);
-            
+
             System.out.println(countPerProvider);
         }
     }

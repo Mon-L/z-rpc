@@ -26,7 +26,7 @@
         <dependencies>
             <dependency>
                 <groupId>cn.zcn</groupId>
-                <artifactId>z-rpc-bootstarp</artifactId>
+                <artifactId>z-rpc-bootstrap</artifactId>
                 <version>${project.parent.version}</version>
             </dependency>
         </dependencies>

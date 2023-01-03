@@ -19,13 +19,14 @@ import io.netty.channel.local.LocalAddress;
 import io.netty.channel.local.LocalChannel;
 import io.netty.channel.local.LocalServerChannel;
 import io.netty.util.concurrent.Future;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
 
@@ -35,7 +36,7 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
     private boolean testTimeoutCase = false;
     private boolean testServiceExceptionCase = false;
 
-    @BeforeEach
+    @Before
     public void before() {
         this.url = new Url.Builder(new LocalAddress(TestUtils.getLocalAddressId())).build();
 
@@ -117,7 +118,7 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
         Future<Void> future = remotingInvoker.oneWayInvoke(url, new Object());
 
         try {
-            assertTrue(future.await(1, TimeUnit.SECONDS));
+            assertThat(future.await(1, TimeUnit.SECONDS)).isTrue();
         } catch (InterruptedException e) {
             fail("Should not reach here.", e);
         }
@@ -133,9 +134,9 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
         Future<Void> future = remotingInvoker.oneWayInvoke(url, new Object());
 
         try {
-            assertTrue(future.await(1, TimeUnit.SECONDS));
-            assertInstanceOf(TransportException.class, future.cause());
-            assertInstanceOf(ConnectException.class, future.cause().getCause());
+            assertThat(future.await(1, TimeUnit.SECONDS)).isTrue();
+            assertThat(future.cause()).isInstanceOf(TransportException.class);
+            assertThat(future.cause().getCause()).isInstanceOf(ConnectException.class);
         } catch (InterruptedException e) {
             fail("Should not reach here.", e);
         }
@@ -151,7 +152,7 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
         Future<Void> future = remotingInvoker.invoke(url, new Object(), 3000);
 
         try {
-            assertTrue(future.await(3000, TimeUnit.MILLISECONDS));
+            assertThat(future.await(3000, TimeUnit.MILLISECONDS)).isTrue();
         } catch (InterruptedException e) {
             fail("Should not reach here.", e);
         }
@@ -167,9 +168,9 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
         Future<Void> future = remotingInvoker.invoke(url, new Object(), 2000);
 
         try {
-            assertTrue(future.await(1, TimeUnit.SECONDS));
-            assertInstanceOf(TransportException.class, future.cause());
-            assertInstanceOf(ConnectException.class, future.cause().getCause());
+            assertThat(future.await(1, TimeUnit.SECONDS)).isTrue();
+            assertThat(future.cause()).isInstanceOf(TransportException.class);
+            assertThat(future.cause().getCause()).isInstanceOf(ConnectException.class);
         } catch (InterruptedException e) {
             fail("Should not reach here.", e);
         }
@@ -187,7 +188,7 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
         Future<Void> future = remotingInvoker.invoke(url, new Object(), 3000);
 
         try {
-            assertFalse(future.await(3000, TimeUnit.MILLISECONDS));
+            assertThat(future.await(3000, TimeUnit.MILLISECONDS)).isFalse();
         } catch (InterruptedException e) {
             fail("Should not reach here.", e);
         }
@@ -206,8 +207,8 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
         Future<Void> future = remotingInvoker.invoke(url, new Object(), 3000);
 
         try {
-            assertTrue(future.await(3000, TimeUnit.MILLISECONDS));
-            assertInstanceOf(RemotingException.class, future.cause());
+            assertThat(future.await(3000, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(future.cause()).isInstanceOf(RemotingException.class);
         } catch (InterruptedException e) {
             fail("Should not reach here.", e);
         }

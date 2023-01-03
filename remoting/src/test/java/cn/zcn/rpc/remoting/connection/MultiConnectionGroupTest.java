@@ -11,9 +11,8 @@ import io.netty.channel.local.LocalAddress;
 import io.netty.channel.local.LocalChannel;
 import io.netty.channel.local.LocalServerChannel;
 import io.netty.util.concurrent.Future;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -21,7 +20,7 @@ import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class MultiConnectionGroupTest extends AbstractEventLoopGroupTest {
 
@@ -29,7 +28,7 @@ public class MultiConnectionGroupTest extends AbstractEventLoopGroupTest {
     private ServerBootstrap server;
     private Bootstrap client;
 
-    @BeforeEach
+    @Before
     public void before() {
         this.url = new Url.Builder(new LocalAddress(TestUtils.getLocalAddressId())).build();
         this.server = new ServerBootstrap().channel(LocalServerChannel.class).group(eventLoopGroup).childHandler(new ChannelInitializer<LocalChannel>() {
@@ -54,8 +53,8 @@ public class MultiConnectionGroupTest extends AbstractEventLoopGroupTest {
 
         Future<Connection> future = connectionGroup.acquireConnection();
         future.awaitUninterruptibly(3, TimeUnit.SECONDS);
-        Assertions.assertTrue(future.isSuccess());
-        Assertions.assertTrue(future.getNow().isActive());
+        assertThat(future.isSuccess()).isTrue();
+        assertThat(future.getNow().isActive()).isTrue();
 
         sc.close().syncUninterruptibly();
         connectionGroup.close();
@@ -69,22 +68,22 @@ public class MultiConnectionGroupTest extends AbstractEventLoopGroupTest {
         Queue<Connection> queue = new LinkedList<>();
         for (int i = 0; i < 3; i++) {
             Future<Connection> future = connectionGroup.acquireConnection();
-            Assertions.assertTrue(future.awaitUninterruptibly(2, TimeUnit.SECONDS));
+            assertThat(future.awaitUninterruptibly(2, TimeUnit.SECONDS)).isTrue();
             queue.offer(future.getNow());
         }
 
         //连接数已耗尽，无法获得连接
         Future<Connection> pendingFuture = connectionGroup.acquireConnection();
-        Assertions.assertFalse(pendingFuture.awaitUninterruptibly(2, TimeUnit.SECONDS));
+        assertThat(pendingFuture.awaitUninterruptibly(2, TimeUnit.SECONDS)).isFalse();
 
         //释放一条连接
         Connection conn = queue.poll();
         connectionGroup.releaseConnection(conn);
 
         // pendingFuture 获得连接
-        Assertions.assertTrue(pendingFuture.awaitUninterruptibly(2, TimeUnit.SECONDS));
-        Assertions.assertTrue(pendingFuture.isSuccess());
-        Assertions.assertSame(conn, pendingFuture.getNow());
+        assertThat(pendingFuture.awaitUninterruptibly(2, TimeUnit.SECONDS)).isTrue();
+        assertThat(pendingFuture.isSuccess()).isTrue();
+        assertThat(pendingFuture.getNow()).isSameAs(conn);
 
         sc.close().syncUninterruptibly();
         connectionGroup.close();
@@ -96,9 +95,9 @@ public class MultiConnectionGroupTest extends AbstractEventLoopGroupTest {
         connectionGroup.close();
 
         Future<Connection> future = connectionGroup.acquireConnection();
-        assertTrue(future.awaitUninterruptibly(2000));
-        assertFalse(future.isSuccess());
-        assertInstanceOf(IllegalStateException.class, future.cause());
+        assertThat(future.awaitUninterruptibly(2000)).isTrue();
+        assertThat(future.isSuccess()).isFalse();
+        assertThat(future.cause()).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -107,13 +106,13 @@ public class MultiConnectionGroupTest extends AbstractEventLoopGroupTest {
         ConnectionGroup connectionGroup = new MultiConnectionGroup(url, client, 1, 3000);
 
         Future<Connection> future = connectionGroup.acquireConnection();
-        Assertions.assertTrue(future.awaitUninterruptibly(2, TimeUnit.SECONDS));
+        assertThat(future.awaitUninterruptibly(2, TimeUnit.SECONDS)).isTrue();
 
         //连接数已耗尽，无法获得连接直至超时
         Future<Connection> pendingFuture = connectionGroup.acquireConnection();
-        Assertions.assertTrue(pendingFuture.awaitUninterruptibly(3500, TimeUnit.MILLISECONDS));
-        Assertions.assertFalse(pendingFuture.isSuccess());
-        Assertions.assertInstanceOf(TimeoutException.class, pendingFuture.cause());
+        assertThat(pendingFuture.awaitUninterruptibly(3500, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(pendingFuture.isSuccess()).isFalse();
+        assertThat(pendingFuture.cause()).isInstanceOf(TimeoutException.class);
 
         sc.close().syncUninterruptibly();
         connectionGroup.close();
@@ -126,19 +125,19 @@ public class MultiConnectionGroupTest extends AbstractEventLoopGroupTest {
 
         //acquire connection
         Future<Connection> future = connectionGroup.acquireConnection();
-        assertTrue(future.awaitUninterruptibly(2000));
-        assertTrue(future.isSuccess());
-        assertTrue(future.getNow().isActive());
+        assertThat(future.awaitUninterruptibly(2000)).isTrue();
+        assertThat(future.isSuccess()).isTrue();
+        assertThat(future.getNow().isActive()).isTrue();
 
         //close group
         Future<Void> closeFuture = connectionGroup.close();
-        assertTrue(closeFuture.awaitUninterruptibly(2000));
+        assertThat(closeFuture.awaitUninterruptibly(2000)).isTrue();
 
         //release connection
         Future<Void> releaseFuture = connectionGroup.releaseConnection(future.getNow());
-        assertTrue(releaseFuture.awaitUninterruptibly(2000));
-        assertFalse(releaseFuture.isSuccess());
-        assertInstanceOf(IllegalStateException.class, releaseFuture.cause());
+        assertThat(releaseFuture.awaitUninterruptibly(2000)).isTrue();
+        assertThat(releaseFuture.isSuccess()).isFalse();
+        assertThat(releaseFuture.cause()).isInstanceOf(IllegalStateException.class);
 
         sc.close().syncUninterruptibly();
     }
@@ -150,32 +149,32 @@ public class MultiConnectionGroupTest extends AbstractEventLoopGroupTest {
 
         //acquire connection
         Future<Connection> future = connectionGroup.acquireConnection();
-        assertTrue(future.awaitUninterruptibly(2000));
-        assertTrue(future.isSuccess());
-        assertTrue(future.getNow().isActive());
+        assertThat(future.awaitUninterruptibly(2000)).isTrue();
+        assertThat(future.isSuccess()).isTrue();
+        assertThat(future.getNow().isActive()).isTrue();
 
         //release
         Future<Void> releaseFuture = connectionGroup.releaseConnection(future.getNow());
-        assertTrue(releaseFuture.awaitUninterruptibly(2000));
-        assertTrue(releaseFuture.isSuccess());
+        assertThat(releaseFuture.awaitUninterruptibly(2000)).isTrue();
+        assertThat(releaseFuture.isSuccess()).isTrue();
 
         //test release connection with error group key
         Connection conn = future.getNow();
 
         //check connection state
-        assertTrue(conn.isActive());
+        assertThat(conn.isActive()).isTrue();
 
         //modify connection group key
         conn.getChannel().attr(Connection.CONNECTION_GROUP_KEY).set(new Url.Builder(new LocalAddress(TestUtils.getLocalAddressId())).build());
 
         //release connection
         releaseFuture = connectionGroup.releaseConnection(conn);
-        assertTrue(releaseFuture.awaitUninterruptibly(2000));
-        assertFalse(releaseFuture.isSuccess());
-        assertInstanceOf(IllegalArgumentException.class, releaseFuture.cause());
+        assertThat(releaseFuture.awaitUninterruptibly(2000)).isTrue();
+        assertThat(releaseFuture.isSuccess()).isFalse();
+        assertThat(releaseFuture.cause()).isInstanceOf(IllegalArgumentException.class);
 
         //connection is closed
-        assertFalse(conn.isActive());
+        assertThat(conn.isActive()).isFalse();
 
         sc.close().syncUninterruptibly();
     }
@@ -189,23 +188,23 @@ public class MultiConnectionGroupTest extends AbstractEventLoopGroupTest {
         List<Connection> connections = new LinkedList<>();
         for (int i = 0; i < 3; i++) {
             Future<Connection> af = connectionGroup.acquireConnection();
-            Assertions.assertTrue(af.awaitUninterruptibly(2, TimeUnit.SECONDS));
+            assertThat(af.awaitUninterruptibly(2, TimeUnit.SECONDS)).isTrue();
             connections.add(af.getNow());
         }
 
         //release connections
         for (Connection conn : connections) {
             Future<Void> rf = connectionGroup.releaseConnection(conn);
-            Assertions.assertTrue(rf.awaitUninterruptibly(2, TimeUnit.SECONDS));
+            assertThat(rf.awaitUninterruptibly(2, TimeUnit.SECONDS)).isTrue();
         }
 
         //close connection group
         Future<Void> closeFuture = connectionGroup.close();
-        Assertions.assertTrue(closeFuture.awaitUninterruptibly(2, TimeUnit.SECONDS));
+        assertThat(closeFuture.awaitUninterruptibly(2, TimeUnit.SECONDS)).isTrue();
 
         //all connection should be closed
         for (Connection conn : connections) {
-            Assertions.assertFalse(conn.isActive());
+            assertThat(conn.isActive()).isFalse();
         }
 
         sc.close().syncUninterruptibly();

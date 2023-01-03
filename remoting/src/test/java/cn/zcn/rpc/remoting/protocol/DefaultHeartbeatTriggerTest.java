@@ -7,20 +7,20 @@ import cn.zcn.rpc.remoting.protocol.v1.RpcProtocolV1;
 import cn.zcn.rpc.remoting.test.TestingChannelHandlerContext;
 import cn.zcn.rpc.remoting.utils.IDGenerator;
 import io.netty.channel.embedded.EmbeddedChannel;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.concurrent.TimeUnit;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 public class DefaultHeartbeatTriggerTest {
 
     private HeartbeatTrigger heartbeatTrigger;
 
-    @BeforeEach
+    @Before
     public void beforeEach() {
         CommandFactory commandFactory = Mockito.mock(CommandFactory.class);
 
@@ -41,7 +41,7 @@ public class DefaultHeartbeatTriggerTest {
         channel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).set(clientOptions);
 
         TestingChannelHandlerContext ctx = new TestingChannelHandlerContext(channel);
-        Assertions.assertTrue(conn.isActive());
+        assertThat(conn.isActive()).isTrue();
 
         int maxFailures = clientOptions.getOption(ClientOptions.HEARTBEAT_MAX_FAILURES);
 
@@ -54,10 +54,10 @@ public class DefaultHeartbeatTriggerTest {
                 fail("Should not reach here!", e);
             }
 
-            Assertions.assertTrue(conn.isActive());
+            assertThat(conn.isActive()).isTrue();
         }
 
         heartbeatTrigger.heartbeatTriggered(ctx);
-        Assertions.assertFalse(conn.isActive());
+        assertThat(conn.isActive()).isFalse();
     }
 }
