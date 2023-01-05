@@ -2,6 +2,9 @@ package cn.zcn.rpc.bootstrap;
 
 import java.lang.annotation.*;
 
+/**
+ * @author zicung
+ */
 @Documented
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

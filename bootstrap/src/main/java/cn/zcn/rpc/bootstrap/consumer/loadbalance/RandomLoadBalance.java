@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * 加权随机算法。根据权重随机选择一个服务提供者
+ * 加权随机算法。根据权重随机选择一个服务提供者。
+ *
+ * @author zicung
  */
 @Extension("random")
 public class RandomLoadBalance extends AbstractLoadBalance {

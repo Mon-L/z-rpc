@@ -4,7 +4,7 @@ import cn.zcn.rpc.remoting.ProtocolDecoder;
 import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.protocol.*;
 import cn.zcn.rpc.remoting.test.TestingChannelHandlerContext;
-import cn.zcn.rpc.remoting.utils.CRC32Util;
+import cn.zcn.rpc.remoting.utils.Crc32Util;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -102,7 +102,7 @@ public class RpcProtocolDecoderTest {
 
         byte[] msg = new byte[in.readableBytes()];
         in.getBytes(0, msg, 0, msg.length);
-        in.writeInt(CRC32Util.calculate(msg));
+        in.writeInt(Crc32Util.calculate(msg));
 
         try {
             List<Object> out = new ArrayList<>();
@@ -158,7 +158,7 @@ public class RpcProtocolDecoderTest {
 
         byte[] msg = new byte[in.readableBytes()];
         in.getBytes(0, msg, 0, msg.length);
-        in.writeInt(CRC32Util.calculate(msg));
+        in.writeInt(Crc32Util.calculate(msg));
 
         try {
             List<Object> out = new ArrayList<>();
@@ -214,7 +214,7 @@ public class RpcProtocolDecoderTest {
 
         byte[] msg = new byte[in.readableBytes()];
         in.getBytes(0, msg, 0, msg.length - 1);
-        in.writeInt(CRC32Util.calculate(msg));
+        in.writeInt(Crc32Util.calculate(msg));
 
         assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
             @Override

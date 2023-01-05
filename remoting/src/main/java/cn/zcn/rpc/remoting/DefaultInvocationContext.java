@@ -1,22 +1,38 @@
 package cn.zcn.rpc.remoting;
 
+import cn.zcn.rpc.remoting.config.Options;
+import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.config.ServerOptions;
 import cn.zcn.rpc.remoting.exception.ServiceException;
 import cn.zcn.rpc.remoting.protocol.*;
+import cn.zcn.rpc.remoting.serialization.Serializer;
 import cn.zcn.rpc.remoting.utils.NetUtil;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * 请求调用上下文
+ *
+ * @author zicung
+ */
 public class DefaultInvocationContext implements InvocationContext {
 
-    private final RequestCommand request;
-    private final RpcContext ctx;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultInvocationContext.class);
 
+    private final Channel channel;
+    private final RequestCommand request;
+
+    private Protocol protocol;
+    private Serializer serializer;
     private int timeout;
     private long startTimeMillis;
     private long readyTimeMillis;
 
-    public DefaultInvocationContext(RequestCommand request, RpcContext rpcContext) {
+    public DefaultInvocationContext(Channel channel, RequestCommand request) {
         this.request = request;
-        this.ctx = rpcContext;
+        this.channel = channel;
     }
 
     @Override
@@ -26,12 +42,12 @@ public class DefaultInvocationContext implements InvocationContext {
 
     @Override
     public String getRemoteHost() {
-        return NetUtil.getRemoteHost(ctx.getChannelContext().channel());
+        return NetUtil.getRemoteHost(channel);
     }
 
     @Override
     public int getRemotePort() {
-        return NetUtil.getRemotePort(ctx.getChannelContext().channel());
+        return NetUtil.getRemotePort(channel);
     }
 
     @Override
@@ -75,6 +91,14 @@ public class DefaultInvocationContext implements InvocationContext {
         this.timeout = timeoutMillis;
     }
 
+    public void setProtocol(Protocol protocol) {
+        this.protocol = protocol;
+    }
+
+    public void setSerializer(Serializer serializer) {
+        this.serializer = serializer;
+    }
+
     @Override
     public void writeAndFlushResponse(Object obj) {
         writeAndFlushResponse(obj, RpcStatus.OK);
@@ -98,19 +122,29 @@ public class DefaultInvocationContext implements InvocationContext {
         }
 
         if (!isTimeout()) {
-            CommandFactory commandFactory = ctx.getProtocol().getCommandFactory();
-            Command response = commandFactory.createResponseCommand(request, status);
+            Options options = channel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).get();
 
-            response.setClazz(obj.getClass().getName().getBytes(ctx.getOptions().getOption(ServerOptions.CHARSET)));
+            CommandFactory commandFactory = protocol.getCommandFactory();
+            BaseCommand response = commandFactory.createResponseCommand(request, status);
+
+            response.setClazz(obj.getClass().getName().getBytes(options.getOption(ServerOptions.CHARSET)));
 
             try {
-                byte[] content = ctx.getSerializer().serialize(obj);
+                byte[] content = serializer.serialize(obj);
                 response.setContent(content);
             } catch (Throwable t) {
                 response = commandFactory.createResponseCommand(request, RpcStatus.SERIALIZATION_ERROR);
             }
 
-            ctx.writeAndFlush(response);
+            channel.writeAndFlush(response).addListener((ChannelFutureListener) future -> {
+                if (!future.isSuccess()) {
+                    LOGGER.error("Failed to send response. Request id:{}, To:{}", request.getId(), NetUtil.getRemoteAddress(channel));
+                } else {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Sent response. Request id:{},  To:{}", request.getId(), NetUtil.getRemoteAddress(channel));
+                    }
+                }
+            });
         }
     }
 }

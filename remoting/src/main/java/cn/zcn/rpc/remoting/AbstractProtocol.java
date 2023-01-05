@@ -1,6 +1,7 @@
 package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.protocol.CommandCode;
+import cn.zcn.rpc.remoting.protocol.ICommand;
 import cn.zcn.rpc.remoting.protocol.ProtocolCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,11 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Abstract protocol
+ *
+ * @author zicung
+ */
 public abstract class AbstractProtocol implements Protocol {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractProtocol.class);
@@ -35,7 +41,7 @@ public abstract class AbstractProtocol implements Protocol {
             throw new IllegalArgumentException("Both CommandCode and CommandHandler should not be null.");
         }
 
-        CommandHandler oldHandler = handlers.put(cmd, handler);
+        CommandHandler<ICommand> oldHandler = handlers.put(cmd, handler);
         if (oldHandler != null) {
             LOGGER.warn("Protocol{} replace commandHandler by CommandCode{}", getProtocolCode(), cmd.name());
         }

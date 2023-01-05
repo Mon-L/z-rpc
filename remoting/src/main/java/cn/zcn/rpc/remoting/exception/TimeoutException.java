@@ -1,5 +1,8 @@
 package cn.zcn.rpc.remoting.exception;
 
+/**
+ * @author zicung
+ */
 public class TimeoutException extends BaseRuntimeException {
 
     public TimeoutException(String msg) {

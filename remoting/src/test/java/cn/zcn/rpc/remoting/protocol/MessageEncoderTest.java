@@ -14,19 +14,17 @@ import static org.assertj.core.api.Assertions.*;
 
 public class MessageEncoderTest {
 
-    private ProtocolManager protocolManager;
     private MessageEncoder messageEncoder;
     private EmbeddedChannel channel;
 
     @Before
     public void before() {
-        protocolManager = Mockito.mock(ProtocolManager.class);
         Protocol protocol = Mockito.mock(Protocol.class);
 
         ProtocolEncoder protocolEncoder = Mockito.mock(ProtocolEncoder.class);
         Mockito.when(protocol.getEncoder()).thenReturn(protocolEncoder);
 
-        messageEncoder = Mockito.spy(new MessageEncoder(protocolManager));
+        messageEncoder = Mockito.spy(new MessageEncoder());
         channel = new EmbeddedChannel(messageEncoder);
     }
 

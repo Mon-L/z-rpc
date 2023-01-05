@@ -28,15 +28,19 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 客户端
+ *
+ * @author zicung
+ */
 public class RemotingClient extends AbstractLifecycle {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(RemotingClient.class);
 
     private final ClientOptions options = new ClientOptions();
-    private final ProtocolManager protocolManager = new ProtocolManager();
 
     private EventLoopGroup workerGroup;
-    private RequestProcessor requestProcessor;
+    private RequestDispatcher requestDispatcher;
     private RpcInboundHandler rpcInboundHandler;
     private RemotingInvoker remotingInvoker;
 
@@ -64,12 +68,12 @@ public class RemotingClient extends AbstractLifecycle {
                     new NamedThreadFactory("netty-client-worker-group"));
         }
 
-        this.requestProcessor = new RequestProcessor(options);
-        this.requestProcessor.start();
-        this.rpcInboundHandler = new RpcInboundHandler(options, protocolManager, requestProcessor);
+        this.requestDispatcher = new RequestDispatcher(options);
+        this.requestDispatcher.start();
+        this.rpcInboundHandler = new RpcInboundHandler(requestDispatcher);
 
         ConnectionEventHandler connectionEventHandler = new ConnectionEventHandler();
-        IdleStateEventHandler idleStateEventHandler = new IdleStateEventHandler(protocolManager);
+        IdleStateEventHandler idleStateEventHandler = new IdleStateEventHandler();
 
         Bootstrap bootstrap = new Bootstrap()
                 .channel(channelClazz)
@@ -86,8 +90,8 @@ public class RemotingClient extends AbstractLifecycle {
                         socketChannel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).set(options);
 
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new MessageEncoder(protocolManager));
-                        pipeline.addLast(new MessageDecoder(protocolManager));
+                        pipeline.addLast(new MessageEncoder());
+                        pipeline.addLast(new MessageDecoder());
 
                         if (options.getOption(ClientOptions.CHECK_IDLE_STATE)) {
                             int idleTime = options.getOption(ClientOptions.HEARTBEAT_INTERVAL_MILLIS);
@@ -100,7 +104,7 @@ public class RemotingClient extends AbstractLifecycle {
                     }
                 });
 
-        this.remotingInvoker = new RemotingInvoker(options, protocolManager, bootstrap);
+        this.remotingInvoker = new RemotingInvoker(options, bootstrap);
         this.remotingInvoker.start();
     }
 
@@ -119,8 +123,8 @@ public class RemotingClient extends AbstractLifecycle {
             }
         }
 
-        if (this.requestProcessor != null) {
-            this.requestProcessor.stop();
+        if (this.requestDispatcher != null) {
+            this.requestDispatcher.stop();
         }
 
         LOGGER.warn("Remoting client has stopped.");
@@ -148,13 +152,5 @@ public class RemotingClient extends AbstractLifecycle {
 
     public <T> void option(Option<T> option, T value) {
         options.setOption(option, value);
-    }
-
-    public ProtocolManager getProtocolManager() {
-        return protocolManager;
-    }
-
-    public void registerRequestHandler(RequestHandler<?> handler) {
-        this.requestProcessor.registerRequestHandler(handler);
     }
 }

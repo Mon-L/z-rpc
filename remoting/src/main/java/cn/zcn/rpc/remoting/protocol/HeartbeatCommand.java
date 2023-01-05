@@ -1,5 +1,8 @@
 package cn.zcn.rpc.remoting.protocol;
 
+/**
+ * @author zicung
+ */
 public class HeartbeatCommand extends RequestCommand {
 
     public HeartbeatCommand(ProtocolCode protocolCode) {

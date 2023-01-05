@@ -5,6 +5,11 @@ import io.netty.util.Timer;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 定时任务调度器
+ *
+ * @author zicung
+ */
 public class TimerHolder {
 
     private static volatile TimerHolder instance;
@@ -16,6 +21,11 @@ public class TimerHolder {
                 TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * 获取定时任务调度器
+     *
+     * @return {@code Timer}, 定时任务调度器
+     */
     public static Timer getTimer() {
         if (instance == null) {
             synchronized (TimerHolder.class) {
@@ -24,7 +34,7 @@ public class TimerHolder {
                 }
             }
         }
-        
+
         return instance.timer;
     }
 }

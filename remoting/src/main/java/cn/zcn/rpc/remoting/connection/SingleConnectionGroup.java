@@ -8,7 +8,9 @@ import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 
 /**
- * 管理单条连接的连接组
+ * 管理仅包含一条 {@link Connection} 的连接组，多个 {@code Thread} 可同时使用该 {@code Connection}。
+ *
+ * @author zicung
  */
 public class SingleConnectionGroup extends AbstractConnectionGroup {
 
@@ -17,6 +19,11 @@ public class SingleConnectionGroup extends AbstractConnectionGroup {
 
     public SingleConnectionGroup(Url url, Bootstrap bootstrap) {
         super(url, bootstrap);
+    }
+
+    @Override
+    public long getLastAcquiredTime() {
+        return super.getLastAcquiredTime();
     }
 
     private Connection getConnectionIfPresent() {
@@ -32,11 +39,22 @@ public class SingleConnectionGroup extends AbstractConnectionGroup {
         return conn != null && conn.isActive() ? 1 : 0;
     }
 
+    /**
+     * 获取 {@code Connection}。<p>
+     * <ul>
+     *     <li>当不存在 {@code Connection} 时，新建一条连接并返回。</li>
+     *     <li>当存在一条可用 {@code Connection} 时直接返回。</li>
+     *     <li>当获得一条 {@code Connection} 时会检查其是否存活，当 {@code Connection} 不存活是会移除它并重新获取。</li>
+     * </ul>
+     *
+     * @param promise acquire promise
+     */
     @Override
     protected void doAcquireConnection(Promise<Connection> promise) {
         Connection connection = getConnectionIfPresent();
         if (connection != null) {
-            if (connection.isActive()) {    //有可用的connection
+            if (connection.isActive()) {
+                //有可用的connection
                 promise.setSuccess(connection);
                 return;
             } else {
@@ -44,7 +62,8 @@ public class SingleConnectionGroup extends AbstractConnectionGroup {
             }
         }
 
-        if (connectionPromise != null && !connectionPromise.isDone()) { //正在建立连接
+        if (connectionPromise != null && !connectionPromise.isDone()) {
+            //正在建立连接
             connectionPromise.addListener(new CreateConnectionListener(promise));
             return;
         }

@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * @author zicung
+ */
 public class InterfaceBootstrap extends AbstractLifecycle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InterfaceBootstrap.class);
@@ -75,11 +78,11 @@ public class InterfaceBootstrap extends AbstractLifecycle {
     }
 
     public Object createProxy() {
-        DefaultInvoker invoker = new DefaultInvoker(interfaceConfig, remotingClient, providersHolder);
-        invoker.init();
+        DefaultRpcInvoker rpcInvoker = new DefaultRpcInvoker(interfaceConfig, remotingClient, providersHolder);
+        rpcInvoker.init();
 
         Proxy proxy = ExtensionLoader.getExtensionLoader(Proxy.class).getExtension(interfaceConfig.getProxy());
-        return proxy.createProxy(interfaceConfig.getInterfaceClass(), invoker);
+        return proxy.createProxy(interfaceConfig.getInterfaceClass(), rpcInvoker);
     }
 
     @Override

@@ -1,5 +1,8 @@
 package cn.zcn.rpc.remoting.exception;
 
+/**
+ * @author zicung
+ */
 public class SerializationException extends BaseRuntimeException {
     public SerializationException(String msg) {
         super(msg);

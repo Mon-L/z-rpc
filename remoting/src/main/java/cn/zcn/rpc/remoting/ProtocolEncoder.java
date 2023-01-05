@@ -5,6 +5,8 @@ import io.netty.channel.ChannelHandlerContext;
 
 /**
  * 协议编码器，将协议编码成字节码
+ *
+ * @author zicung
  */
 public interface ProtocolEncoder {
 

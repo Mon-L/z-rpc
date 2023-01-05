@@ -7,26 +7,40 @@ import cn.zcn.rpc.bootstrap.utils.MethodSignatureUtil;
 import cn.zcn.rpc.remoting.InvocationContext;
 import cn.zcn.rpc.remoting.RequestHandler;
 import io.netty.util.concurrent.Future;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
-import java.util.Collection;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * RPC 请求处理器
+ * RPC 请求处理器，用于处理 {@code RpcRequest}。
+ * <p>
+ * 解析 {@code ProviderInterfaceConfig} 获取服务端注册的 RPC 接口和接口的方法。
+ * <p>
+ * 当请求到来时，根据 {@code RpcRequest} 中的接口信息匹配接口实例，并处理请求。
+ *
+ * @author zicung
  */
 public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
 
-    private static final class InterfaceMetadata {
+    private static final class RegisteredInterface {
         private Object instance;
-        private final Map<String, Method> methods = new HashMap<>();
+        private final Map<String, RegisteredMethod> methods = new HashMap<>();
     }
+
+    private static final class RegisteredMethod {
+        private Method method;
+    }
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(ProviderRequestHandler.class);
 
     private final ProviderConfig providerConfig;
     private final Supplier<Boolean> isServerStarted;
-    private final Map<String, InterfaceMetadata> interfaces = new HashMap<>();
+    private final Map<String, RegisteredInterface> registeredInterfaces = new HashMap<>();
 
     public ProviderRequestHandler(ProviderConfig providerConfig, Supplier<Boolean> isServerStarted) {
         this.providerConfig = providerConfig;
@@ -34,19 +48,27 @@ public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
     }
 
     /**
-     * 解析服务提供者注册的接口，获取可被调用的方法
+     * 解析服务提供者注册的接口，获取服务端注册的所有的接口信息
      */
     public void resolve() {
         for (ProviderInterfaceConfig config : providerConfig.getInterfaceConfigs()) {
-            InterfaceMetadata interMetadata = new InterfaceMetadata();
-            interMetadata.instance = config.getImpl();
+            RegisteredInterface registeredInterface = new RegisteredInterface();
+            registeredInterface.instance = config.getImpl();
 
             Class<?> clazz = config.getInterfaceClass();
-            for (Method m : clazz.getMethods()) {
-                interMetadata.methods.put(MethodSignatureUtil.getMethodSignature(m), m);
+            for (Method method : clazz.getMethods()) {
+                if (method.isDefault() || Modifier.isStatic(method.getModifiers())) {
+                    //jdk1.8, default methods in interface, static methods in interface
+                    continue;
+                }
+
+                RegisteredMethod registeredMethod = new RegisteredMethod();
+                registeredMethod.method = method;
+
+                registeredInterface.methods.put(MethodSignatureUtil.getMethodSignature(method), registeredMethod);
             }
 
-            interfaces.put(config.getInterfaceClass().getName(), interMetadata);
+            registeredInterfaces.put(config.getInterfaceClass().getName(), registeredInterface);
         }
     }
 
@@ -61,31 +83,31 @@ public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
     }
 
     @Override
-    public void run(InvocationContext ctx, RpcRequest request) {
-        String clazz = request.getClazz();
-
+    public void handle(InvocationContext ctx, RpcRequest request) {
         RpcResponse response = new RpcResponse();
         if (!isServerStarted.get()) {
             response.setException(new RpcException("ProviderBootstrap was stopped."));
+            ctx.writeAndFlushResponse(response);
             return;
         }
 
-        InterfaceMetadata itfm = interfaces.get(clazz);
-        if (itfm == null) {
+        String clazz = request.getClazz();
+        RegisteredInterface registeredInterface = registeredInterfaces.get(clazz);
+        if (registeredInterface == null) {
             response.setException(new RpcException("Interface can not be found. Interface:{0}", clazz));
             ctx.writeAndFlushResponse(response);
             return;
         }
 
         String methodSignature = MethodSignatureUtil.getMethodSignature(request.getMethodName(), request.getParameterTypes());
-        Method method = itfm.methods.get(methodSignature);
-        if (method == null) {
+        RegisteredMethod registeredMethod = registeredInterface.methods.get(methodSignature);
+        if (registeredMethod == null) {
             response.setException(new RpcException("Method can not be found. Method:{0}", methodSignature));
             ctx.writeAndFlushResponse(response);
             return;
         }
 
-        doInvoke(ctx, request, response, itfm.instance, method);
+        doInvoke(ctx, request, response, registeredInterface.instance, registeredMethod.method);
     }
 
     /**

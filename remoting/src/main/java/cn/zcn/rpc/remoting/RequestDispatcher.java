@@ -17,16 +17,22 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.concurrent.*;
 
-public class RequestProcessor extends AbstractLifecycle {
+/**
+ * 请求分发器，将 {@link RequestCommand} 分发给对应的 {@link RequestHandler} 进行处理。</p>
+ * {@code RequestHandler} 对 {@code RequestCommand} 的处理将在线程池中执行。
+ *
+ * @author zicung
+ */
+public class RequestDispatcher extends AbstractLifecycle {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RequestProcessor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestDispatcher.class);
 
     private final Options options;
     private final Map<String, RequestHandler<?>> requestHandlers = new ConcurrentHashMap<>();
 
     private ExecutorService executor;
 
-    RequestProcessor(Options options) {
+    RequestDispatcher(Options options) {
         this.options = options;
     }
 
@@ -48,10 +54,12 @@ public class RequestProcessor extends AbstractLifecycle {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void execute(RpcContext rpcContext, RequestCommand requestCommand) {
-        DefaultInvocationContext invocationContext = new DefaultInvocationContext(requestCommand, rpcContext);
+    public void dispatch(RpcContext rpcContext, RequestCommand requestCommand) {
+        DefaultInvocationContext invocationContext = new DefaultInvocationContext(rpcContext.getChannelContext().channel(), requestCommand);
         invocationContext.setReadyTimeMillis(System.currentTimeMillis());
         invocationContext.setTimeoutMillis(requestCommand.getTimeout());
+        invocationContext.setProtocol(rpcContext.getProtocol());
+        invocationContext.setSerializer(rpcContext.getSerializer());
 
         executor.execute(() -> {
             invocationContext.setStartTimeMillis(System.currentTimeMillis());
@@ -79,7 +87,7 @@ public class RequestProcessor extends AbstractLifecycle {
                                 requestCommand.getTimeout(), System.currentTimeMillis() - invocationContext.getReadyTimeMillis());
                     } else {
                         try {
-                            handler.run(invocationContext, obj);
+                            handler.handle(invocationContext, obj);
                         } catch (Throwable t) {
                             invocationContext.writeAndFlushException(t);
                         }
@@ -102,7 +110,12 @@ public class RequestProcessor extends AbstractLifecycle {
         }
     }
 
-    public void registerRequestHandler(RequestHandler<?> handler) {
+    /**
+     * 注册请求处理器
+     *
+     * @param handler 请求处理器
+     */
+    void registerRequestHandler(RequestHandler<?> handler) {
         if (isStarted()) {
             throw new IllegalStateException("RequestHandler was closed.");
         }

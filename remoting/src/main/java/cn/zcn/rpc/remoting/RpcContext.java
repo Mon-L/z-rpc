@@ -1,33 +1,32 @@
 package cn.zcn.rpc.remoting;
 
-import cn.zcn.rpc.remoting.config.Options;
 import cn.zcn.rpc.remoting.protocol.ICommand;
 import cn.zcn.rpc.remoting.serialization.Serializer;
+import cn.zcn.rpc.remoting.utils.NetUtil;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Rpc invocation context.
+ *
+ * @author zicung
+ */
 public class RpcContext {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RpcInboundHandler.class);
 
-    private final Options options;
     private final ChannelHandlerContext channelContext;
-    private final RequestProcessor requestProcessor;
+    private final RequestDispatcher requestDispatcher;
     private final Protocol protocol;
 
     private Serializer serializer;
 
-    public RpcContext(Options options, ChannelHandlerContext channelContext, Protocol protocol, RequestProcessor requestProcessor) {
-        this.options = options;
+    public RpcContext(ChannelHandlerContext channelContext, Protocol protocol, RequestDispatcher requestDispatcher) {
         this.channelContext = channelContext;
         this.protocol = protocol;
-        this.requestProcessor = requestProcessor;
-    }
-
-    public Options getOptions() {
-        return options;
+        this.requestDispatcher = requestDispatcher;
     }
 
     public ChannelHandlerContext getChannelContext() {
@@ -46,16 +45,18 @@ public class RpcContext {
         this.serializer = serializer;
     }
 
-    public RequestProcessor getRpcProcessor() {
-        return requestProcessor;
+    public RequestDispatcher getRequestDispatcher() {
+        return requestDispatcher;
     }
 
     public void writeAndFlush(ICommand response) {
         channelContext.channel().writeAndFlush(response).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) {
-                LOGGER.error("Failed to send response. Request id:{}", response.getId());
+                LOGGER.error("Failed to send response. Request id:{}, To:{}", response.getId(), NetUtil.getRemoteAddress(channelContext.channel()));
             } else {
-                LOGGER.debug("Sent response. Request id:{}", response.getId());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Sent response. Request id:{}, To:{}", response.getId(), NetUtil.getRemoteAddress(channelContext.channel()));
+                }
             }
         });
     }

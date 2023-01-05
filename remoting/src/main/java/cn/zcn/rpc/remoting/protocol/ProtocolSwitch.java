@@ -3,7 +3,15 @@ package cn.zcn.rpc.remoting.protocol;
 import java.util.BitSet;
 import java.util.Objects;
 
+/**
+ * 协议选项，在协议中占一个字节的空间。
+ *
+ * @author zicung
+ */
 public class ProtocolSwitch {
+
+    private final static int MAX_INDEX = 6;
+    private final static int MIN_INDEX = 0;
 
     private final BitSet bits;
 
@@ -27,7 +35,7 @@ public class ProtocolSwitch {
     }
 
     private void checkIndex(int index) {
-        if (index < 0 || index > 6) {
+        if (index < MIN_INDEX || index > MAX_INDEX) {
             throw new IllegalArgumentException("ProtocolSwitch index must between 0 and 6.");
         }
     }
@@ -43,8 +51,13 @@ public class ProtocolSwitch {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProtocolSwitch)) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof ProtocolSwitch)) {
+            return false;
+        }
 
         ProtocolSwitch that = (ProtocolSwitch) o;
 

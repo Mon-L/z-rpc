@@ -6,14 +6,20 @@ import io.netty.util.internal.StringUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
+/**
+ * @author zicung
+ */
 public class NetUtil {
 
+    private static final String COLON = ":";
+    private static final char SLASH = '/';
+
     public static String getRemoteAddress(Channel channel) {
-        return getRemoteHost(channel.remoteAddress()) + ":" + getRemotePort(channel.remoteAddress());
+        return getRemoteHost(channel.remoteAddress()) + COLON + getRemotePort(channel.remoteAddress());
     }
 
     public static String getRemoteAddress(SocketAddress address) {
-        return getRemoteHost(address) + ":" + getRemotePort(address);
+        return getRemoteHost(address) + COLON + getRemotePort(address);
     }
 
     public static String getRemoteHost(Channel channel) {
@@ -34,10 +40,10 @@ public class NetUtil {
                 return StringUtil.EMPTY_STRING;
             }
 
-            if (addr.charAt(0) == '/') {
+            if (addr.charAt(0) == SLASH) {
                 return addr.substring(1);
             } else {
-                int i = addr.indexOf('/', 1);
+                int i = addr.indexOf(SLASH, 1);
                 if (i != -1) {
                     return addr.substring(i + 1);
                 }

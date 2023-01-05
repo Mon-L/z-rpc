@@ -17,7 +17,12 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class DefaultInvoker implements Invoker {
+/**
+ * {@code RpcInvoker} 默认实现，具有请求过滤、负载均衡功能。
+ *
+ * @author zicung
+ */
+public class DefaultRpcInvoker implements RpcInvoker {
 
     private final RemotingClient remotingClient;
     private final ConsumerInterfaceConfig interfaceConfig;
@@ -25,7 +30,7 @@ public class DefaultInvoker implements Invoker {
     private FilterChainNode filterHead;
     private LoadBalance loadBalance;
 
-    public DefaultInvoker(ConsumerInterfaceConfig interfaceConfig, RemotingClient remotingClient, ProvidersHolder providersHolder) {
+    public DefaultRpcInvoker(ConsumerInterfaceConfig interfaceConfig, RemotingClient remotingClient, ProvidersHolder providersHolder) {
         this.interfaceConfig = interfaceConfig;
         this.remotingClient = remotingClient;
         this.providersHolder = providersHolder;

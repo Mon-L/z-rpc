@@ -13,6 +13,13 @@ import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.*;
 
+/**
+ * 管理所有连接组，提供连接组的获取和清理功能。<p>
+ * 使用 {@code ScheduledExecutorService} 定时关闭符合条件的 {@code ConnectionGroup}，
+ * 利用 {@link ConnectionGroup#canClose()} 判断 {@code ConnectionGroup} 是否可以被关闭。
+ *
+ * @author zicung
+ */
 public class ConnectionGroupManager extends AbstractLifecycle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionGroupManager.class);
@@ -77,7 +84,7 @@ public class ConnectionGroupManager extends AbstractLifecycle {
                 pendingCloseConnectionGroups.add(group);
 
                 LOGGER.info("Remove connection group. Url:{}, Active connection num:{}, Idle time:{}ms.",
-                        group.getURL().toString(), group.getActiveCount(), now - group.getLastAcquiredTime());
+                        group.getUrl().toString(), group.getActiveCount(), now - group.getLastAcquiredTime());
             }
         }
     }
@@ -85,9 +92,9 @@ public class ConnectionGroupManager extends AbstractLifecycle {
     private void closeConnectionGroup(ConnectionGroup group) {
         group.close().addListener(future -> {
             if (future.isSuccess()) {
-                LOGGER.info("Closed Connection group successfully. Url:{}", group.getURL().toString());
+                LOGGER.info("Closed Connection group successfully. Url:{}", group.getUrl().toString());
             } else {
-                LOGGER.warn("Failed to close connection group. Url:{} " + group.getURL().toString());
+                LOGGER.warn("Failed to close connection group. Url:{} " + group.getUrl().toString());
             }
         });
     }

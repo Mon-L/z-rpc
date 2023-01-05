@@ -8,12 +8,17 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * Manage all serializers.
+ *
+ * @author zicung
+ */
 public class SerializerManager {
 
-    private static final SerializerManager instance = new SerializerManager();
+    private static final SerializerManager INSTANCE = new SerializerManager();
 
     public static SerializerManager getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SerializerManager.class);

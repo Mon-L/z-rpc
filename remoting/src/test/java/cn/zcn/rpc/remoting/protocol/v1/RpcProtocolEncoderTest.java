@@ -4,7 +4,7 @@ import cn.zcn.rpc.remoting.ProtocolEncoder;
 import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.protocol.*;
 import cn.zcn.rpc.remoting.test.TestingChannelHandlerContext;
-import cn.zcn.rpc.remoting.utils.CRC32Util;
+import cn.zcn.rpc.remoting.utils.Crc32Util;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -145,7 +145,7 @@ public class RpcProtocolEncoderTest {
     private void checkCRC32(byte[] bytes, int i) {
         byte[] bytesWithoutCRC32 = new byte[bytes.length - 4];
         System.arraycopy(bytes, 0, bytesWithoutCRC32, 0, bytesWithoutCRC32.length);
-        assertThat(CRC32Util.calculate(bytesWithoutCRC32)).isEqualTo(i);
+        assertThat(Crc32Util.calculate(bytesWithoutCRC32)).isEqualTo(i);
     }
 
     private byte[] getBytes(ByteBuf byteBuf, int length) {

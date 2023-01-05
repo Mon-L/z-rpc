@@ -1,5 +1,10 @@
 package cn.zcn.rpc.remoting.config;
 
+/**
+ * {@code ClientOptions} 包含所有客户端可配置的所有选项
+ *
+ * @author zicung
+ */
 public class ClientOptions extends RpcOptions {
     public static final Option<Boolean> USE_CRC32 = Option.valueOf("rpc.use.crc32", true);
 

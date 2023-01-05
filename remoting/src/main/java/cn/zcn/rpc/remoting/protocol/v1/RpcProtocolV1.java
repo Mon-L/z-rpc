@@ -6,6 +6,7 @@ import cn.zcn.rpc.remoting.ProtocolEncoder;
 import cn.zcn.rpc.remoting.protocol.*;
 
 /**
+ * Rpc protocol v1.
  * <pre>
  * Request
  * 0           1           2           3           4           5           6           7           8           9           10
@@ -31,6 +32,8 @@ import cn.zcn.rpc.remoting.protocol.*;
  * |                                                                       |                   crc32                       |
  * +-----------------------------------------------------------------------------------------------------------------------+
  * </pre>
+ *
+ * @author zicung
  */
 public class RpcProtocolV1 extends AbstractProtocol {
 

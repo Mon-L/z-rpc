@@ -5,7 +5,7 @@ import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.connection.Connection;
 import cn.zcn.rpc.remoting.protocol.v1.RpcProtocolV1;
 import cn.zcn.rpc.remoting.test.TestingChannelHandlerContext;
-import cn.zcn.rpc.remoting.utils.IDGenerator;
+import cn.zcn.rpc.remoting.utils.CommandIdGenerator;
 import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,7 +25,7 @@ public class DefaultHeartbeatTriggerTest {
         CommandFactory commandFactory = Mockito.mock(CommandFactory.class);
 
         HeartbeatCommand heartbeatCommand = new HeartbeatCommand(RpcProtocolV1.PROTOCOL_CODE);
-        heartbeatCommand.setId(IDGenerator.getInstance().nextId());
+        heartbeatCommand.setId(CommandIdGenerator.getInstance().nextId());
         Mockito.when(commandFactory.createHeartbeatCommand()).thenReturn(heartbeatCommand);
 
         heartbeatTrigger = Mockito.spy(new DefaultHeartbeatTrigger(commandFactory));

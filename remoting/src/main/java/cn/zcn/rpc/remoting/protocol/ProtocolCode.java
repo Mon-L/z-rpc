@@ -1,5 +1,10 @@
 package cn.zcn.rpc.remoting.protocol;
 
+/**
+ * 包含版本号的协议码
+ *
+ * @author zicung
+ */
 public class ProtocolCode {
 
     public static final int LENGTH = 2;
@@ -29,12 +34,20 @@ public class ProtocolCode {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProtocolCode)) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof ProtocolCode)) {
+            return false;
+        }
 
         ProtocolCode that = (ProtocolCode) o;
 
-        if (code != that.code) return false;
+        if (code != that.code) {
+            return false;
+        }
+
         return version == that.version;
     }
 

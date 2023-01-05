@@ -10,6 +10,12 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/**
+ * RPC 客户端引导器。</p>
+ *
+ * @author zicung
+ */
 public class ConsumerBootstrap extends AbstractLifecycle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerBootstrap.class);

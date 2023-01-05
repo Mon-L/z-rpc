@@ -34,6 +34,8 @@ import java.util.*;
  *    ------| ......
  * </pre>
  * </p>
+ *
+ * @author zicung
  */
 @Extension("nacos")
 public class NacosRegistry extends Registry {

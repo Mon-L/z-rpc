@@ -2,7 +2,6 @@ package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.protocol.*;
 import org.assertj.core.api.ThrowableAssert;
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,12 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 
 public class ProtocolManagerTest {
 
-    private ProtocolManager protocolManager;
-
-    @Before
-    public void before() {
-        protocolManager = new ProtocolManager();
-    }
+    private final ProtocolManager protocolManager = ProtocolManager.getInstance();
 
     @Test
     public void testRegister() {

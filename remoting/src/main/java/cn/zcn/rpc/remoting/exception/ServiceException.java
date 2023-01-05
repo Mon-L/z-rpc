@@ -1,5 +1,8 @@
 package cn.zcn.rpc.remoting.exception;
 
+/**
+ * @author zicung
+ */
 public class ServiceException extends BaseRuntimeException{
 
     public ServiceException(String msg) {

@@ -3,11 +3,20 @@ package cn.zcn.rpc.bootstrap.registry;
 import java.util.Objects;
 
 /**
- * 服务提供者信息
+ * 服务提供者信息，包含服务提供者的ip、port等其他信息。
+ *
+ * @author zicung
  */
 public class Provider {
 
+    /**
+     * ip
+     */
     private String ip;
+
+    /**
+     * port
+     */
     private int port;
 
     /**
@@ -67,12 +76,20 @@ public class Provider {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Provider)) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof Provider)) {
+            return false;
+        }
 
         Provider that = (Provider) o;
 
-        if (port != that.port) return false;
+        if (port != that.port) {
+            return false;
+        }
+
         return Objects.equals(ip, that.ip);
     }
 

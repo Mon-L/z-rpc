@@ -2,6 +2,9 @@ package cn.zcn.rpc.bootstrap;
 
 import cn.zcn.rpc.remoting.exception.BaseRuntimeException;
 
+/**
+ * @author zicung
+ */
 public class RpcException extends BaseRuntimeException {
     public RpcException(String msg) {
         super(msg);

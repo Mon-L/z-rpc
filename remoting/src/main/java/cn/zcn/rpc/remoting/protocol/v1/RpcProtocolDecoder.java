@@ -3,12 +3,17 @@ package cn.zcn.rpc.remoting.protocol.v1;
 import cn.zcn.rpc.remoting.ProtocolDecoder;
 import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.protocol.*;
-import cn.zcn.rpc.remoting.utils.CRC32Util;
+import cn.zcn.rpc.remoting.utils.Crc32Util;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
 import java.util.List;
 
+/**
+ * {@link RpcProtocolV1} 解码器
+ *
+ * @author zicung
+ */
 public class RpcProtocolDecoder implements ProtocolDecoder {
 
     @Override
@@ -53,8 +58,8 @@ public class RpcProtocolDecoder implements ProtocolDecoder {
 
             int requiredLength = clazzLength + contentLength;
 
-            boolean hasCRC32 = command.getProtocolSwitch().isOn(0);
-            if (hasCRC32) { // CRC32
+            boolean hasCrc32 = command.getProtocolSwitch().isOn(0);
+            if (hasCrc32) {
                 requiredLength += 4;
             }
 
@@ -71,8 +76,8 @@ public class RpcProtocolDecoder implements ProtocolDecoder {
                     command.setContent(content);
                 }
 
-                if (hasCRC32) {
-                    checkCRC32(byteBuf, startIndex);
+                if (hasCrc32) {
+                    checkCrc32(byteBuf, startIndex);
                 }
 
                 out.add(command);
@@ -106,8 +111,9 @@ public class RpcProtocolDecoder implements ProtocolDecoder {
 
             int requiredLength = clazzLength + contentLength;
 
-            boolean hasCRC32 = command.getProtocolSwitch().isOn(0);
-            if (hasCRC32) { // CRC32
+            boolean hasCrc32 = command.getProtocolSwitch().isOn(0);
+            if (hasCrc32) {
+                // CRC32
                 requiredLength += 4;
             }
 
@@ -128,8 +134,8 @@ public class RpcProtocolDecoder implements ProtocolDecoder {
                     command.setContent(new byte[0]);
                 }
 
-                if (hasCRC32) {
-                    checkCRC32(byteBuf, startIndex);
+                if (hasCrc32) {
+                    checkCrc32(byteBuf, startIndex);
                 }
 
                 out.add(command);
@@ -141,13 +147,13 @@ public class RpcProtocolDecoder implements ProtocolDecoder {
         }
     }
 
-    private void checkCRC32(ByteBuf byteBuf, int startIndex) {
+    private void checkCrc32(ByteBuf byteBuf, int startIndex) {
         int endIndex = byteBuf.readerIndex();
         byte[] msg = new byte[endIndex - startIndex];
         byteBuf.getBytes(startIndex, msg, 0, msg.length);
 
-        int exceptedCRC32 = byteBuf.readInt();
-        if (CRC32Util.calculate(msg) != exceptedCRC32) {
+        int exceptedCrc32 = byteBuf.readInt();
+        if (Crc32Util.calculate(msg) != exceptedCrc32) {
             throw new ProtocolException("Invalid CRC32!");
         }
     }

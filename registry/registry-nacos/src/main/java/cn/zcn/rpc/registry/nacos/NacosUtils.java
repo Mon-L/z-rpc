@@ -9,6 +9,9 @@ import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author zicung
+ */
 public class NacosUtils {
 
     protected static final String WEIGHT = "weight";

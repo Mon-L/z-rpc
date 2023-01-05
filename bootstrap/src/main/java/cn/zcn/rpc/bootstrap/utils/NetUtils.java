@@ -30,6 +30,8 @@ import static java.util.Collections.emptyList;
 
 /**
  * IP and Port Helper for RPC
+ *
+ * @author dubbo
  */
 public final class NetUtils {
 
@@ -38,11 +40,15 @@ public final class NetUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(NetUtils.class);
 
-    // returned port range is [30000, 39999]
+    /**
+     * returned port range is [30000, 39999]
+     */
     private static final int RND_PORT_START = 30000;
     private static final int RND_PORT_RANGE = 10000;
 
-    // valid port range is (0, 65535]
+    /**
+     * valid port range is (0, 65535]
+     */
     private static final int MIN_PORT = 1;
     private static final int MAX_PORT = 65535;
 
@@ -53,6 +59,9 @@ public final class NetUtils {
 
     private static final String LOCAL_HOST_VALUE = "127.0.0.1";
     private static final String ANY_HOST_VALUE = "0.0.0.0";
+
+    private static final String PERCENT = "%";
+    private static final char PERCENT_CHAR = '%';
 
     /**
      * store the used port.
@@ -126,10 +135,10 @@ public final class NetUtils {
      */
     private static InetAddress normalizeV6Address(Inet6Address address) {
         String addr = address.getHostAddress();
-        int i = addr.lastIndexOf('%');
+        int i = addr.lastIndexOf(PERCENT_CHAR);
         if (i > 0) {
             try {
-                return InetAddress.getByName(addr.substring(0, i) + '%' + address.getScopeId());
+                return InetAddress.getByName(addr.substring(0, i) + PERCENT_CHAR + address.getScopeId());
             } catch (UnknownHostException e) {
                 // ignore
                 logger.debug("Unknown IPV6 address: ", e);
@@ -149,8 +158,8 @@ public final class NetUtils {
         if (address != null) {
             if (address instanceof Inet6Address) {
                 String ipv6AddressString = address.getHostAddress();
-                if (ipv6AddressString.contains("%")) {
-                    ipv6AddressString = ipv6AddressString.substring(0, ipv6AddressString.indexOf("%"));
+                if (ipv6AddressString.contains(PERCENT)) {
+                    ipv6AddressString = ipv6AddressString.substring(0, ipv6AddressString.indexOf(PERCENT));
                 }
                 HOST_ADDRESS = ipv6AddressString;
                 return HOST_ADDRESS;

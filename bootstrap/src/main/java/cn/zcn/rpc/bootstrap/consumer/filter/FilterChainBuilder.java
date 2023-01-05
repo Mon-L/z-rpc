@@ -8,6 +8,20 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * 过滤器链构建者。
+ * <p>
+ * <pre>
+ * 过滤器链是一个由 {@code FilterChainNode} 组成的单向链表，每个 {@code FilterChainNode} 都有
+ * 一个 {@code next} 属性指向下一个 {@code FilterChainNode}。如下所示：
+ *  +------+   +------+   +------+   +------+
+ *  |filter|   |filter|   |filter|   |filter|
+ *  | next |-->| next |-->| next |-->| next |
+ *  +------+   +------+   +------+   +------+
+ * </pre>
+ *
+ * @author zicung
+ */
 public class FilterChainBuilder {
 
     private static final Comparator<Filter> FILTER_COMPARATOR = new FilterComparator();
@@ -16,10 +30,11 @@ public class FilterChainBuilder {
     }
 
     /**
-     * 构建过滤器链。根据 {@link Order} 对 {@link Filter} 进行排序。
+     * 使用 {@link ExtensionLoader} 根据过滤器名称获取过滤器构建过滤器链。使用 {@link Order}
+     * 对 {@code Filter} 进行排序。
      *
-     * @param originalFilter 过滤器链尾节点
-     * @param filters        过滤器列表
+     * @param originalFilter 过滤器中的尾节点
+     * @param filters        过滤器名称列表
      * @return 过滤器链的头节点
      */
     public static FilterChainNode build(Filter originalFilter, List<String> filters) {
@@ -48,7 +63,7 @@ public class FilterChainBuilder {
 
 
     /**
-     * {@link Filter} 排序器。{@link Order} 的值越小排在越前面。当没有 {@link Order} 时默认值为 0。
+     * {@code Filter} 排序器。{@link Order#value()} 的值越小排在越前面。当没有 {@code Order} 时默认值为 0。
      */
     private static final class FilterComparator implements Comparator<Filter> {
 

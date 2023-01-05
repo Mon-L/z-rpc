@@ -2,7 +2,10 @@ package cn.zcn.rpc.remoting.protocol;
 
 import java.io.Serializable;
 
-public abstract class Command implements ICommand, Serializable {
+/**
+ * @author zicung
+ */
+public abstract class BaseCommand implements ICommand, Serializable {
 
     private ProtocolCode protocolCode;
     private CommandType commandType;
@@ -13,7 +16,7 @@ public abstract class Command implements ICommand, Serializable {
     private byte[] clazz;
     private byte[] content;
 
-    public Command(ProtocolCode protocolCode, CommandType commandType) {
+    public BaseCommand(ProtocolCode protocolCode, CommandType commandType) {
         this.protocolCode = protocolCode;
         this.commandType = commandType;
     }

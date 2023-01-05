@@ -23,6 +23,11 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
+/**
+ * 服务端
+ *
+ * @author zicung
+ */
 public class RemotingServer extends AbstractLifecycle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RemotingServer.class);
@@ -31,14 +36,12 @@ public class RemotingServer extends AbstractLifecycle {
     private final String host;
     private final ServerOptions options = new ServerOptions();
 
-    private final ProtocolManager protocolManager = new ProtocolManager();
-
     private RpcInboundHandler rpcInboundHandler;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
 
-    private final RequestProcessor requestProcessor = new RequestProcessor(options);
+    private final RequestDispatcher requestDispatcher = new RequestDispatcher(options);
 
     public RemotingServer(String host, int port) {
         this.host = host;
@@ -79,9 +82,9 @@ public class RemotingServer extends AbstractLifecycle {
                     new NamedThreadFactory("netty-server-worker-group"));
         }
 
-        this.requestProcessor.start();
+        this.requestDispatcher.start();
 
-        this.rpcInboundHandler = new RpcInboundHandler(options, protocolManager, requestProcessor);
+        this.rpcInboundHandler = new RpcInboundHandler(requestDispatcher);
         ConnectionEventHandler connectionEventHandler = new ConnectionEventHandler();
 
         ServerBootstrap server = new ServerBootstrap();
@@ -99,8 +102,8 @@ public class RemotingServer extends AbstractLifecycle {
                         socketChannel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).set(options);
 
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new MessageDecoder(protocolManager));
-                        pipeline.addLast(new MessageEncoder(protocolManager));
+                        pipeline.addLast(new MessageDecoder());
+                        pipeline.addLast(new MessageEncoder());
                         pipeline.addLast(connectionEventHandler);
                         pipeline.addLast(rpcInboundHandler);
                     }
@@ -140,17 +143,13 @@ public class RemotingServer extends AbstractLifecycle {
             }
         }
 
-        this.requestProcessor.stop();
+        this.requestDispatcher.stop();
 
         return true;
     }
 
     public void registerRequestHandler(RequestHandler<?> handler) {
-        this.requestProcessor.registerRequestHandler(handler);
-    }
-
-    public ProtocolManager getProtocolManager() {
-        return protocolManager;
+        this.requestDispatcher.registerRequestHandler(handler);
     }
 
     public <T> void option(Option<T> option, T value) {

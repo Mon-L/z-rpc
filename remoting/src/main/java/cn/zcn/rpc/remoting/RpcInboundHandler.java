@@ -1,7 +1,5 @@
 package cn.zcn.rpc.remoting;
 
-import cn.zcn.rpc.remoting.config.Options;
-import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.protocol.ICommand;
 import cn.zcn.rpc.remoting.protocol.ProtocolCode;
 import cn.zcn.rpc.remoting.protocol.ResponseCommand;
@@ -14,29 +12,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 将 {@link ICommand} 按协议分发到不同的 {@link CommandHandler} 进行处理
+ * 消息入站处理器，将 {@link ICommand} 按协议分发到不同的 {@link CommandHandler} 进行处理
+ *
+ * @author zicung
  */
 @ChannelHandler.Sharable
 class RpcInboundHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RpcInboundHandler.class);
 
-    private final Options options;
-    private final ProtocolProvider protocolProvider;
-    private final RequestProcessor requestProcessor;
+    private final RequestDispatcher requestDispatcher;
 
-    RpcInboundHandler(RpcOptions options, ProtocolProvider protocolProvider, RequestProcessor requestProcessor) {
-        this.options = options;
-        this.protocolProvider = protocolProvider;
-        this.requestProcessor = requestProcessor;
+    RpcInboundHandler(RequestDispatcher requestDispatcher) {
+        this.requestDispatcher = requestDispatcher;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext channelContext, Object msg) {
         ProtocolCode protocolCode = channelContext.channel().attr(Protocol.PROTOCOL).get();
-        Protocol protocol = protocolProvider.getProtocol(protocolCode);
+        Protocol protocol = ProtocolManager.getInstance().getProtocol(protocolCode);
 
-        RpcContext rpcContext = new RpcContext(options, channelContext, protocol, requestProcessor);
+        RpcContext rpcContext = new RpcContext(channelContext, protocol, requestDispatcher);
         ICommand command = null;
         try {
             command = (ICommand) msg;
@@ -65,6 +61,14 @@ class RpcInboundHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
+    /**
+     * 创建响应
+     *
+     * @param protocol       协议
+     * @param requestCommand 请求
+     * @param rpcStatus      响应码
+     * @return 响应
+     */
     private ResponseCommand createResponseCommand(Protocol protocol, ICommand requestCommand, RpcStatus rpcStatus) {
         return protocol.getCommandFactory().createResponseCommand(requestCommand, rpcStatus);
     }

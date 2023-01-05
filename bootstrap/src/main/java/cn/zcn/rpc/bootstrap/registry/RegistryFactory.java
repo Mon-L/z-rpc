@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 注册中心工厂。当服务提供者与服务消费者在同一个进程时，会共用 {@link Registry} 实例。
+ * 注册中心工厂。在同一个进程中，只会拥有一个相同 {@link RegistryConfig} 的 {@link Registry} 实例。
+ *
+ * @author zicung
  */
 public class RegistryFactory {
 

@@ -4,6 +4,8 @@ import cn.zcn.rpc.bootstrap.InterfaceConfig;
 
 /**
  * 服务提供者接口配置
+ *
+ * @author zicung
  */
 public class ProviderInterfaceConfig extends InterfaceConfig {
 

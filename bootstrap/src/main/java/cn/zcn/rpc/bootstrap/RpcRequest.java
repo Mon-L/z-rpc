@@ -3,6 +3,11 @@ package cn.zcn.rpc.bootstrap;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
+/**
+ * Rpc 请求，包含对远程接口方法调用的接口名、方法名、方法参数类型、参数等数据。
+ *
+ * @author zicung
+ */
 public class RpcRequest implements Serializable {
 
     /**

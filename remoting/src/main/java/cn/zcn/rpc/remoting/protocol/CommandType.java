@@ -1,8 +1,27 @@
 package cn.zcn.rpc.remoting.protocol;
 
+/**
+ * @author zicung
+ */
 public enum CommandType {
-    REQUEST((byte) 1), REQUEST_ONEWAY((byte) 2), RESPONSE((byte) 3);
+    /**
+     * 双向请求，具有返回值
+     */
+    REQUEST((byte) 1),
 
+    /**
+     * 单向请求，没有返回值
+     */
+    REQUEST_ONEWAY((byte) 2),
+
+    /**
+     * 响应
+     */
+    RESPONSE((byte) 3);
+
+    /**
+     * 命令类型
+     */
     private final short value;
 
     CommandType(short value) {
@@ -21,8 +40,8 @@ public enum CommandType {
                 return REQUEST_ONEWAY;
             case 3:
                 return RESPONSE;
+            default:
+                throw new IllegalArgumentException("Unknown command type : " + value);
         }
-
-        throw new IllegalArgumentException("Unknown command type : " + value);
     }
 }

@@ -11,6 +11,11 @@ import io.netty.util.concurrent.Promise;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * 抽象连接组，使用 {@link EventExecutor} 让 {@code Connection} 的获取与释放都运行在同一个线程内。
+ *
+ * @author zicung
+ */
 public abstract class AbstractConnectionGroup implements ConnectionGroup {
 
     private volatile long lastAcquiredTimeMillis = System.currentTimeMillis();
@@ -107,11 +112,22 @@ public abstract class AbstractConnectionGroup implements ConnectionGroup {
     }
 
     @Override
-    public Url getURL() {
+    public Url getUrl() {
         return url;
     }
 
+    /**
+     * 子类应该重写该方法执行获取连接的逻辑
+     *
+     * @param newPromise acquire promise
+     */
     protected abstract void doAcquireConnection(Promise<Connection> newPromise);
 
+    /**
+     * 子类应该重写该方法执行释放连接的逻辑
+     *
+     * @param promise    release promise
+     * @param connection 待释放连接
+     */
     protected abstract void doReleaseConnection(Promise<Void> promise, Connection connection);
 }

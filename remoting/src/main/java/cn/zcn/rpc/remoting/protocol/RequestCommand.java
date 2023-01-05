@@ -1,6 +1,9 @@
 package cn.zcn.rpc.remoting.protocol;
 
-public class RequestCommand extends Command {
+/**
+ * @author zicung
+ */
+public class RequestCommand extends BaseCommand {
 
     private int timeout;
 

@@ -3,10 +3,15 @@ package cn.zcn.rpc.remoting;
 import java.net.SocketAddress;
 import java.util.Objects;
 
+/**
+ * remoting url
+ *
+ * @author zicung
+ */
 public class Url {
 
     /**
-     * 服务端地址
+     * 地址
      */
     private final SocketAddress address;
 
@@ -34,8 +39,13 @@ public class Url {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Url)) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof Url)) {
+            return false;
+        }
 
         Url url = (Url) o;
 

@@ -3,6 +3,15 @@ package cn.zcn.rpc.remoting.utils;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Named thread factory.<p>
+ * 使用 {@code prefix} 和递增的 {@code num} 对 {@code Thread} 进行命名，格式如下：
+ * <pre>
+ * {prefix} + "-" + {num}
+ * </pre>
+ *
+ * @author zicung
+ */
 public class NamedThreadFactory implements ThreadFactory {
 
     private final String prefix;

@@ -9,19 +9,26 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * 协议管理者，维护支持的协议
+ * Manage all protocol.
+ *
+ * @author zicung
  */
-public class ProtocolManager implements ProtocolProvider {
+public class ProtocolManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProtocolManager.class);
+
+    private static final ProtocolManager INSTANCE = new ProtocolManager();
+
+    public static ProtocolManager getInstance() {
+        return INSTANCE;
+    }
 
     private ProtocolCode defaultProtocol;
     private final ConcurrentMap<ProtocolCode, Protocol> protocols = new ConcurrentHashMap<>();
 
-    protected ProtocolManager() {
+    private ProtocolManager() {
         registerProtocol(RpcProtocolV1.PROTOCOL_CODE, new RpcProtocolV1());
-
-        this.defaultProtocol = RpcProtocolV1.PROTOCOL_CODE;
+        setDefaultProtocol(RpcProtocolV1.PROTOCOL_CODE);
     }
 
     /**
@@ -42,7 +49,7 @@ public class ProtocolManager implements ProtocolProvider {
     }
 
     /**
-     * 注销协议
+     * 注销协议，无法注销默认协议。
      *
      * @param protocolCode 协议码
      */
@@ -58,21 +65,35 @@ public class ProtocolManager implements ProtocolProvider {
         protocols.remove(protocolCode);
     }
 
-    @Override
+    /**
+     * 获取指定协议
+     *
+     * @param protocolCode 协议码
+     * @return Protocol
+     */
     public Protocol getProtocol(ProtocolCode protocolCode) {
         return protocols.get(protocolCode);
     }
 
-    @Override
+    /**
+     * 获取默认协议
+     *
+     * @return Protocol
+     */
     public Protocol getDefaultProtocol() {
         return protocols.get(defaultProtocol);
     }
 
+    /**
+     * 设置默认协议
+     *
+     * @param protocolCode 默认协议码
+     */
     public void setDefaultProtocol(ProtocolCode protocolCode) {
         if (protocolCode == null) {
             throw new IllegalArgumentException("Protocol code should not be null!");
         } else if (!protocols.containsKey(protocolCode)) {
-            throw new IllegalArgumentException("Unknown protocol " + protocolCode.toString());
+            throw new IllegalArgumentException("Unknown protocol, " + protocolCode);
         } else {
             defaultProtocol = protocolCode;
         }

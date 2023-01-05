@@ -9,6 +9,8 @@ import java.util.Set;
 
 /**
  * 服务消费者接口配置
+ *
+ * @author zicung
  */
 public class ConsumerInterfaceConfig extends InterfaceConfig {
 

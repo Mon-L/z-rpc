@@ -7,13 +7,17 @@ import java.io.InputStream;
 import java.util.*;
 
 /**
- * RPC 文件配置。优先级从高到低为:
+ * RPC 文件配置，配置文件名为 rpc-config.properties。可以有多份该配置文件，配置文件对优先级从高到低为:
  * <pre>
- *  1. rpc-config.properties
- *  2. META-INF/rpc-config.properties
+ * 1. rpc-config.properties
+ * 2. META-INF/rpc-config.properties
  * </pre>
+ *
+ * @author zicung
  */
 public class RpcConfigs {
+
+    private static final char EMPTY = ' ';
 
     /**
      * 服务提供者权重
@@ -151,7 +155,7 @@ public class RpcConfigs {
      */
     public static Boolean getBool(String key, boolean defaultValue) {
         String val = getConfigs().getProperty(key);
-        return val == null ? defaultValue : Boolean.valueOf(val);
+        return val == null ? defaultValue : Boolean.parseBoolean(val);
     }
 
     /**
@@ -194,13 +198,13 @@ public class RpcConfigs {
         List<String> list = new ArrayList<>();
         int l = 0, r = 0, len = val.length();
         while (r < len) {
-            if (val.charAt(r) == ' ') {
+            if (val.charAt(r) == EMPTY) {
                 if (l != r) {
                     list.add(val.substring(l, r));
                 }
 
                 //remove space
-                while (++r < len && val.charAt(r) == ' ') {
+                while (++r < len && val.charAt(r) == EMPTY) {
                 }
 
                 l = r;

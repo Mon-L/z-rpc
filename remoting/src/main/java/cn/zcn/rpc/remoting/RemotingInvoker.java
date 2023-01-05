@@ -21,20 +21,23 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 远程调用者。与远程节点建立连接并发送请求。
+ *
+ * @author zicung
+ */
 public class RemotingInvoker extends AbstractLifecycle {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(RemotingInvoker.class);
 
     private final Options options;
     private final EventExecutor eventExecutor;
-    private final ProtocolProvider protocolManager;
     private final Bootstrap bootstrap;
 
     private ConnectionGroupManager connectionGroupManager;
 
-    public RemotingInvoker(Options options, ProtocolProvider protocolProvider, Bootstrap bootstrap) {
+    public RemotingInvoker(Options options, Bootstrap bootstrap) {
         this.options = options;
-        this.protocolManager = protocolProvider;
         this.bootstrap = bootstrap;
         this.eventExecutor = bootstrap.config().group().next();
     }
@@ -72,11 +75,9 @@ public class RemotingInvoker extends AbstractLifecycle {
      * @return ICommand
      */
     private ICommand createRequestCommand(Object payload, int timeoutMillis, CommandType commandType) {
-        Protocol protocol = protocolManager.getDefaultProtocol();
+        Protocol protocol = ProtocolManager.getInstance().getDefaultProtocol();
         CommandFactory commandFactory = protocol.getCommandFactory();
         RequestCommand req = commandFactory.createRequestCommand(commandType, CommandCode.REQUEST);
-
-        req.setTimeout(timeoutMillis);
 
         byte[] clazz = payload.getClass().getName().getBytes(options.getOption(ClientOptions.CHARSET));
         req.setClazz(clazz);
@@ -90,6 +91,8 @@ public class RemotingInvoker extends AbstractLifecycle {
             protocolSwitch.turnOn(0);
         }
         req.setProtocolSwitch(protocolSwitch);
+
+        req.setTimeout(timeoutMillis);
         return req;
     }
 
@@ -99,7 +102,8 @@ public class RemotingInvoker extends AbstractLifecycle {
             throw new SerializationException("Unknown serializer with " + responseCommand.getSerializer());
         }
 
-        return serializer.deserialize(responseCommand.getContent(), new String(responseCommand.getClazz(), options.getOption(ClientOptions.CHARSET)));
+        String clazz = new String(responseCommand.getClazz(), options.getOption(ClientOptions.CHARSET));
+        return serializer.deserialize(responseCommand.getContent(), clazz);
     }
 
     /**
@@ -107,6 +111,7 @@ public class RemotingInvoker extends AbstractLifecycle {
      *
      * @param url 请求路径
      * @param obj 请求体
+     * @return Future<Void>
      */
     public Future<Void> oneWayInvoke(Url url, Object obj) {
         if (!isStarted()) {
@@ -122,25 +127,30 @@ public class RemotingInvoker extends AbstractLifecycle {
             //获取连接组
             ConnectionGroup connectionGroup = connectionGroupManager.getConnectionGroup(url);
 
-            connectionGroup.acquireConnection().addListener((GenericFutureListener<Future<Connection>>) connFuture -> {
-                if (connFuture.isSuccess()) {
-                    Connection conn = connFuture.get();
-                    try {
-                        conn.getChannel().writeAndFlush(req).addListener(future -> {
-                            if (!future.isSuccess()) {
-                                LOGGER.error("Unexpected exception when write request. Request id:{}, Remoting address:{}", req.getId(), NetUtil.getRemoteAddress(conn.getChannel()), future.cause());
-                                promise.setFailure(future.cause());
-                            } else {
-                                promise.setSuccess(null);
+            connectionGroup.acquireConnection()
+                    .addListener((GenericFutureListener<Future<Connection>>) connFuture -> {
+                        if (connFuture.isSuccess()) {
+                            //获取连接成功
+                            Connection conn = connFuture.get();
+                            try {
+                                conn.getChannel().writeAndFlush(req).addListener(future -> {
+                                    if (!future.isSuccess()) {
+                                        LOGGER.error("Unexpected exception when write request. Request id:{}, To:{}",
+                                                req.getId(), NetUtil.getRemoteAddress(conn.getChannel()), future.cause());
+                                        promise.setFailure(future.cause());
+                                    } else {
+                                        promise.setSuccess(null);
+                                    }
+                                });
+                            } finally {
+                                connectionGroup.releaseConnection(conn);
                             }
-                        });
-                    } finally {
-                        connectionGroup.releaseConnection(conn);
-                    }
-                } else {
-                    promise.setFailure(new TransportException(connFuture.cause(), "Failed to acquire connection. Request id:{0}, Remoting address:{1}", req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
-                }
-            });
+                        } else {
+                            //获取连接失败
+                            promise.setFailure(new TransportException(connFuture.cause(), "Failed to acquire connection. " +
+                                    "Request id:{0}, To:{1}", req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
+                        }
+                    });
 
         } catch (Throwable t) {
             promise.setFailure(t);
@@ -172,8 +182,8 @@ public class RemotingInvoker extends AbstractLifecycle {
             //获取连接组
             ConnectionGroup connectionGroup = connectionGroupManager.getConnectionGroup(url);
 
-            InvokePromise<ResponseCommand> invokePromise = new DefaultInvokePromise(eventExecutor.newPromise());
-            invokePromise.addListener((GenericFutureListener<Future<ResponseCommand>>) future -> {
+            InvocationPromise<ResponseCommand> invocationPromise = new DefaultInvocationPromise(eventExecutor.newPromise());
+            invocationPromise.addListener((GenericFutureListener<Future<ResponseCommand>>) future -> {
                 if (future.isSuccess()) {
                     try {
                         ResponseCommand response = future.get();
@@ -187,7 +197,8 @@ public class RemotingInvoker extends AbstractLifecycle {
                             RemotingException exception;
                             if (response.getContent() != null) {
                                 Throwable cause = (Throwable) deserialize(response);
-                                exception = new RemotingException("Remoting server error. ResponseStatus: {0}, ErrorMsg: {1}", response.getStatus().name(), cause.getMessage());
+                                exception = new RemotingException("Remoting server error. ResponseStatus: {0}, ErrorMsg: {1}",
+                                        response.getStatus().name(), cause.getMessage());
                                 exception.setStackTrace(cause.getStackTrace());
                             } else {
                                 exception = new RemotingException("Remoting server error. ResponseStatus: {0}", response.getStatus().name());
@@ -205,7 +216,8 @@ public class RemotingInvoker extends AbstractLifecycle {
 
             //判断请求是否已超时
             if (getRemainingTime(startMillis, timeoutMillis) <= 0) {
-                invokePromise.setFailure(new TimeoutException("Send request timeout. Request id:{0}, Remoting address:{1}", req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
+                invocationPromise.setFailure(new TimeoutException("Send request timeout. Request id:{0}, To:{1}",
+                        req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
                 return promise;
             }
 
@@ -213,7 +225,8 @@ public class RemotingInvoker extends AbstractLifecycle {
                 long remainingTime = getRemainingTime(startMillis, timeoutMillis);
                 if (remainingTime <= 0) {
                     //请求已超时，返回超时异常
-                    invokePromise.setFailure(new TimeoutException("Send request timeout. Request id:{0}, Remoting address:{1}", req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
+                    invocationPromise.setFailure(new TimeoutException("Send request timeout. Request id:{0}, To:{1}",
+                            req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
 
                     //释放连接
                     if (connFuture.isSuccess()) {
@@ -223,40 +236,48 @@ public class RemotingInvoker extends AbstractLifecycle {
                 }
 
                 if (connFuture.isSuccess()) {
+                    //获取连接成功
                     Connection conn = connFuture.get();
                     try {
-                        invokePromise.setTimeout(TimerHolder.getTimer().newTimeout(timeout -> {
-                            /*
-                             * 请求已超时，移除 promise，返回超时异常
-                             */
-                            InvokePromise<?> p = conn.removePromise(req.getId());
+                        //设置超时定时器
+                        invocationPromise.setTimeout(TimerHolder.getTimer().newTimeout(timeout -> {
+                            //请求已超时，移除 promise，返回超时异常
+                            InvocationPromise<?> p = conn.removePromise(req.getId());
                             if (p != null) {
-                                p.setFailure(new TimeoutException("Wait for response timeout. Request id:{0}, Remoting address:{1}", req.getId(), NetUtil.getRemoteAddress(conn.getChannel())));
+                                p.setFailure(new TimeoutException("Wait for response timeout. Request id:{0}, To:{1}",
+                                        req.getId(), NetUtil.getRemoteAddress(conn.getChannel())));
                             }
                         }, timeoutMillis, TimeUnit.MILLISECONDS));
 
-                        //添加 promise
-                        conn.addPromise(req.getId(), invokePromise);
-
+                        //发送请求
                         conn.getChannel().writeAndFlush(req).addListener(future -> {
                             if (!future.isSuccess()) {
-                                /*
-                                 * 发送失败。移除 promise，并取消响应超时监听
-                                 */
-                                InvokePromise<?> p = conn.removePromise(req.getId());
+                                //发送失败。移除 promise，并取消响应超时监听
+                                InvocationPromise<?> p = conn.removePromise(req.getId());
                                 if (p != null) {
                                     p.cancelTimeout();
                                     p.setFailure(future.cause());
                                 }
 
-                                LOGGER.error("Unexpected exception when write request. Request id:{}, Remoting address:{}", req.getId(), NetUtil.getRemoteAddress(conn.getChannel()), future.cause());
+                                LOGGER.error("Unexpected exception when write request. Request id:{}, To:{}",
+                                        req.getId(), NetUtil.getRemoteAddress(conn.getChannel()), future.cause());
+                            } else {
+                                if (LOGGER.isDebugEnabled()) {
+                                    LOGGER.debug("Sent request. Request Id:{}, To:{}.", req.getId(),
+                                            NetUtil.getRemoteAddress(conn.getChannel()));
+                                }
                             }
                         });
+
+                        //添加 promise
+                        conn.addPromise(req.getId(), invocationPromise);
                     } finally {
                         connectionGroup.releaseConnection(conn);
                     }
                 } else {
-                    invokePromise.setFailure(new TransportException(connFuture.cause(), "Failed to acquire connection. Request id:{0}, Remoting address{1}", req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
+                    //获取连接失败
+                    invocationPromise.setFailure(new TransportException(connFuture.cause(), "Failed to acquire connection. Request id:{0}, To:{1}",
+                            req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
                 }
             });
         } catch (Throwable t) {

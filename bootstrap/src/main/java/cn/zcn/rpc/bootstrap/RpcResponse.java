@@ -3,6 +3,11 @@ package cn.zcn.rpc.bootstrap;
 import java.io.Serializable;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Rpc 响应。
+ *
+ * @author zicung
+ */
 public class RpcResponse implements Serializable {
 
     private static final int NORMAL = 1;

@@ -1,6 +1,6 @@
 package cn.zcn.rpc.remoting.connection;
 
-import cn.zcn.rpc.remoting.InvokePromise;
+import cn.zcn.rpc.remoting.InvocationPromise;
 import cn.zcn.rpc.remoting.Url;
 import cn.zcn.rpc.remoting.config.Option;
 import cn.zcn.rpc.remoting.config.RpcOptions;
@@ -21,6 +21,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * @author zicung
+ */
 public class Connection {
 
     public static final AttributeKey<Connection> CONNECTION_KEY = AttributeKey.valueOf("rpc-connection");
@@ -35,7 +38,7 @@ public class Connection {
      */
     private int heartbeatFailures = 0;
 
-    private final ConcurrentMap<Integer, InvokePromise<ResponseCommand>> promises = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Integer, InvocationPromise<ResponseCommand>> promises = new ConcurrentHashMap<>();
 
     public Connection(Channel channel) {
         this.channel = channel;
@@ -45,13 +48,13 @@ public class Connection {
     private void init() {
         channel.closeFuture().addListener((GenericFutureListener<Future<Void>>) future -> {
             // if connection closed, notify uncompleted promise.
-            Iterator<Map.Entry<Integer, InvokePromise<ResponseCommand>>> iterator = promises.entrySet().iterator();
+            Iterator<Map.Entry<Integer, InvocationPromise<ResponseCommand>>> iterator = promises.entrySet().iterator();
 
             while (iterator.hasNext()) {
-                Map.Entry<Integer, InvokePromise<ResponseCommand>> entry = iterator.next();
+                Map.Entry<Integer, InvocationPromise<ResponseCommand>> entry = iterator.next();
                 iterator.remove();
 
-                InvokePromise<ResponseCommand> promise = entry.getValue();
+                InvocationPromise<ResponseCommand> promise = entry.getValue();
                 promise.cancelTimeout();
                 promise.setFailure(new TransportException("Connection was closed. Request id:{0}, Remoting address:{1}",
                         entry.getKey(), NetUtil.getRemoteAddress(channel)));
@@ -67,11 +70,11 @@ public class Connection {
         heartbeatFailures = failures;
     }
 
-    public InvokePromise<ResponseCommand> removePromise(Integer id) {
+    public InvocationPromise<ResponseCommand> removePromise(Integer id) {
         return promises.remove(id);
     }
 
-    public void addPromise(int id, InvokePromise<ResponseCommand> promise) {
+    public void addPromise(int id, InvocationPromise<ResponseCommand> promise) {
         promises.put(id, promise);
     }
 
@@ -87,7 +90,7 @@ public class Connection {
         return channel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).get().getOption(option);
     }
 
-    public Map<Integer, InvokePromise<ResponseCommand>> getInvokeFutures() {
+    public Map<Integer, InvocationPromise<ResponseCommand>> getInvokeFutures() {
         return promises;
     }
 
@@ -97,7 +100,9 @@ public class Connection {
                 if (!f.isSuccess()) {
                     LOGGER.warn("Failed to close connection. Url:{}", NetUtil.getRemoteAddress(channel), f.cause());
                 } else {
-                    LOGGER.debug("Connection was closed. Url:{}", NetUtil.getRemoteAddress(channel));
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Connection was closed. Url:{}", NetUtil.getRemoteAddress(channel));
+                    }
                 }
             });
         } else {

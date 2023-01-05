@@ -1,7 +1,7 @@
 package cn.zcn.rpc.remoting.protocol;
 
-import cn.zcn.rpc.remoting.DefaultInvokePromise;
-import cn.zcn.rpc.remoting.InvokePromise;
+import cn.zcn.rpc.remoting.DefaultInvocationPromise;
+import cn.zcn.rpc.remoting.InvocationPromise;
 import cn.zcn.rpc.remoting.config.ClientOptions;
 import cn.zcn.rpc.remoting.connection.Connection;
 import cn.zcn.rpc.remoting.exception.TimeoutException;
@@ -15,6 +15,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Default HeartbeatTrigger
+ *
+ * @author zicung
+ */
 public class DefaultHeartbeatTrigger implements HeartbeatTrigger {
     final static int HEARTBEAT_TIMEOUT_MILLIS = 1000;
 
@@ -41,7 +46,7 @@ public class DefaultHeartbeatTrigger implements HeartbeatTrigger {
         }
 
         HeartbeatCommand heartbeatCommand = commandFactory.createHeartbeatCommand();
-        InvokePromise<ResponseCommand> promise = new DefaultInvokePromise(ctx.executor().newPromise());
+        InvocationPromise<ResponseCommand> promise = new DefaultInvocationPromise(ctx.executor().newPromise());
         promise.addListener((GenericFutureListener<Future<ResponseCommand>>) future -> {
             promise.cancelTimeout();
 
@@ -70,7 +75,7 @@ public class DefaultHeartbeatTrigger implements HeartbeatTrigger {
         });
 
         promise.setTimeout(TimerHolder.getTimer().newTimeout(timeout -> {
-            InvokePromise<ResponseCommand> p = conn.removePromise(heartbeatCommand.getId());
+            InvocationPromise<ResponseCommand> p = conn.removePromise(heartbeatCommand.getId());
             if (p != null) {
                 p.setFailure(new TimeoutException("Wait for heartbeat ack timeout. Id:{0}, To:{1}",
                         heartbeatCommand.getId(), NetUtil.getRemoteAddress(ctx.channel())));
@@ -83,7 +88,7 @@ public class DefaultHeartbeatTrigger implements HeartbeatTrigger {
         ctx.channel().writeAndFlush(heartbeatCommand).addListener((GenericFutureListener<Future<Void>>) future -> {
             if (!future.isSuccess()) {
                 //发送失败，移除 promise、timeout
-                InvokePromise<ResponseCommand> p = conn.removePromise(heartbeatCommand.getId());
+                InvocationPromise<ResponseCommand> p = conn.removePromise(heartbeatCommand.getId());
                 p.cancelTimeout();
 
                 //心跳失败次数加一

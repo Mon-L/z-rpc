@@ -14,6 +14,12 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * RPC 服务端引导器。</p>
+ * 根据 {@code ProviderConfig} 配置信息，创建 RPC 服务。
+ *
+ * @author zicung
+ */
 public class ProviderBootstrap extends AbstractLifecycle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProviderBootstrap.class);

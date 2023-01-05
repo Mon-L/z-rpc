@@ -1,6 +1,9 @@
 package cn.zcn.rpc.remoting.protocol;
 
-public class ResponseCommand extends Command {
+/**
+ * @author zicung
+ */
+public class ResponseCommand extends BaseCommand {
 
     private RpcStatus status;
 

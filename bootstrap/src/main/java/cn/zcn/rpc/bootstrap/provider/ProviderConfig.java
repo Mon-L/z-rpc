@@ -8,6 +8,8 @@ import java.util.Set;
 
 /**
  * 服务提供者配置
+ *
+ * @author zicung
  */
 public class ProviderConfig {
 

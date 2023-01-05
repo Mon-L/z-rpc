@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * @author zicung
+ */
 public class ProvidersHolder {
 
     private final List<ProviderGroup> groups = new CopyOnWriteArrayList<>();

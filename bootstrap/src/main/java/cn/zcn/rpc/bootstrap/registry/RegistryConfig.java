@@ -2,6 +2,12 @@ package cn.zcn.rpc.bootstrap.registry;
 
 import java.util.Objects;
 
+/**
+ * 注册中心配置。<p>
+ * 重写了 {@code equals} 和 {@code hashCode} ，只要 {@code type} 和 {@code url} 相同则认为是相同的 {@code RegistryConfig}。
+ *
+ * @author zicung
+ */
 public class RegistryConfig {
 
     private String type;
@@ -36,12 +42,20 @@ public class RegistryConfig {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RegistryConfig)) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof RegistryConfig)) {
+            return false;
+        }
 
         RegistryConfig that = (RegistryConfig) o;
 
-        if (!Objects.equals(type, that.type)) return false;
+        if (!Objects.equals(type, that.type)) {
+            return false;
+        }
+
         return Objects.equals(url, that.url);
     }
 

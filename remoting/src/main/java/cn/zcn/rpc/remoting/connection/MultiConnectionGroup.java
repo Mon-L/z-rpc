@@ -15,7 +15,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 管理多条连接的连接组
+ * 管理包含多条 {@link Connection} 的连接组。{@code Connection} 不能被多条 {@code Thread} 同时使用。
+ * 只有当 {@code Connection} 被释放后才可以被其他 {@code Thread} 使用。
+ *
+ * @author zicung
  */
 public class MultiConnectionGroup extends AbstractConnectionGroup {
 
@@ -34,6 +37,17 @@ public class MultiConnectionGroup extends AbstractConnectionGroup {
         this.acquireTimeoutMillis = acquireTimeoutMillis;
     }
 
+    /**
+     * 获取可用连接。<p>
+     * 获取连接时会出现以下情况：
+     * <ul>
+     *     <li>当 {@code lendingCount < maxConnection} 时会新建一条 {@code Connection} 并返回</li>
+     *     <li>当 {@code lendingCount >= maxConnection}，等待其他线程释放 {@code Connection} 后才能获得 {@code Connection}。</li>
+     *     <li>当获得一条 {@code Connection} 时会检查其是否存活，当 {@code Connection} 不存活是会移除它并重新获取。</li>
+     * </ul>
+     *
+     * @param promise acquired promise
+     */
     @Override
     protected void doAcquireConnection(Promise<Connection> promise) {
         if (lendingCount.get() < maxConnection) {
@@ -51,24 +65,21 @@ public class MultiConnectionGroup extends AbstractConnectionGroup {
         }
     }
 
+    /**
+     * 获取或者新建 {@code Connection}。当重用 {@code Connection} 时检查其是否存活
+     *
+     * @param promise acquired promise
+     */
     private void getOrCreateConnection(Promise<Connection> promise) {
         Connection conn = connections.pollFirst();
         if (conn == null) {
             createConnection(promise);
         } else {
-            if (executor.inEventLoop()) {
-                checkActive(conn, promise);
+            if (conn.isActive()) {
+                promise.setSuccess(conn);
             } else {
-                executor.execute(() -> checkActive(conn, promise));
+                getOrCreateConnection(promise);
             }
-        }
-    }
-
-    private void checkActive(Connection connection, Promise<Connection> promise) {
-        if (connection.isActive()) {
-            promise.setSuccess(connection);
-        } else {
-            getOrCreateConnection(promise);
         }
     }
 

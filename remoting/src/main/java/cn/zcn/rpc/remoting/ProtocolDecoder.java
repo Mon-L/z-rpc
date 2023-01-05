@@ -7,6 +7,8 @@ import java.util.List;
 
 /**
  * 协议解码器，解码协议字节码
+ *
+ * @author zicung
  */
 public interface ProtocolDecoder {
 

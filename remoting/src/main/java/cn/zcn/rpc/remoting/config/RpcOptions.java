@@ -4,8 +4,15 @@ import io.netty.util.AttributeKey;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-public class RpcOptions extends OptionsImpl {
+/**
+ * RPC 选项集合。
+ *
+ * @author zicung
+ */
+public class RpcOptions implements Options {
 
     public static final AttributeKey<Options> OPTIONS_ATTRIBUTE_KEY = AttributeKey.valueOf("options");
 
@@ -34,4 +41,28 @@ public class RpcOptions extends OptionsImpl {
     public static final Option<Integer> PROCESSOR_KEEPALIVE = Option.valueOf("rpc.processor.keepalive", 60);
 
     public static final Option<Integer> PROCESSOR_WORKER_QUEEN_SIZE = Option.valueOf("rpc.processor.worker.queen.size", 1024);
+
+    private final ConcurrentMap<Option<?>, Object> options = new ConcurrentHashMap<>();
+
+    @Override
+    @SuppressWarnings({"unchecked"})
+    public <T> T getOption(Option<T> option) {
+        Object value = options.get(option);
+        if (value == null) {
+            return option.getDefaultValue();
+        }
+
+        return (T) value;
+    }
+
+    /**
+     * 设置选项值。
+     *
+     * @param option 选项
+     * @param value  值
+     * @param <T>    选项值的类型
+     */
+    public <T> void setOption(Option<T> option, T value) {
+        options.put(option, value);
+    }
 }

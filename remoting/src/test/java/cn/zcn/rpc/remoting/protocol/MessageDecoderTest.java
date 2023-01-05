@@ -16,14 +16,11 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 public class MessageDecoderTest {
 
-    private ProtocolManager protocolManager;
-    private MessageDecoder messageDecoder;
     private EmbeddedChannel channel;
 
     @Before
     public void before() {
-        protocolManager = Mockito.mock(ProtocolManager.class);
-        messageDecoder = Mockito.spy(new MessageDecoder(protocolManager));
+        MessageDecoder messageDecoder = Mockito.spy(new MessageDecoder());
         channel = new EmbeddedChannel(messageDecoder);
     }
 
@@ -43,40 +40,24 @@ public class MessageDecoderTest {
     }
 
     @Test
-    public void testDecodeWhenUnmatchedProtocolCode() {
-        ProtocolCode protocolCode = ProtocolCode.from((byte) 1, (byte) 1);
-        Protocol protocol = Mockito.mock(Protocol.class);
-        Mockito.when(protocolManager.getProtocol(protocolCode)).thenReturn(protocol);
-
-        ByteBuf byteBuf = Unpooled.buffer();
-        byteBuf.writeByte(1);  //protocol code
-        byteBuf.writeByte(2);  //protocol version
-        byteBuf.writeByte(0);
-
-        assertThatExceptionOfType(DecoderException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
-            @Override
-            public void call() throws Throwable {
-                channel.writeInbound(byteBuf.retain());
-            }
-        });
-    }
-
-    @Test
     public void testDecodeThenSuccessful() throws Exception {
-        ProtocolCode protocolCode = ProtocolCode.from((byte) 1, (byte) 1);
-
         Protocol protocol = Mockito.mock(Protocol.class);
+        Mockito.when(protocol.getProtocolCode()).thenReturn(ProtocolCode.from((byte) 11, (byte) 2));
+
+        ProtocolManager.getInstance().registerProtocol(protocol.getProtocolCode(), protocol);
+
         ProtocolDecoder protocolDecoder = Mockito.mock(ProtocolDecoder.class);
         Mockito.when(protocol.getDecoder()).thenReturn(protocolDecoder);
-        Mockito.when(protocolManager.getProtocol(protocolCode)).thenReturn(protocol);
 
         ByteBuf byteBuf = Unpooled.buffer();
-        byteBuf.writeByte(1);  //protocol code
-        byteBuf.writeByte(1);  //protocol version
+        byteBuf.writeByte(protocol.getProtocolCode().getCode());  //protocol code
+        byteBuf.writeByte(protocol.getProtocolCode().getVersion());  //protocol version
         byteBuf.writeByte(0);
         channel.writeInbound(byteBuf.retain());
 
-        Mockito.verify(protocolDecoder, Mockito.times(1))
+        Mockito.verify(protocol.getDecoder(), Mockito.times(1))
                 .decode(Mockito.any(), Mockito.any(), Mockito.any());
+
+        ProtocolManager.getInstance().unregisterProtocol(protocol.getProtocolCode());
     }
 }

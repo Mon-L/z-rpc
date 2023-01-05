@@ -40,7 +40,6 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
     public void before() {
         this.url = new Url.Builder(new LocalAddress(TestUtils.getLocalAddressId())).build();
 
-        ProtocolManager protocolManager = new ProtocolManager();
         Serializer serializer = SerializerManager.getInstance().getSerializer(SerializerManager.getInstance().getDefaultSerializerCode());
 
         this.server = new ServerBootstrap()
@@ -49,8 +48,8 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
                 .childHandler(new ChannelInitializer<LocalChannel>() {
                     @Override
                     protected void initChannel(LocalChannel channel) {
-                        channel.pipeline().addLast(new MessageDecoder(protocolManager));
-                        channel.pipeline().addLast(new MessageEncoder(protocolManager));
+                        channel.pipeline().addLast(new MessageDecoder());
+                        channel.pipeline().addLast(new MessageEncoder());
                         channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -90,14 +89,14 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
                 .handler(new ChannelInitializer<LocalChannel>() {
                     @Override
                     protected void initChannel(LocalChannel channel) {
-                        channel.pipeline().addLast(new MessageDecoder(protocolManager));
-                        channel.pipeline().addLast(new MessageEncoder(protocolManager));
+                        channel.pipeline().addLast(new MessageDecoder());
+                        channel.pipeline().addLast(new MessageEncoder());
                         channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                                 ResponseCommand resp = (ResponseCommand) msg;
 
-                                InvokePromise<ResponseCommand> promise = ctx.channel().attr(Connection.CONNECTION_KEY).get().removePromise(resp.getId());
+                                InvocationPromise<ResponseCommand> promise = ctx.channel().attr(Connection.CONNECTION_KEY).get().removePromise(resp.getId());
                                 if (promise != null) {
                                     promise.cancelTimeout();
                                     promise.setSuccess(resp);
@@ -107,7 +106,7 @@ public class RemotingInvokerTest extends AbstractEventLoopGroupTest {
                     }
                 });
 
-        this.remotingInvoker = new RemotingInvoker(new RpcOptions(), new ProtocolManager(), bootstrap);
+        this.remotingInvoker = new RemotingInvoker(new RpcOptions(), bootstrap);
     }
 
     @Test

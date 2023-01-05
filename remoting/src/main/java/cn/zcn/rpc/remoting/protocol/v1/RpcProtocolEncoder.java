@@ -2,24 +2,29 @@ package cn.zcn.rpc.remoting.protocol.v1;
 
 import cn.zcn.rpc.remoting.ProtocolEncoder;
 import cn.zcn.rpc.remoting.exception.ProtocolException;
-import cn.zcn.rpc.remoting.protocol.Command;
+import cn.zcn.rpc.remoting.protocol.BaseCommand;
 import cn.zcn.rpc.remoting.protocol.RequestCommand;
 import cn.zcn.rpc.remoting.protocol.ResponseCommand;
-import cn.zcn.rpc.remoting.utils.CRC32Util;
+import cn.zcn.rpc.remoting.utils.Crc32Util;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
+/**
+ * {@link RpcProtocolV1} 编码器
+ *
+ * @author zicung
+ */
 public class RpcProtocolEncoder implements ProtocolEncoder {
 
     @Override
     public void encode(ChannelHandlerContext context, Object msg, ByteBuf out) throws Exception {
-        if (!(msg instanceof Command)) {
-            throw new ProtocolException("Message is not a instance of Command!");
+        if (!(msg instanceof BaseCommand)) {
+            throw new ProtocolException("Message is not a instance of BaseCommand!");
         }
 
         int startIndex = out.writerIndex();
 
-        Command command = (Command) msg;
+        BaseCommand command = (BaseCommand) msg;
 
         out.writeByte(command.getProtocolCode().getCode());
         out.writeByte(command.getProtocolCode().getVersion());
@@ -57,11 +62,12 @@ public class RpcProtocolEncoder implements ProtocolEncoder {
             out.writeBytes(command.getContent());
         }
 
-        if (command.getProtocolSwitch().isOn(0)) {  // CRC32
+        if (command.getProtocolSwitch().isOn(0)) {
+            // CRC32
             int endIndex = out.writerIndex();
             byte[] bytes = new byte[endIndex - startIndex];
             out.getBytes(startIndex, bytes, 0, bytes.length);
-            int crc32 = CRC32Util.calculate(bytes);
+            int crc32 = Crc32Util.calculate(bytes);
             out.writeInt(crc32);
         }
     }

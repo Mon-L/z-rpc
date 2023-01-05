@@ -9,6 +9,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+/**
+ * hessian serializer
+ *
+ * @author zicung
+ */
 public class HessianSerializer implements Serializer {
 
     private final SerializerFactory serializerFactory = new SerializerFactory();

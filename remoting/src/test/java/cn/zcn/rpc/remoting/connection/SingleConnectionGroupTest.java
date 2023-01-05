@@ -1,6 +1,6 @@
 package cn.zcn.rpc.remoting.connection;
 
-import cn.zcn.rpc.remoting.DefaultInvokePromise;
+import cn.zcn.rpc.remoting.DefaultInvocationPromise;
 import cn.zcn.rpc.remoting.Url;
 import cn.zcn.rpc.remoting.test.TestUtils;
 import io.netty.bootstrap.Bootstrap;
@@ -231,7 +231,7 @@ public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
         assertThat(connectionGroup.canClose()).isTrue();
 
         //存在一条连接， 还有未完成的请求
-        connection.addPromise(1, new DefaultInvokePromise(this.client.config().group().next().newPromise()));
+        connection.addPromise(1, new DefaultInvocationPromise(this.client.config().group().next().newPromise()));
         assertThat(connectionGroup.canClose()).isFalse();
 
         assertThat(connection.close().awaitUninterruptibly(2000)).isTrue();
