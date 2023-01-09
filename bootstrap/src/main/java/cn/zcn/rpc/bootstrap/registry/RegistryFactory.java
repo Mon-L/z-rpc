@@ -1,7 +1,6 @@
 package cn.zcn.rpc.bootstrap.registry;
 
 import cn.zcn.rpc.bootstrap.extension.ExtensionLoader;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +16,6 @@ public class RegistryFactory {
     private final Map<RegistryConfig, Registry> registries = new HashMap<>();
 
     private RegistryFactory() {
-
     }
 
     public static RegistryFactory get() {
@@ -39,8 +37,10 @@ public class RegistryFactory {
                 registry = registries.get(registryConfig);
                 if (registry == null) {
                     ExtensionLoader<Registry> extensionLoader = ExtensionLoader.getExtensionLoader(Registry.class);
-                    registry = extensionLoader.getExtension(registryConfig.getType(),
-                            new Class<?>[]{RegistryConfig.class}, new Object[]{registryConfig});
+                    registry = extensionLoader.getExtension(
+                        registryConfig.getType(),
+                        new Class<?>[] { RegistryConfig.class },
+                        new Object[] { registryConfig });
                     registry.start();
 
                     registries.put(registryConfig, registry);

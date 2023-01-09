@@ -2,9 +2,7 @@ package cn.zcn.rpc.remoting.exception;
 
 import java.text.MessageFormat;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public class BaseRuntimeException extends RuntimeException {
 
     public BaseRuntimeException(String msg) {

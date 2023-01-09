@@ -9,9 +9,6 @@ import io.netty.util.AttributeKey;
  * @author zicung
  */
 public interface Protocol {
-
-    AttributeKey<ProtocolCode> PROTOCOL = AttributeKey.valueOf("protocol");
-
     /**
      * 获取协议码
      *
@@ -58,7 +55,7 @@ public interface Protocol {
     /**
      * 注册命令处理器
      *
-     * @param cmd     命令码
+     * @param cmd 命令码
      * @param handler 命令处理器
      */
     void registerCommandHandler(CommandCode cmd, CommandHandler<ICommand> handler);

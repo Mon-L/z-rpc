@@ -3,17 +3,18 @@ package cn.zcn.rpc.bootstrap.consumer.filter;
 import cn.zcn.rpc.bootstrap.Order;
 import cn.zcn.rpc.bootstrap.extension.ExtensionLoader;
 import cn.zcn.rpc.bootstrap.utils.CollectionUtils;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 /**
  * 过滤器链构建者。
+ *
  * <p>
+ *
  * <pre>
- * 过滤器链是一个由 {@code FilterChainNode} 组成的单向链表，每个 {@code FilterChainNode} 都有
- * 一个 {@code next} 属性指向下一个 {@code FilterChainNode}。如下所示：
+ * 过滤器链是由一个或多个 {@code FilterChainNode} 组成的单向链表，每个 {@code FilterChainNode} 都有
+ * 包含 {@code next} 属性指向下一个 {@code FilterChainNode}。如下所示：
  *  +------+   +------+   +------+   +------+
  *  |filter|   |filter|   |filter|   |filter|
  *  | next |-->| next |-->| next |-->| next |
@@ -30,11 +31,10 @@ public class FilterChainBuilder {
     }
 
     /**
-     * 使用 {@link ExtensionLoader} 根据过滤器名称获取过滤器构建过滤器链。使用 {@link Order}
-     * 对 {@code Filter} 进行排序。
+     * 使用 {@link ExtensionLoader} 根据过滤器名称获取过滤器并构建过滤器链。多个 {@code Filter} 使用 {@code FILTER_COMPARATOR} 进行排序。
      *
      * @param originalFilter 过滤器中的尾节点
-     * @param filters        过滤器名称列表
+     * @param filters 过滤器名称列表
      * @return 过滤器链的头节点
      */
     public static FilterChainNode build(Filter originalFilter, List<String> filters) {
@@ -61,10 +61,7 @@ public class FilterChainBuilder {
         return head;
     }
 
-
-    /**
-     * {@code Filter} 排序器。{@link Order#value()} 的值越小排在越前面。当没有 {@code Order} 时默认值为 0。
-     */
+    /** {@code Filter} 排序器。{@link Order#value()} 的值越小排在越前面。当没有 {@code Order} 时默认值为 0。 */
     private static final class FilterComparator implements Comparator<Filter> {
 
         @Override

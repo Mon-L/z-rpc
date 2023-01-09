@@ -1,7 +1,10 @@
 package cn.zcn.rpc.remoting.connection;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import cn.zcn.rpc.remoting.DefaultInvocationPromise;
 import cn.zcn.rpc.remoting.Url;
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.test.TestUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -12,20 +15,16 @@ import io.netty.channel.local.LocalAddress;
 import io.netty.channel.local.LocalChannel;
 import io.netty.channel.local.LocalServerChannel;
 import io.netty.util.concurrent.Future;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 import org.assertj.core.data.Offset;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
-
     private Url url;
     private ServerBootstrap server;
     private Bootstrap client;
@@ -34,24 +33,26 @@ public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
     public void before() {
         this.url = new Url.Builder(new LocalAddress(TestUtils.getLocalAddressId())).build();
         this.server = new ServerBootstrap()
-                .channel(LocalServerChannel.class)
-                .group(eventLoopGroup)
-                .childHandler(new ChannelInitializer<LocalChannel>() {
-                    @Override
-                    protected void initChannel(LocalChannel channel) {
-                        channel.pipeline().addLast(new ChannelInboundHandlerAdapter());
-                    }
-                });
+            .channel(LocalServerChannel.class)
+            .group(eventLoopGroup)
+            .childHandler(new ChannelInitializer<LocalChannel>() {
+
+                @Override
+                protected void initChannel(LocalChannel channel) {
+                    channel.pipeline().addLast(new ChannelInboundHandlerAdapter());
+                }
+            });
 
         this.client = new Bootstrap()
-                .channel(LocalChannel.class)
-                .group(eventLoopGroup)
-                .handler(new ChannelInitializer<LocalChannel>() {
-                    @Override
-                    protected void initChannel(LocalChannel channel) {
-                        channel.pipeline().addLast(new ChannelInboundHandlerAdapter());
-                    }
-                });
+            .channel(LocalChannel.class)
+            .group(eventLoopGroup)
+            .handler(new ChannelInitializer<LocalChannel>() {
+
+                @Override
+                protected void initChannel(LocalChannel channel) {
+                    channel.pipeline().addLast(new ChannelInboundHandlerAdapter());
+                }
+            });
     }
 
     @Test
@@ -59,22 +60,22 @@ public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
         Channel sc = this.server.bind(url.getAddress()).syncUninterruptibly().channel();
         ConnectionGroup connectionGroup = new SingleConnectionGroup(url, client);
 
-        //acquire connection
+        // acquire connection
         Future<Connection> future = connectionGroup.acquireConnection();
         assertThat(future.awaitUninterruptibly(2000)).isTrue();
         assertThat(future.isSuccess()).isTrue();
         assertThat(future.getNow().isActive()).isTrue();
 
-        //acquire connection
+        // acquire connection
         Future<Connection> future2 = connectionGroup.acquireConnection();
         assertThat(future2.awaitUninterruptibly(1000)).isTrue();
         assertThat(future2.isSuccess()).isTrue();
         assertThat(future2.getNow().isActive()).isTrue();
 
-        //connection must be same in single connection group
+        // connection must be same in single connection group
         assertThat(future2.getNow()).isSameAs(future.getNow());
 
-        //release connection
+        // release connection
         Future<Void> releaseFuture = connectionGroup.releaseConnection(future.getNow());
         assertThat(releaseFuture.awaitUninterruptibly(1000)).isTrue();
         assertThat(releaseFuture.isSuccess()).isTrue();
@@ -99,35 +100,35 @@ public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
         Channel sc = this.server.bind(url.getAddress()).syncUninterruptibly().channel();
         ConnectionGroup connectionGroup = new SingleConnectionGroup(url, client);
 
-        //acquire connection
+        // acquire connection
         Future<Connection> future = connectionGroup.acquireConnection();
         assertThat(future.awaitUninterruptibly(2000)).isTrue();
         assertThat(future.isSuccess()).isTrue();
         assertThat(future.getNow().isActive()).isTrue();
 
-        //release
+        // release
         Future<Void> releaseFuture = connectionGroup.releaseConnection(future.getNow());
         assertThat(releaseFuture.awaitUninterruptibly(2000)).isTrue();
         assertThat(releaseFuture.isSuccess()).isTrue();
 
-        //test release connection with error group key
+        // test release connection with error group key
         Connection conn = future.getNow();
 
-        //check connection state
+        // check connection state
         assertThat(conn.isActive()).isTrue();
 
-        //modify connection group key
+        // modify connection group key
         conn.getChannel()
-                .attr(Connection.CONNECTION_GROUP_KEY)
-                .set(new Url.Builder(new LocalAddress(TestUtils.getLocalAddressId())).build());
+            .attr(AttributeKeys.CONNECTION_URL)
+            .set(new Url.Builder(new LocalAddress(TestUtils.getLocalAddressId())).build());
 
-        //release connection
+        // release connection
         releaseFuture = connectionGroup.releaseConnection(conn);
         assertThat(releaseFuture.awaitUninterruptibly(2000)).isTrue();
         assertThat(releaseFuture.isSuccess()).isFalse();
         assertThat(releaseFuture.cause()).isInstanceOf(IllegalArgumentException.class);
 
-        //connection is closed
+        // connection is closed
         assertThat(conn.isActive()).isFalse();
 
         sc.close().syncUninterruptibly();
@@ -138,17 +139,17 @@ public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
         Channel sc = this.server.bind(url.getAddress()).syncUninterruptibly().channel();
         ConnectionGroup connectionGroup = new SingleConnectionGroup(url, client);
 
-        //acquire connection
+        // acquire connection
         Future<Connection> future = connectionGroup.acquireConnection();
         assertThat(future.awaitUninterruptibly(2000)).isTrue();
         assertThat(future.isSuccess()).isTrue();
         assertThat(future.getNow().isActive()).isTrue();
 
-        //close group
+        // close group
         Future<Void> closeFuture = connectionGroup.close();
         assertThat(closeFuture.awaitUninterruptibly(2000)).isTrue();
 
-        //release connection
+        // release connection
         Future<Void> releaseFuture = connectionGroup.releaseConnection(future.getNow());
         assertThat(releaseFuture.awaitUninterruptibly(2000)).isTrue();
         assertThat(releaseFuture.isSuccess()).isFalse();
@@ -164,7 +165,7 @@ public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
         List<Future<Connection>> futures = Collections.synchronizedList(new LinkedList<>());
         ConnectionGroup connectionGroup = new SingleConnectionGroup(url, client);
 
-        //acquire connection
+        // acquire connection
         int num = 20;
         CountDownLatch latch = new CountDownLatch(num);
         CyclicBarrier barrier = new CyclicBarrier(num);
@@ -177,10 +178,11 @@ public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
                 } catch (Exception e) {
                     Assert.fail("Should not reach here!");
                 }
-            }).start();
+            })
+                .start();
         }
 
-        //wait for all thread
+        // wait for all thread
         assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
         assertThat(futures.size()).isEqualTo(num);
 
@@ -191,7 +193,7 @@ public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
             set.add(f.getNow());
         }
 
-        //all connection must be same
+        // all connection must be same
         assertThat(set.size()).isEqualTo(1);
 
         sc.close().syncUninterruptibly();
@@ -204,7 +206,7 @@ public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
 
         ConnectionGroup connectionGroup = new SingleConnectionGroup(url, client);
 
-        //acquire
+        // acquire
         long acquiredMillis = System.currentTimeMillis();
         Future<Connection> future = connectionGroup.acquireConnection();
         assertThat(future.awaitUninterruptibly(3000)).isTrue();
@@ -227,11 +229,13 @@ public class SingleConnectionGroupTest extends AbstractEventLoopGroupTest {
 
         Connection connection = future.getNow();
 
-        //存在一条连接，但是没有完成的请求
+        // 存在一条连接，但是没有完成的请求
         assertThat(connectionGroup.canClose()).isTrue();
 
-        //存在一条连接， 还有未完成的请求
-        connection.addPromise(1, new DefaultInvocationPromise(this.client.config().group().next().newPromise()));
+        // 存在一条连接， 还有未完成的请求
+        connection.addPromise(
+            1,
+            new DefaultInvocationPromise(this.client.config().group().next().newPromise()));
         assertThat(connectionGroup.canClose()).isFalse();
 
         assertThat(connection.close().awaitUninterruptibly(2000)).isTrue();

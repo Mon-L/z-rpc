@@ -9,12 +9,11 @@ import io.netty.channel.ChannelHandlerContext;
  * @author zicung
  */
 public interface ProtocolEncoder {
-
     /**
      * 编码
      *
      * @param context ChannelHandlerContext
-     * @param msg     message
+     * @param msg message
      * @param byteBuf ByteBuf
      * @throws Exception 编码失败
      */

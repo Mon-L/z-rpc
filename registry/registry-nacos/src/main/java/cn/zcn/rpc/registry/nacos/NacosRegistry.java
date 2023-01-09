@@ -13,16 +13,17 @@ import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.listener.EventListener;
 import com.alibaba.nacos.api.naming.listener.NamingEvent;
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-
 /**
  * Nacos 服务提供者注册中心，提供服务注册与服务订阅功能。
+ *
  * <p>
+ *
  * <pre>
- * 存储结构：
+ * 服务提供者在 Nacos 的存储结构：
  *    --| z-rpc (namespace)
  *    ----| cn.zcn.rpc.example.service.PingService:v1.0.0 (interface:version)
  *    ------| cluster1 (cluster)
@@ -33,7 +34,6 @@ import java.util.*;
  *    ----| cn.zcn.rpc.example.service.PongService:v1.0.0
  *    ------| ......
  * </pre>
- * </p>
  *
  * @author zicung
  */
@@ -41,7 +41,6 @@ import java.util.*;
 public class NacosRegistry extends Registry {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NacosRegistry.class);
-
 
     private NamingService namingService;
     private final Map<ProviderInterfaceConfig, Instance> instances = new HashMap<>();
@@ -53,7 +52,7 @@ public class NacosRegistry extends Registry {
 
     private Properties getProperties(RegistryConfig registryConfig) {
         Properties properties = new Properties();
-        String url = registryConfig.getUrl();   // 10.0.1.1:8888, 10.0.1.1:8888/{namespace}
+        String url = registryConfig.getUrl(); // 10.0.1.1:8888, 10.0.1.1:8888/{namespace}
 
         String namespace, serverAddr;
         int slash = url.indexOf('/');
@@ -83,7 +82,8 @@ public class NacosRegistry extends Registry {
     }
 
     @Override
-    public void register(ProviderConfig providerConfig, Collection<ProviderInterfaceConfig> providerInterfaceConfigs) throws RegistryException {
+    public void register(ProviderConfig providerConfig, Collection<ProviderInterfaceConfig> providerInterfaceConfigs)
+        throws RegistryException {
         try {
             for (ProviderInterfaceConfig interfaceConfig : providerInterfaceConfigs) {
                 Instance instance = NacosUtils.toInstance(providerConfig, interfaceConfig);
@@ -113,7 +113,8 @@ public class NacosRegistry extends Registry {
     }
 
     @Override
-    public void subscribe(ConsumerInterfaceConfig consumerInterfaceConfig, ProviderListener providerListener) throws RegistryException {
+    public void subscribe(ConsumerInterfaceConfig consumerInterfaceConfig, ProviderListener providerListener)
+        throws RegistryException {
         try {
             EventListener eventListener = event -> {
                 if (event instanceof NamingEvent) {
@@ -131,7 +132,10 @@ public class NacosRegistry extends Registry {
             namingService.subscribe(consumerInterfaceConfig.getUniqueName(), eventListener);
             listens.put(consumerInterfaceConfig, eventListener);
         } catch (NacosException e) {
-            throw new RegistryException(e, "Error occurred when subscribe instances. Interface:{}", consumerInterfaceConfig.getUniqueName());
+            throw new RegistryException(
+                e,
+                "Error occurred when subscribe instances. Interface:{}",
+                consumerInterfaceConfig.getUniqueName());
         }
     }
 
@@ -146,7 +150,10 @@ public class NacosRegistry extends Registry {
             EventListener eventListener = listens.remove(consumerInterfaceConfig);
             namingService.unsubscribe(consumerInterfaceConfig.getUniqueName(), eventListener);
         } catch (NacosException e) {
-            throw new RegistryException(e, "Error occurred when unsubscribe instances. Interface:{}", consumerInterfaceConfig.getUniqueName());
+            throw new RegistryException(
+                e,
+                "Error occurred when unsubscribe instances. Interface:{}",
+                consumerInterfaceConfig.getUniqueName());
         }
     }
 
@@ -164,7 +171,8 @@ public class NacosRegistry extends Registry {
             }
             return providers;
         } catch (NacosException e) {
-            throw new RegistryException(e, "Error occurred when load provider. Interface:{}", consumerInterfaceConfig.getUniqueName());
+            throw new RegistryException(
+                e, "Error occurred when load provider. Interface:{}", consumerInterfaceConfig.getUniqueName());
         }
     }
 

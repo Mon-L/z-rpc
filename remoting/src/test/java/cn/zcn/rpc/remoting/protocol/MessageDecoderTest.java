@@ -1,5 +1,7 @@
 package cn.zcn.rpc.remoting.protocol;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import cn.zcn.rpc.remoting.Protocol;
 import cn.zcn.rpc.remoting.ProtocolDecoder;
 import cn.zcn.rpc.remoting.ProtocolManager;
@@ -12,10 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 public class MessageDecoderTest {
-
     private EmbeddedChannel channel;
 
     @Before
@@ -27,11 +26,12 @@ public class MessageDecoderTest {
     @Test
     public void testDecodeWhenUnknownProtocolCode() {
         ByteBuf byteBuf = Unpooled.buffer();
-        byteBuf.writeByte(11);  //protocol code
-        byteBuf.writeByte(11);  //protocol version
+        byteBuf.writeByte(11); // protocol code
+        byteBuf.writeByte(11); // protocol version
         byteBuf.writeByte(0);
 
         assertThatExceptionOfType(DecoderException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 channel.writeInbound(byteBuf.retain());
@@ -50,13 +50,12 @@ public class MessageDecoderTest {
         Mockito.when(protocol.getDecoder()).thenReturn(protocolDecoder);
 
         ByteBuf byteBuf = Unpooled.buffer();
-        byteBuf.writeByte(protocol.getProtocolCode().getCode());  //protocol code
-        byteBuf.writeByte(protocol.getProtocolCode().getVersion());  //protocol version
+        byteBuf.writeByte(protocol.getProtocolCode().getCode()); // protocol code
+        byteBuf.writeByte(protocol.getProtocolCode().getVersion()); // protocol version
         byteBuf.writeByte(0);
         channel.writeInbound(byteBuf.retain());
 
-        Mockito.verify(protocol.getDecoder(), Mockito.times(1))
-                .decode(Mockito.any(), Mockito.any(), Mockito.any());
+        Mockito.verify(protocol.getDecoder(), Mockito.times(1)).decode(Mockito.any(), Mockito.any(), Mockito.any());
 
         ProtocolManager.getInstance().unregisterProtocol(protocol.getProtocolCode());
     }

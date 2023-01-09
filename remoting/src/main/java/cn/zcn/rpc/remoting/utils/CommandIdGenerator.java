@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author zicung
  */
 public class CommandIdGenerator {
-
     private static final CommandIdGenerator INSTANCE = new CommandIdGenerator();
 
     private final AtomicInteger id = new AtomicInteger(0);

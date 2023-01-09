@@ -8,7 +8,6 @@ import cn.zcn.rpc.remoting.protocol.RequestCommand;
  * @author zicung
  */
 public interface RequestHandler<T> {
-
     /**
      * 可处理的请求的class，对应 {@link RequestCommand#getClazz()}
      *

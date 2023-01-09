@@ -4,7 +4,6 @@ import cn.zcn.rpc.remoting.exception.SerializationException;
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
 import com.caucho.hessian.io.SerializerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,7 +14,6 @@ import java.io.IOException;
  * @author zicung
  */
 public class HessianSerializer implements Serializer {
-
     private final SerializerFactory serializerFactory = new SerializerFactory();
 
     @Override
@@ -36,7 +34,6 @@ public class HessianSerializer implements Serializer {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T deserialize(byte[] bytes, String clazz) throws SerializationException {
-
         ByteArrayInputStream out = new ByteArrayInputStream(bytes);
         Hessian2Input hessian = new Hessian2Input(out);
         hessian.setSerializerFactory(serializerFactory);

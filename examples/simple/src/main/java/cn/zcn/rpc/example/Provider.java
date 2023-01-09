@@ -11,7 +11,8 @@ public class Provider {
         ProviderConfig providerConfig = new ProviderConfig();
 
         StudentService studentServiceImpl = new StudentServiceImpl();
-        ProviderInterfaceConfig studentServiceConfig = new ProviderInterfaceConfig(StudentService.class, studentServiceImpl);
+        ProviderInterfaceConfig studentServiceConfig =
+                new ProviderInterfaceConfig(StudentService.class, studentServiceImpl);
         studentServiceConfig.setVersion("1.0.1");
         providerConfig.addInterfaceConfig(studentServiceConfig);
 

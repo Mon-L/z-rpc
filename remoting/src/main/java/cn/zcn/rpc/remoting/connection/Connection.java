@@ -1,41 +1,30 @@
 package cn.zcn.rpc.remoting.connection;
 
 import cn.zcn.rpc.remoting.InvocationPromise;
-import cn.zcn.rpc.remoting.Url;
 import cn.zcn.rpc.remoting.config.Option;
-import cn.zcn.rpc.remoting.config.RpcOptions;
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.exception.TransportException;
 import cn.zcn.rpc.remoting.protocol.ResponseCommand;
 import cn.zcn.rpc.remoting.utils.NetUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public class Connection {
-
-    public static final AttributeKey<Connection> CONNECTION_KEY = AttributeKey.valueOf("rpc-connection");
-    public static final AttributeKey<Url> CONNECTION_GROUP_KEY = AttributeKey.valueOf("connection-group-key");
-
     private static final Logger LOGGER = LoggerFactory.getLogger(Connection.class);
 
     private final Channel channel;
 
-    /**
-     * 心跳失败次数
-     */
+    /** 心跳失败次数 */
     private int heartbeatFailures = 0;
 
     private final ConcurrentMap<Integer, InvocationPromise<ResponseCommand>> promises = new ConcurrentHashMap<>();
@@ -56,8 +45,9 @@ public class Connection {
 
                 InvocationPromise<ResponseCommand> promise = entry.getValue();
                 promise.cancelTimeout();
-                promise.setFailure(new TransportException("Connection was closed. Request id:{0}, Remoting address:{1}",
-                        entry.getKey(), NetUtil.getRemoteAddress(channel)));
+                promise.setFailure(new TransportException(
+                    "Connection was closed. Request id:{0}, Remoting address:{1}",
+                    entry.getKey(), NetUtil.getRemoteAddress(channel)));
             }
         });
     }
@@ -87,7 +77,7 @@ public class Connection {
     }
 
     public <T> T getOption(Option<T> option) {
-        return channel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).get().getOption(option);
+        return channel.attr(AttributeKeys.OPTIONS).get().getOption(option);
     }
 
     public Map<Integer, InvocationPromise<ResponseCommand>> getInvokeFutures() {

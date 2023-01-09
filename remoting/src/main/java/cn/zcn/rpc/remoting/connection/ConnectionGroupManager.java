@@ -5,23 +5,22 @@ import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
 import cn.zcn.rpc.remoting.utils.NamedThreadFactory;
 import io.netty.bootstrap.Bootstrap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * 管理所有连接组，提供连接组的获取和清理功能。<p>
- * 使用 {@code ScheduledExecutorService} 定时关闭符合条件的 {@code ConnectionGroup}，
- * 利用 {@link ConnectionGroup#canClose()} 判断 {@code ConnectionGroup} 是否可以被关闭。
+ * 管理所有连接组，提供连接组的创建、获取和清理功能。
+ *
+ * <p>使用 {@code ScheduledExecutorService} 定时关闭符合关闭条件的 {@code ConnectionGroup}， 利用 {@link
+ * ConnectionGroup#canClose()} 判断 {@code ConnectionGroup} 是否可以被关闭。
  *
  * @author zicung
  */
 public class ConnectionGroupManager extends AbstractLifecycle {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionGroupManager.class);
 
     private final Bootstrap bootstrap;
@@ -36,7 +35,8 @@ public class ConnectionGroupManager extends AbstractLifecycle {
 
     @Override
     protected void doStart() throws LifecycleException {
-        this.connectionGroupCleaner = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("connection-group-cleaner"));
+        this.connectionGroupCleaner = new ScheduledThreadPoolExecutor(1,
+            new NamedThreadFactory("connection-group-cleaner"));
         this.connectionGroupCleaner.scheduleAtFixedRate(this::cleanConnectionGroup, 0, 10, TimeUnit.SECONDS);
     }
 
@@ -50,13 +50,15 @@ public class ConnectionGroupManager extends AbstractLifecycle {
             iter.remove();
         }
 
-        //等待所有连接组被关闭
+        // 等待所有连接组被关闭
         long startTime = System.currentTimeMillis();
         while (!pendingCloseConnectionGroups.isEmpty()) {
             try {
                 cleanConnectionGroup();
                 TimeUnit.MILLISECONDS.sleep(100);
-                LOGGER.warn("Wait for all connection groups be closed. Total wait time:{}ms", System.currentTimeMillis() - startTime);
+                LOGGER.warn(
+                    "Wait for all connection groups be closed. Total wait time:{}ms",
+                    System.currentTimeMillis() - startTime);
             } catch (InterruptedException ignored) {
             }
         }
@@ -77,14 +79,17 @@ public class ConnectionGroupManager extends AbstractLifecycle {
         while (iter.hasNext()) {
             ConnectionGroup group = iter.next();
 
-            //清理没有可用连接或者空闲时间超过十分钟的连接组
+            // 清理没有可用连接或者空闲时间超过十分钟的连接组
             // 1000 * 60 * 10 = 600000
             if (group.getActiveCount() <= 0 || now - group.getLastAcquiredTime() > 600000) {
                 iter.remove();
                 pendingCloseConnectionGroups.add(group);
 
-                LOGGER.info("Remove connection group. Url:{}, Active connection num:{}, Idle time:{}ms.",
-                        group.getUrl().toString(), group.getActiveCount(), now - group.getLastAcquiredTime());
+                LOGGER.info(
+                    "Remove connection group. Url:{}, Active connection num:{}, Idle time:{}ms.",
+                    group.getUrl().toString(),
+                    group.getActiveCount(),
+                    now - group.getLastAcquiredTime());
             }
         }
     }
@@ -92,7 +97,9 @@ public class ConnectionGroupManager extends AbstractLifecycle {
     private void closeConnectionGroup(ConnectionGroup group) {
         group.close().addListener(future -> {
             if (future.isSuccess()) {
-                LOGGER.info("Closed Connection group successfully. Url:{}", group.getUrl().toString());
+                LOGGER.info(
+                    "Closed Connection group successfully. Url:{}",
+                    group.getUrl().toString());
             } else {
                 LOGGER.warn("Failed to close connection group. Url:{} " + group.getUrl().toString());
             }
@@ -112,8 +119,9 @@ public class ConnectionGroupManager extends AbstractLifecycle {
                 throw new IllegalArgumentException("Max connection num must be equal or greater than 1.");
             }
 
-            group = (maxConnections == 1 ? new SingleConnectionGroup(url, bootstrap.clone()) :
-                    new MultiConnectionGroup(url, bootstrap.clone(), maxConnections, 10000));
+            group = (maxConnections == 1
+                ? new SingleConnectionGroup(url, bootstrap.clone())
+                : new MultiConnectionGroup(url, bootstrap.clone(), maxConnections, 10000));
 
             ConnectionGroup exist = connectionGroups.putIfAbsent(url, group);
             if (exist != null) {

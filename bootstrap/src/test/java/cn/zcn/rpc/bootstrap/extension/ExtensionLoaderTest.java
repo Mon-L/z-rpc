@@ -1,10 +1,10 @@
 package cn.zcn.rpc.bootstrap.extension;
 
-import org.assertj.core.api.ThrowableAssert;
-import org.junit.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.assertj.core.api.ThrowableAssert;
+import org.junit.Test;
 
 public class ExtensionLoaderTest {
 
@@ -13,28 +13,32 @@ public class ExtensionLoaderTest {
         assertThatThrownBy(() -> ExtensionLoader.getExtensionLoader(null)).isInstanceOf(ExtensionException.class);
 
         assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
-            @Override
-            public void call() throws Throwable {
-                //ExtensionLoaderTest 不是接口
-                ExtensionLoader.getExtensionLoader(ExtensionLoaderTest.class);
-            }
-        }).isInstanceOf(ExtensionException.class);
+                    @Override
+                    public void call() throws Throwable {
+                        // ExtensionLoaderTest 不是接口
+                        ExtensionLoader.getExtensionLoader(ExtensionLoaderTest.class);
+                    }
+                })
+                .isInstanceOf(ExtensionException.class);
 
         assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
-            @Override
-            public void call() throws Throwable {
-                //Runnable 没有 @ExtensionPoint 注解
-                ExtensionLoader.getExtensionLoader(Runnable.class);
-            }
-        }).isInstanceOf(ExtensionException.class);
+                    @Override
+                    public void call() throws Throwable {
+                        // Runnable 没有 @ExtensionPoint 注解
+                        ExtensionLoader.getExtensionLoader(Runnable.class);
+                    }
+                })
+                .isInstanceOf(ExtensionException.class);
 
-        ExtensionLoader<FlyableNotInExtensionFile> ext = ExtensionLoader.getExtensionLoader(FlyableNotInExtensionFile.class);
+        ExtensionLoader<FlyableNotInExtensionFile> ext =
+                ExtensionLoader.getExtensionLoader(FlyableNotInExtensionFile.class);
         assertThat(ext).isNotNull();
     }
 
     @Test
     public void testNotInExtensionFile() {
-        ExtensionLoader<FlyableNotInExtensionFile> ext = ExtensionLoader.getExtensionLoader(FlyableNotInExtensionFile.class);
+        ExtensionLoader<FlyableNotInExtensionFile> ext =
+                ExtensionLoader.getExtensionLoader(FlyableNotInExtensionFile.class);
         assertThat(ext).isNotNull();
 
         assertThatThrownBy(new ThrowableAssert.ThrowingCallable() {
@@ -42,7 +46,8 @@ public class ExtensionLoaderTest {
             public void call() throws Throwable {
                 ext.getExtension("foo");
             }
-        }).isInstanceOf(ExtensionException.class);
+        })
+            .isInstanceOf(ExtensionException.class);
     }
 
     @Test
@@ -60,7 +65,7 @@ public class ExtensionLoaderTest {
         ExtensionLoader<AbstractRegistry> ext = ExtensionLoader.getExtensionLoader(AbstractRegistry.class);
         assertThat(ext).isNotNull();
 
-        AbstractRegistry instance = ext.getExtension("foo", new Class<?>[]{int.class}, new Object[]{1});
+        AbstractRegistry instance = ext.getExtension("foo", new Class<?>[] { int.class }, new Object[] { 1 });
         assertThat(instance).isNotNull();
         assertThat(AbstractRegistry.class.isAssignableFrom(instance.getClass())).isTrue();
     }
@@ -95,7 +100,6 @@ public class ExtensionLoaderTest {
     public static class FlyImpl implements Flyable {
         @Override
         public void fly() {
-
         }
     }
 
@@ -108,7 +112,6 @@ public class ExtensionLoaderTest {
 
         @Override
         public void fly() {
-
         }
     }
 
@@ -120,7 +123,6 @@ public class ExtensionLoaderTest {
     @ExtensionPoint
     public abstract static class AbstractRegistry {
         public AbstractRegistry(int i) {
-
         }
     }
 

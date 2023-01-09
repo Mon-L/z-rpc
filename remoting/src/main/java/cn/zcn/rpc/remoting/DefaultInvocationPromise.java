@@ -5,7 +5,6 @@ import io.netty.util.Timeout;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -16,7 +15,6 @@ import java.util.concurrent.TimeoutException;
  * @author zicung
  */
 public class DefaultInvocationPromise implements InvocationPromise<ResponseCommand> {
-
     private final Promise<ResponseCommand> promise;
     private Timeout timeout;
 
@@ -172,7 +170,8 @@ public class DefaultInvocationPromise implements InvocationPromise<ResponseComma
     }
 
     @Override
-    public ResponseCommand get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public ResponseCommand get(long timeout, TimeUnit unit)
+        throws InterruptedException, ExecutionException, TimeoutException {
         return promise.get(timeout, unit);
     }
 }

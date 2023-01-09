@@ -3,9 +3,8 @@ package cn.zcn.rpc.example;
 import cn.zcn.rpc.bootstrap.consumer.ConsumerBootstrap;
 import cn.zcn.rpc.bootstrap.consumer.ConsumerInterfaceConfig;
 import cn.zcn.rpc.bootstrap.registry.RegistryConfig;
-import org.apache.http.util.Asserts;
-
 import java.util.Collections;
+import org.apache.http.util.Asserts;
 
 public class Consumer {
 
@@ -13,12 +12,12 @@ public class Consumer {
         ConsumerBootstrap bootstrap = new ConsumerBootstrap();
         bootstrap.start();
 
-        //registry
+        // registry
         RegistryConfig nacosRegistryConfig = new RegistryConfig();
         nacosRegistryConfig.setType("nacos");
         nacosRegistryConfig.setUrl("127.0.0.1:8848");
 
-        //interface config
+        // interface config
         ConsumerInterfaceConfig studentServiceConfig = new ConsumerInterfaceConfig(StudentService.class);
         studentServiceConfig.setVersion("1.0.1");
         studentServiceConfig.setRegistryConfigs(Collections.singleton(nacosRegistryConfig));

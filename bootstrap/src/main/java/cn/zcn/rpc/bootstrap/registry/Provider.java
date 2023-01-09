@@ -9,29 +9,19 @@ import java.util.Objects;
  */
 public class Provider {
 
-    /**
-     * ip
-     */
+    /** ip */
     private String ip;
 
-    /**
-     * port
-     */
+    /** port */
     private int port;
 
-    /**
-     * 服务权重
-     */
+    /** 服务权重 */
     private int weight = 5;
 
-    /**
-     * 服务预热时间，毫秒
-     */
+    /** 服务预热时间，毫秒 */
     private int warmup = 0;
 
-    /**
-     * 服务启动时间
-     */
+    /** 服务启动时间 */
     private long startTime = 0;
 
     public String getIp() {

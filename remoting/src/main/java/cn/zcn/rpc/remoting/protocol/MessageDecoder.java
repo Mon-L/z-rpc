@@ -2,11 +2,11 @@ package cn.zcn.rpc.remoting.protocol;
 
 import cn.zcn.rpc.remoting.Protocol;
 import cn.zcn.rpc.remoting.ProtocolManager;
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.exception.ProtocolException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-
 import java.util.List;
 
 /**
@@ -26,7 +26,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
         ProtocolCode protocolCode;
         try {
             protocolCode = ProtocolCode.from(byteBuf.readByte(), byteBuf.readByte());
-            context.channel().attr(Protocol.PROTOCOL).set(protocolCode);
+            context.channel().attr(AttributeKeys.PROTOCOL).set(protocolCode);
         } finally {
             byteBuf.resetReaderIndex();
         }

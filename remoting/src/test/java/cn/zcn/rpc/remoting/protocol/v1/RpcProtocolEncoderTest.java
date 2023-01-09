@@ -1,5 +1,7 @@
 package cn.zcn.rpc.remoting.protocol.v1;
 
+import static org.assertj.core.api.Assertions.*;
+
 import cn.zcn.rpc.remoting.ProtocolEncoder;
 import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.protocol.*;
@@ -9,16 +11,12 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
+import java.util.Arrays;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-
-import static org.assertj.core.api.Assertions.*;
-
 public class RpcProtocolEncoderTest {
-
     private EmbeddedChannel channel;
     private ChannelHandlerContext context;
     private ProtocolEncoder protocolEncoder;
@@ -36,6 +34,7 @@ public class RpcProtocolEncoderTest {
         Object msg = new Object();
 
         assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 protocolEncoder.encode(context, msg, out);

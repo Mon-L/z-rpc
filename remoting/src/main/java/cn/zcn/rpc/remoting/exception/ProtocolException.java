@@ -1,8 +1,6 @@
 package cn.zcn.rpc.remoting.exception;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public class ProtocolException extends BaseRuntimeException {
 
     public ProtocolException(String msg) {

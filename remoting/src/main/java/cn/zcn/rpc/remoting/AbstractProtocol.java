@@ -3,11 +3,10 @@ package cn.zcn.rpc.remoting;
 import cn.zcn.rpc.remoting.protocol.CommandCode;
 import cn.zcn.rpc.remoting.protocol.ICommand;
 import cn.zcn.rpc.remoting.protocol.ProtocolCode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract protocol
@@ -15,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author zicung
  */
 public abstract class AbstractProtocol implements Protocol {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractProtocol.class);
 
     private final ProtocolCode protocolCode;

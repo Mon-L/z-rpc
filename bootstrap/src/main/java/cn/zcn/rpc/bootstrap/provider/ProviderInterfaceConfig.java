@@ -9,9 +9,7 @@ import cn.zcn.rpc.bootstrap.InterfaceConfig;
  */
 public class ProviderInterfaceConfig extends InterfaceConfig {
 
-    /**
-     * 接口实现类
-     */
+    /** 接口实现类 */
     private final Object impl;
 
     public <T> ProviderInterfaceConfig(Class<T> clazz, T impl) {

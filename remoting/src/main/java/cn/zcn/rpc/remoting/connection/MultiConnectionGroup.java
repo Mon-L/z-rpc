@@ -1,6 +1,13 @@
 package cn.zcn.rpc.remoting.connection;
 
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import cn.zcn.rpc.remoting.Url;
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.utils.NetUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.util.concurrent.Future;
@@ -8,20 +15,13 @@ import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.ScheduledFuture;
 
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
- * 管理包含多条 {@link Connection} 的连接组。{@code Connection} 不能被多条 {@code Thread} 同时使用。
- * 只有当 {@code Connection} 被释放后才可以被其他 {@code Thread} 使用。
+ * 包含多条 {@link Connection} 的连接组。{@code Connection} 不能被多次获取，只有当 {@code
+ * Connection} 被释放后才可以被再次获取。
  *
  * @author zicung
  */
 public class MultiConnectionGroup extends AbstractConnectionGroup {
-
     private final int maxConnection;
     private final long acquireTimeoutMillis;
 
@@ -38,12 +38,15 @@ public class MultiConnectionGroup extends AbstractConnectionGroup {
     }
 
     /**
-     * 获取可用连接。<p>
-     * 获取连接时会出现以下情况：
+     * 获取可用连接。
+     *
+     * <p>获取连接时会出现以下情况：
+     *
      * <ul>
-     *     <li>当 {@code lendingCount < maxConnection} 时会新建一条 {@code Connection} 并返回</li>
-     *     <li>当 {@code lendingCount >= maxConnection}，等待其他线程释放 {@code Connection} 后才能获得 {@code Connection}。</li>
-     *     <li>当获得一条 {@code Connection} 时会检查其是否存活，当 {@code Connection} 不存活是会移除它并重新获取。</li>
+     *   <li>当 {@code lendingCount < maxConnection} 时会新建一条 {@code Connection} 并返回
+     *   <li>当 {@code lendingCount >= maxConnection}，等待其他线程释放 {@code Connection} 后才能获得 {@code
+     *       Connection}。
+     *   <li>获得一条 {@code Connection} 时会检查其是否存活，{@code Connection} 不存活时会移除它并重新获取。
      * </ul>
      *
      * @param promise acquired promise
@@ -93,11 +96,11 @@ public class MultiConnectionGroup extends AbstractConnectionGroup {
 
     @Override
     protected void doReleaseConnection(Promise<Void> promise, Connection connection) {
-        Url groupKey = connection.getChannel().attr(Connection.CONNECTION_GROUP_KEY).get();
+        Url groupKey = connection.getChannel().attr(AttributeKeys.CONNECTION_URL).get();
         if (!this.url.equals(groupKey)) {
             connection.close();
-            promise.setFailure(new IllegalArgumentException("Connection " + NetUtil.getRemoteAddress(connection.getChannel()) +
-                    " was not acquired from this ConnectionGroup"));
+            promise.setFailure(new IllegalArgumentException("Connection " +
+                NetUtil.getRemoteAddress(connection.getChannel()) + " was not acquired from this ConnectionGroup"));
         } else {
             lendingCount.decrementAndGet();
 
@@ -195,7 +198,6 @@ public class MultiConnectionGroup extends AbstractConnectionGroup {
     }
 
     private class AcquiredListener implements GenericFutureListener<Future<Connection>> {
-
         private final Promise<Connection> promise;
 
         public AcquiredListener(Promise<Connection> promise) {

@@ -7,6 +7,7 @@ import cn.zcn.rpc.remoting.protocol.*;
 
 /**
  * Rpc protocol v1.
+ *
  * <pre>
  * Request
  * 0           1           2           3           4           5           6           7           8           9           10
@@ -36,7 +37,6 @@ import cn.zcn.rpc.remoting.protocol.*;
  * @author zicung
  */
 public class RpcProtocolV1 extends AbstractProtocol {
-
     public static final ProtocolCode PROTOCOL_CODE = ProtocolCode.from((byte) 1, (byte) 0);
     public static final int MIN_MESSAGE_LENGTH = 19;
     public static final int MIN_REQUEST_LENGTH = 21;

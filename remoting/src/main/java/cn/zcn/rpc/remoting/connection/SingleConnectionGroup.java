@@ -1,6 +1,7 @@
 package cn.zcn.rpc.remoting.connection;
 
 import cn.zcn.rpc.remoting.Url;
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.utils.NetUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.util.concurrent.Future;
@@ -8,12 +9,11 @@ import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 
 /**
- * 管理仅包含一条 {@link Connection} 的连接组，多个 {@code Thread} 可同时使用该 {@code Connection}。
+ * 仅一条 {@link Connection} 的连接组，多个 {@code Thread} 可同时使用该 {@code Connection}。
  *
  * @author zicung
  */
 public class SingleConnectionGroup extends AbstractConnectionGroup {
-
     private volatile Promise<Connection> connectionPromise;
     private volatile Promise<Void> closePromise;
 
@@ -40,11 +40,14 @@ public class SingleConnectionGroup extends AbstractConnectionGroup {
     }
 
     /**
-     * 获取 {@code Connection}。<p>
+     * 获取 {@code Connection}。
+     *
+     * <p>
+     *
      * <ul>
-     *     <li>当不存在 {@code Connection} 时，新建一条连接并返回。</li>
-     *     <li>当存在一条可用 {@code Connection} 时直接返回。</li>
-     *     <li>当获得一条 {@code Connection} 时会检查其是否存活，当 {@code Connection} 不存活是会移除它并重新获取。</li>
+     *   <li>当不存在 {@code Connection} 时，新建一条连接并返回。
+     *   <li>当存在一条可用 {@code Connection} 时直接返回。
+     *   <li>当获得一条 {@code Connection} 时会检查其是否存活，当 {@code Connection} 不存活是会移除它并重新获取。
      * </ul>
      *
      * @param promise acquire promise
@@ -54,7 +57,7 @@ public class SingleConnectionGroup extends AbstractConnectionGroup {
         Connection connection = getConnectionIfPresent();
         if (connection != null) {
             if (connection.isActive()) {
-                //有可用的connection
+                // 有可用的connection
                 promise.setSuccess(connection);
                 return;
             } else {
@@ -63,12 +66,12 @@ public class SingleConnectionGroup extends AbstractConnectionGroup {
         }
 
         if (connectionPromise != null && !connectionPromise.isDone()) {
-            //正在建立连接
+            // 正在建立连接
             connectionPromise.addListener(new CreateConnectionListener(promise));
             return;
         }
 
-        //建立一条新连接
+        // 建立一条新连接
         connectionPromise = executor.newPromise();
         connectionPromise.addListener(new CreateConnectionListener(promise));
         createConnection(connectionPromise);
@@ -76,19 +79,17 @@ public class SingleConnectionGroup extends AbstractConnectionGroup {
 
     @Override
     protected void doReleaseConnection(Promise<Void> promise, Connection connection) {
-        Url groupKey = connection.getChannel().attr(Connection.CONNECTION_GROUP_KEY).get();
+        Url groupKey = connection.getChannel().attr(AttributeKeys.CONNECTION_URL).get();
         if (url.equals(groupKey)) {
-            if (!connection.isActive()
-                    || !connectionPromise.isDone()
-                    || !connectionPromise.isSuccess()
-                    || connectionPromise.getNow() != connection) {
+            if (!connection.isActive() || !connectionPromise.isDone() || !connectionPromise.isSuccess() ||
+                connectionPromise.getNow() != connection) {
                 connection.close();
             }
             promise.setSuccess(null);
         } else {
             connection.close();
-            promise.setFailure(new IllegalArgumentException("Connection " + NetUtil.getRemoteAddress(connection.getChannel()) +
-                    " was not acquired from this ConnectionGroup"));
+            promise.setFailure(new IllegalArgumentException("Connection " +
+                NetUtil.getRemoteAddress(connection.getChannel()) + " was not acquired from this ConnectionGroup"));
         }
     }
 
@@ -96,13 +97,13 @@ public class SingleConnectionGroup extends AbstractConnectionGroup {
     public boolean canClose() {
         if (connectionPromise != null) {
             if (!connectionPromise.isDone()) {
-                //正在连接,不能关闭
+                // 正在连接,不能关闭
                 return false;
             } else if (connectionPromise.isSuccess()) {
                 Connection connection = connectionPromise.getNow();
 
-                //存在可用的连接且还有未完成的请求,不能关闭
-                return connection.getInvokeFutures().isEmpty() || !connection.isActive();
+                // 存在可用的连接且还有未完成的请求,不能关闭
+                return (connection.getInvokeFutures().isEmpty() || !connection.isActive());
             }
         }
         return true;
@@ -131,7 +132,6 @@ public class SingleConnectionGroup extends AbstractConnectionGroup {
     }
 
     private class CreateConnectionListener implements GenericFutureListener<Future<Connection>> {
-
         private final Promise<Connection> promise;
 
         private CreateConnectionListener(Promise<Connection> promise) {

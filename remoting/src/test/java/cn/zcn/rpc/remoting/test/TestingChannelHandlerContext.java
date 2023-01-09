@@ -5,11 +5,9 @@ import io.netty.channel.*;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.EventExecutor;
-
 import java.net.SocketAddress;
 
 public class TestingChannelHandlerContext implements ChannelHandlerContext {
-
     private Channel channel;
 
     public TestingChannelHandlerContext(Channel channel) {
@@ -157,7 +155,9 @@ public class TestingChannelHandlerContext implements ChannelHandlerContext {
     }
 
     @Override
-    public ChannelFuture connect(SocketAddress socketAddress, SocketAddress socketAddress1, ChannelPromise channelPromise) {
+    public ChannelFuture connect(
+                                 SocketAddress socketAddress, SocketAddress socketAddress1,
+                                 ChannelPromise channelPromise) {
         return null;
     }
 

@@ -4,15 +4,12 @@ import cn.zcn.rpc.bootstrap.RpcRequest;
 import cn.zcn.rpc.bootstrap.RpcResponse;
 import cn.zcn.rpc.bootstrap.consumer.RpcInvoker;
 import cn.zcn.rpc.bootstrap.extension.Extension;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.ExecutionException;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 @Extension("jdk")
 public class JdkProxy implements Proxy {
 
@@ -20,12 +17,12 @@ public class JdkProxy implements Proxy {
     private static final String HASHCODE_METHOD_NAME = "hashcode";
     private static final String EQUALS_METHOD_NAME = "equals";
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({ "unchecked" })
     @Override
     public <T> T createProxy(Class<?> clazz, RpcInvoker rpcInvoker) {
         InvocationHandler handler = new JdkInvocationHandler(rpcInvoker);
-        Object instance = java.lang.reflect.Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                new Class[]{clazz}, handler);
+        Object instance = java.lang.reflect.Proxy.newProxyInstance(
+            Thread.currentThread().getContextClassLoader(), new Class[] { clazz }, handler);
         return (T) instance;
     }
 

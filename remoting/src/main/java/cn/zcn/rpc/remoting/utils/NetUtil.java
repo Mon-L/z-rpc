@@ -2,20 +2,16 @@ package cn.zcn.rpc.remoting.utils;
 
 import io.netty.channel.Channel;
 import io.netty.util.internal.StringUtil;
-
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public class NetUtil {
-
     private static final String COLON = ":";
     private static final char SLASH = '/';
 
     public static String getRemoteAddress(Channel channel) {
-        return getRemoteHost(channel.remoteAddress()) + COLON + getRemotePort(channel.remoteAddress());
+        return (getRemoteHost(channel.remoteAddress()) + COLON + getRemotePort(channel.remoteAddress()));
     }
 
     public static String getRemoteAddress(SocketAddress address) {

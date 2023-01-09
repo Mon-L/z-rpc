@@ -10,7 +10,6 @@ import cn.zcn.rpc.remoting.utils.CommandIdGenerator;
  * @author zicung
  */
 public class RpcProtocolCommandFactory implements CommandFactory {
-
     private final ProtocolCode protocolCode;
 
     protected RpcProtocolCommandFactory(ProtocolCode protocolCode) {

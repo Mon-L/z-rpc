@@ -1,5 +1,8 @@
 package cn.zcn.rpc.bootstrap.consumer.filter;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import cn.zcn.rpc.bootstrap.Order;
 import cn.zcn.rpc.bootstrap.RpcException;
 import cn.zcn.rpc.bootstrap.RpcRequest;
@@ -7,16 +10,12 @@ import cn.zcn.rpc.bootstrap.RpcResponse;
 import cn.zcn.rpc.bootstrap.extension.Extension;
 import cn.zcn.rpc.bootstrap.extension.ExtensionException;
 import cn.zcn.rpc.bootstrap.registry.Provider;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 public class FilterChainBuilderTest {
 
@@ -25,7 +24,8 @@ public class FilterChainBuilderTest {
     @Extension("filter1")
     public static class Filter1 implements Filter {
         @Override
-        public RpcResponse doFilter(Provider provider, RpcRequest request, FilterChainNode nextFilter) throws RpcException {
+        public RpcResponse doFilter(Provider provider, RpcRequest request, FilterChainNode nextFilter)
+                throws RpcException {
             SEQUENCE.add("filter1");
             return nextFilter.invoke(provider, request);
         }
@@ -35,7 +35,8 @@ public class FilterChainBuilderTest {
     @Extension("filter2")
     public static class Filter2 implements Filter {
         @Override
-        public RpcResponse doFilter(Provider provider, RpcRequest request, FilterChainNode nextFilter) throws RpcException {
+        public RpcResponse doFilter(Provider provider, RpcRequest request, FilterChainNode nextFilter)
+                throws RpcException {
             SEQUENCE.add("filter2");
             return nextFilter.invoke(provider, request);
         }
@@ -45,7 +46,8 @@ public class FilterChainBuilderTest {
     @Extension("suspendFilter")
     public static class SuspendFilter implements Filter {
         @Override
-        public RpcResponse doFilter(Provider provider, RpcRequest request, FilterChainNode nextFilter) throws RpcException {
+        public RpcResponse doFilter(Provider provider, RpcRequest request, FilterChainNode nextFilter)
+                throws RpcException {
             RpcResponse resp = new RpcResponse();
             resp.set(false);
             return resp;
@@ -56,7 +58,8 @@ public class FilterChainBuilderTest {
     @Extension("filter3")
     public static class Filter3 implements Filter {
         @Override
-        public RpcResponse doFilter(Provider provider, RpcRequest request, FilterChainNode nextFilter) throws RpcException {
+        public RpcResponse doFilter(Provider provider, RpcRequest request, FilterChainNode nextFilter)
+                throws RpcException {
             SEQUENCE.add("filter3");
             return nextFilter.invoke(provider, request);
         }
@@ -69,11 +72,13 @@ public class FilterChainBuilderTest {
 
     @Test
     public void testFilterOrder() throws ExecutionException {
-        List<String> filters = new ArrayList<String>() {{
-            add("filter3");
-            add("filter1");
-            add("filter2");
-        }};
+        List<String> filters = new ArrayList<String>() {
+            {
+                add("filter3");
+                add("filter1");
+                add("filter2");
+            }
+        };
 
         Filter filter = (provider, request, next) -> {
             RpcResponse resp = new RpcResponse();
@@ -92,21 +97,26 @@ public class FilterChainBuilderTest {
 
     @Test
     public void testInvalidFilter() {
-        List<String> filters = new ArrayList<String>() {{
-            add("filter6");
-        }};
+        List<String> filters = new ArrayList<String>() {
+            {
+                add("filter6");
+            }
+        };
 
-        assertThatThrownBy(() -> FilterChainBuilder.build((provider, request, next) -> null, filters)).isInstanceOf(ExtensionException.class);
+        assertThatThrownBy(() -> FilterChainBuilder.build((provider, request, next) -> null, filters))
+                .isInstanceOf(ExtensionException.class);
     }
 
     @Test
     public void testFilterChainButSuspend() throws ExecutionException {
-        List<String> filters = new ArrayList<String>() {{
-            add("filter1");
-            add("filter3");
-            add("suspendFilter");
-            add("filter2");
-        }};
+        List<String> filters = new ArrayList<String>() {
+            {
+                add("filter1");
+                add("filter3");
+                add("suspendFilter");
+                add("filter2");
+            }
+        };
 
         Filter filter = (provider, request, next) -> {
             RpcResponse resp = new RpcResponse();

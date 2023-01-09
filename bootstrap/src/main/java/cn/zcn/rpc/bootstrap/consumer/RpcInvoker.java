@@ -5,14 +5,14 @@ import cn.zcn.rpc.bootstrap.RpcRequest;
 import cn.zcn.rpc.bootstrap.RpcResponse;
 
 /**
- * Rpc 调用者，提供调用远程 Rpc 接口的功能。
+ * Rpc 调用者，提供调用远程接口的功能。
  *
  * @author zicung
  */
 public interface RpcInvoker {
 
     /**
-     * 调用 Rpc 接口
+     * 调用远程接口
      *
      * @param request 当前请求
      * @return 响应

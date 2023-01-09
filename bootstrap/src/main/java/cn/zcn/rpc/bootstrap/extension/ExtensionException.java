@@ -2,9 +2,7 @@ package cn.zcn.rpc.bootstrap.extension;
 
 import cn.zcn.rpc.remoting.exception.BaseRuntimeException;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public class ExtensionException extends BaseRuntimeException {
 
     public ExtensionException(Throwable t, String msg) {

@@ -9,15 +9,10 @@ import java.util.Objects;
  * @author zicung
  */
 public class Url {
-
-    /**
-     * 地址
-     */
+    /** 地址 */
     private final SocketAddress address;
 
-    /**
-     * 最大连接数，指该 Url 可以建立多少条连接
-     */
+    /** 最大连接数，指该 Url 可以建立多少条连接 */
     private int maxConnectionNum;
 
     private Url(SocketAddress address) {
@@ -57,7 +52,7 @@ public class Url {
         return address != null ? address.hashCode() : 0;
     }
 
-    public final static class Builder {
+    public static final class Builder {
         private final SocketAddress address;
         private int maxConnectionNum = 1;
 

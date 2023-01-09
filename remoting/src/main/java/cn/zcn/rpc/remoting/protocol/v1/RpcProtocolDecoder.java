@@ -6,7 +6,6 @@ import cn.zcn.rpc.remoting.protocol.*;
 import cn.zcn.rpc.remoting.utils.Crc32Util;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-
 import java.util.List;
 
 /**
@@ -27,7 +26,8 @@ public class RpcProtocolDecoder implements ProtocolDecoder {
 
         ProtocolCode protocolCode = ProtocolCode.from(byteBuf.readByte(), byteBuf.readByte());
         if (!RpcProtocolV1.PROTOCOL_CODE.equals(protocolCode)) {
-            throw new ProtocolException("Excepted protocol {0}, but got {1}.", RpcProtocolV1.PROTOCOL_CODE, protocolCode);
+            throw new ProtocolException(
+                "Excepted protocol {0}, but got {1}.", RpcProtocolV1.PROTOCOL_CODE, protocolCode);
         }
 
         short type = byteBuf.readShort();

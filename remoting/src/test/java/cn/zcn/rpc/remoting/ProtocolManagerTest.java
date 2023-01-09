@@ -1,19 +1,19 @@
 package cn.zcn.rpc.remoting;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+
 import cn.zcn.rpc.remoting.protocol.*;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-
 public class ProtocolManagerTest {
-
     private final ProtocolManager protocolManager = ProtocolManager.getInstance();
 
     @Test
     public void testRegister() {
         assertThatIllegalArgumentException().isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() {
                 protocolManager.registerProtocol(null, new NoopProtocol());
@@ -21,6 +21,7 @@ public class ProtocolManagerTest {
         });
 
         assertThatIllegalArgumentException().isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() {
                 protocolManager.registerProtocol(ProtocolCode.from((byte) 1, (byte) 2), null);
@@ -81,7 +82,6 @@ public class ProtocolManagerTest {
 
         @Override
         public void registerCommandHandler(CommandCode cmd, CommandHandler<ICommand> handler) {
-
         }
     }
 }

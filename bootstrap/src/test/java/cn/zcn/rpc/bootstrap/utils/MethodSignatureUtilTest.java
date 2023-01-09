@@ -1,14 +1,12 @@
 package cn.zcn.rpc.bootstrap.utils;
 
-
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class MethodSignatureUtilTest {
 
@@ -36,8 +34,10 @@ public class MethodSignatureUtilTest {
     @Test
     public void testGetMethodSignature3() {
         assertThat(MethodSignatureUtil.getMethodSignature("addUser", null)).isEqualTo("addUser");
-        assertThat(MethodSignatureUtil.getMethodSignature("addUser", new String[]{})).isEqualTo("addUser");
-        assertThat(
-                MethodSignatureUtil.getMethodSignature("addUser", new String[]{"java.lang.String", "int", "boolean"})).isEqualTo("addUser:java.lang.String,int,boolean");
+        assertThat(MethodSignatureUtil.getMethodSignature("addUser", new String[] {}))
+            .isEqualTo("addUser");
+        assertThat(MethodSignatureUtil.getMethodSignature(
+            "addUser", new String[] { "java.lang.String", "int", "boolean" }))
+            .isEqualTo("addUser:java.lang.String,int,boolean");
     }
 }

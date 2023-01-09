@@ -2,9 +2,7 @@ package cn.zcn.rpc.bootstrap.registry;
 
 import cn.zcn.rpc.remoting.exception.BaseRuntimeException;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public class RegistryException extends BaseRuntimeException {
 
     public RegistryException(Throwable t, String msg) {

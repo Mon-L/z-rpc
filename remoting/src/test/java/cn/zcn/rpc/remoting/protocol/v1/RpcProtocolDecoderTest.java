@@ -1,5 +1,7 @@
 package cn.zcn.rpc.remoting.protocol.v1;
 
+import static org.assertj.core.api.Assertions.*;
+
 import cn.zcn.rpc.remoting.ProtocolDecoder;
 import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.protocol.*;
@@ -9,18 +11,14 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.*;
-
 public class RpcProtocolDecoderTest {
-
     private EmbeddedChannel channel;
     private ChannelHandlerContext context;
     private ProtocolDecoder protocolDecoder;
@@ -42,12 +40,15 @@ public class RpcProtocolDecoderTest {
             in.writeByte(i);
         }
 
-        assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
-            @Override
-            public void call() throws Throwable {
-                protocolDecoder.decode(context, in, new ArrayList<>());
-            }
-        }).withMessageContaining("Excepted protocol ");
+        assertThatExceptionOfType(ProtocolException.class)
+                .isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
+                    @Override
+                    public void call() throws Throwable {
+                        protocolDecoder.decode(context, in, new ArrayList<>());
+                    }
+                })
+                .withMessageContaining("Excepted protocol ");
     }
 
     @Test
@@ -61,12 +62,15 @@ public class RpcProtocolDecoderTest {
             in.writeByte(i);
         }
 
-        assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
-            @Override
-            public void call() throws Throwable {
-                protocolDecoder.decode(context, in, new ArrayList<>());
-            }
-        }).withMessageContaining("Unknown command type ");
+        assertThatExceptionOfType(ProtocolException.class)
+                .isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
+                    @Override
+                    public void call() throws Throwable {
+                        protocolDecoder.decode(context, in, new ArrayList<>());
+                    }
+                })
+                .withMessageContaining("Unknown command type ");
     }
 
     @Test
@@ -76,14 +80,14 @@ public class RpcProtocolDecoderTest {
         in.writeByte(RpcProtocolV1.PROTOCOL_CODE.getVersion());
         in.writeShort(CommandType.REQUEST.getValue());
         in.writeShort(CommandCode.REQUEST.getValue());
-        in.writeInt(1000);  // id
-        in.writeByte(6);    //serializer
+        in.writeInt(1000); // id
+        in.writeByte(6); // serializer
 
         ProtocolSwitch protocolSwitch = ProtocolSwitch.parse((byte) 0);
-        protocolSwitch.turnOn(0);  // crc 32
+        protocolSwitch.turnOn(0); // crc 32
 
         in.writeByte(protocolSwitch.toByte());
-        in.writeInt(400);   // timeout
+        in.writeInt(400); // timeout
 
         testDecodeWithIncompleteMessage(in);
 
@@ -132,11 +136,11 @@ public class RpcProtocolDecoderTest {
         in.writeByte(RpcProtocolV1.PROTOCOL_CODE.getVersion());
         in.writeShort(CommandType.RESPONSE.getValue());
         in.writeShort(CommandCode.RESPONSE.getValue());
-        in.writeInt(1000);  // id
-        in.writeByte(6);    //serializer
+        in.writeInt(1000); // id
+        in.writeByte(6); // serializer
 
         ProtocolSwitch protocolSwitch = ProtocolSwitch.parse((byte) 0);
-        protocolSwitch.turnOn(0);  // crc 32
+        protocolSwitch.turnOn(0); // crc 32
 
         in.writeByte(protocolSwitch.toByte());
         in.writeShort(RpcStatus.OK.getValue());
@@ -188,14 +192,14 @@ public class RpcProtocolDecoderTest {
         in.writeByte(RpcProtocolV1.PROTOCOL_CODE.getVersion());
         in.writeShort(CommandType.REQUEST.getValue());
         in.writeShort(CommandCode.REQUEST.getValue());
-        in.writeInt(1000);  // id
-        in.writeByte(6);    //serializer
+        in.writeInt(1000); // id
+        in.writeByte(6); // serializer
 
         ProtocolSwitch protocolSwitch = ProtocolSwitch.parse((byte) 0);
-        protocolSwitch.turnOn(0);  // crc 32
+        protocolSwitch.turnOn(0); // crc 32
 
         in.writeByte(protocolSwitch.toByte());
-        in.writeInt(400);   // timeout
+        in.writeInt(400); // timeout
 
         testDecodeWithIncompleteMessage(in);
 
@@ -217,6 +221,7 @@ public class RpcProtocolDecoderTest {
         in.writeInt(Crc32Util.calculate(msg));
 
         assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 List<Object> out = new ArrayList<>();
@@ -233,7 +238,7 @@ public class RpcProtocolDecoderTest {
             fail("Should not reach here!");
         }
 
-        //should reset reader index
+        // should reset reader index
         assertThat(in.readableBytes()).isEqualTo(readableBytes);
     }
 }

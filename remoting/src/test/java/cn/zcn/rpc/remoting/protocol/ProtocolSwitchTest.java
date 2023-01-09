@@ -1,15 +1,16 @@
 package cn.zcn.rpc.remoting.protocol;
 
+import static org.assertj.core.api.Assertions.*;
+
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.*;
 
 public class ProtocolSwitchTest {
 
     @Test
     public void testParseWithInvalidByte() {
         assertThatIllegalArgumentException().isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 ProtocolSwitch.parse((byte) -1);
@@ -17,6 +18,7 @@ public class ProtocolSwitchTest {
         });
 
         assertThatIllegalArgumentException().isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 ProtocolSwitch.parse((byte) 128);
@@ -79,6 +81,7 @@ public class ProtocolSwitchTest {
         ProtocolSwitch protocolSwitch = ProtocolSwitch.parse((byte) 127);
 
         assertThatIllegalArgumentException().isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 protocolSwitch.turnOff(-1);
@@ -107,6 +110,7 @@ public class ProtocolSwitchTest {
         assertThat(protocolSwitch.toByte()).isEqualTo((byte) 0);
 
         assertThatIllegalArgumentException().isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 protocolSwitch.turnOff(7);
@@ -119,6 +123,7 @@ public class ProtocolSwitchTest {
         ProtocolSwitch protocolSwitch = ProtocolSwitch.parse((byte) 127);
 
         assertThatIllegalArgumentException().isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 protocolSwitch.isOn(-1);
@@ -132,6 +137,7 @@ public class ProtocolSwitchTest {
         }
 
         assertThatIllegalArgumentException().isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 protocolSwitch.isOn(7);

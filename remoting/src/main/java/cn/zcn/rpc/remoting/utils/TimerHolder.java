@@ -2,7 +2,6 @@ package cn.zcn.rpc.remoting.utils;
 
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timer;
-
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -11,14 +10,12 @@ import java.util.concurrent.TimeUnit;
  * @author zicung
  */
 public class TimerHolder {
-
     private static volatile TimerHolder instance;
 
     private final Timer timer;
 
     private TimerHolder() {
-        this.timer = new HashedWheelTimer(new NamedThreadFactory("rpc-timer"), 10,
-                TimeUnit.MILLISECONDS);
+        this.timer = new HashedWheelTimer(new NamedThreadFactory("rpc-timer"), 10, TimeUnit.MILLISECONDS);
     }
 
     /**

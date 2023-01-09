@@ -2,7 +2,6 @@ package cn.zcn.rpc.bootstrap.provider;
 
 import cn.zcn.rpc.bootstrap.RpcConfigs;
 import cn.zcn.rpc.bootstrap.registry.RegistryConfig;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,29 +12,19 @@ import java.util.Set;
  */
 public class ProviderConfig {
 
-    /**
-     * 名称
-     */
+    /** 名称 */
     private String name;
 
-    /**
-     * ip
-     */
+    /** ip */
     private String host;
 
-    /**
-     * 端口
-     */
+    /** 端口 */
     private int port;
 
-    /**
-     * 服务权重
-     */
+    /** 服务权重 */
     private int weight = RpcConfigs.getInteger(RpcConfigs.WEIGHT, 5);
 
-    /**
-     * 服务预热时间。默认十五分钟。
-     */
+    /** 服务预热时间。默认十五分钟。 */
     private int warmup = RpcConfigs.getInteger(RpcConfigs.WARMUP, 900000);
 
     private boolean ignoreTimeoutRequest = RpcConfigs.getBool(RpcConfigs.IGNORE_TIMEOUT_REQUEST, false);

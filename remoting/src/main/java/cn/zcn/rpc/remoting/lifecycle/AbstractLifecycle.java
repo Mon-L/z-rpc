@@ -1,18 +1,17 @@
 package cn.zcn.rpc.remoting.lifecycle;
 
 import cn.zcn.rpc.remoting.exception.LifecycleException;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 抽象的 {@code Lifecycle} 实现。<p>
- * 使用 {@code started} 存储启动状态，当{@code started.get() == false} 时才能调用 {@code start()}。
- * 只有当{@code started.get() == true} 时才能调用 {@code stop()}。
+ * 抽象的 {@code Lifecycle} 实现。
+ *
+ * <p>使用 {@code started} 标识启动状态，当 {@code started.get() == false} 时才能调用 {@code start()}。 只有当 {@code
+ * started.get() == true} 时才能调用 {@code stop()}。
  *
  * @author zicung
  */
 public abstract class AbstractLifecycle implements Lifecycle {
-
     private final AtomicBoolean started = new AtomicBoolean(false);
 
     @Override

@@ -1,9 +1,6 @@
 package cn.zcn.rpc.bootstrap.utils;
 
-
-/**
- * @author zicung
- */
+/** @author zicung */
 public class StringUtils {
 
     /**

@@ -9,9 +9,8 @@ import java.util.Objects;
  * @author zicung
  */
 public class ProtocolSwitch {
-
-    private final static int MAX_INDEX = 6;
-    private final static int MIN_INDEX = 0;
+    private static final int MAX_INDEX = 6;
+    private static final int MIN_INDEX = 0;
 
     private final BitSet bits;
 
@@ -74,6 +73,6 @@ public class ProtocolSwitch {
             throw new IllegalArgumentException("ProtocolSwitch value must between 0 and 127.");
         }
 
-        return new ProtocolSwitch(BitSet.valueOf(new byte[]{b}));
+        return new ProtocolSwitch(BitSet.valueOf(new byte[] { b }));
     }
 }

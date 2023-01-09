@@ -2,11 +2,8 @@ package cn.zcn.rpc.remoting.protocol;
 
 import java.io.Serializable;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public interface ICommand extends Serializable {
-
     /**
      * 获取协议码
      *

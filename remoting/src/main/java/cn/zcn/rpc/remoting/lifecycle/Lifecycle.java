@@ -8,7 +8,6 @@ import cn.zcn.rpc.remoting.exception.LifecycleException;
  * @author zicung
  */
 public interface Lifecycle {
-
     /**
      * 启动
      *

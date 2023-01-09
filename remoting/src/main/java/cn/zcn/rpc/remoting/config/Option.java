@@ -2,8 +2,9 @@ package cn.zcn.rpc.remoting.config;
 
 /**
  * 这是一个包含名称和默认值的配置选项。
- * <p>
- * 使用如下方式创建 {@code Option}：
+ *
+ * <p>使用如下方式创建 {@code Option}：
+ *
  * <pre>
  * {@code Option<Integer> age = valueOf("age", 1)}
  * </pre>
@@ -12,7 +13,6 @@ package cn.zcn.rpc.remoting.config;
  * @author zicung
  */
 public class Option<T> {
-
     private final String name;
     private final T defaultValue;
 

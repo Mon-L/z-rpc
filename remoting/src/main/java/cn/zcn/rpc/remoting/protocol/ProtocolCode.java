@@ -6,17 +6,12 @@ package cn.zcn.rpc.remoting.protocol;
  * @author zicung
  */
 public class ProtocolCode {
-
     public static final int LENGTH = 2;
 
-    /**
-     * 协议码
-     **/
+    /** 协议码 */
     private final byte code;
 
-    /**
-     * 协议版本
-     **/
+    /** 协议版本 */
     private final byte version;
 
     private ProtocolCode(byte code, byte version) {

@@ -2,7 +2,6 @@ package cn.zcn.rpc.bootstrap.consumer.loadbalance;
 
 import cn.zcn.rpc.bootstrap.RpcRequest;
 import cn.zcn.rpc.bootstrap.registry.Provider;
-
 import java.util.List;
 
 /**
@@ -26,9 +25,9 @@ public abstract class AbstractLoadBalance implements LoadBalance {
     /**
      * 当服务运行时间小于预热时间时降低其权重。调整后的服务权重处于 [0, weight] 之间。
      *
-     * @param weight    原始权重
+     * @param weight 原始权重
      * @param startTime 服务启动时间
-     * @param warmup    服务预热时间
+     * @param warmup 服务所需的预热时间
      * @return 调整后当权重
      */
     protected int adjustWeightWithWarmup(int weight, long startTime, int warmup) {
@@ -40,13 +39,13 @@ public abstract class AbstractLoadBalance implements LoadBalance {
             return weight;
         }
 
-        //运行时间
+        // 运行时间
         long uptime = System.currentTimeMillis() - startTime;
         if (uptime <= 0) {
             return 1;
         }
 
-        //运行时间小于预热时间
+        // 运行时间小于预热时间
         if (uptime < warmup) {
             return (int) (((float) uptime / warmup) * weight);
         }
@@ -58,7 +57,7 @@ public abstract class AbstractLoadBalance implements LoadBalance {
      * 子类应覆盖此方法用于执行负载均衡的逻辑
      *
      * @param providers 服务提供者列表
-     * @param request   请求
+     * @param request 请求
      * @return 被选中的服务提供者
      */
     protected abstract Provider doSelect(List<Provider> providers, RpcRequest request);

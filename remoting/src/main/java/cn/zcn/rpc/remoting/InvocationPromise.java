@@ -9,9 +9,7 @@ import io.netty.util.concurrent.Promise;
  * @author zicung
  */
 public interface InvocationPromise<T> extends Promise<T> {
-    /**
-     * 取消超时定时器
-     */
+    /** 取消超时定时器 */
     void cancelTimeout();
 
     /**

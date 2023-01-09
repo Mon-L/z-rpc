@@ -2,11 +2,10 @@ package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.protocol.ProtocolCode;
 import cn.zcn.rpc.remoting.protocol.v1.RpcProtocolV1;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manage all protocol.
@@ -14,7 +13,6 @@ import java.util.concurrent.ConcurrentMap;
  * @author zicung
  */
 public class ProtocolManager {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ProtocolManager.class);
 
     private static final ProtocolManager INSTANCE = new ProtocolManager();
@@ -35,7 +33,7 @@ public class ProtocolManager {
      * 注册协议
      *
      * @param protocolCode 协议码
-     * @param protocol     协议
+     * @param protocol 协议
      */
     public void registerProtocol(ProtocolCode protocolCode, Protocol protocol) {
         if (protocolCode == null || protocol == null) {

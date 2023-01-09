@@ -1,5 +1,6 @@
 package cn.zcn.rpc.remoting;
 
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.protocol.ProtocolCode;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,20 +16,21 @@ import org.slf4j.LoggerFactory;
  */
 @ChannelHandler.Sharable
 public class IdleStateEventHandler extends ChannelInboundHandlerAdapter {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(IdleStateEventHandler.class);
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
-            ProtocolCode protocolCode = ctx.channel().attr(Protocol.PROTOCOL).get();
+            ProtocolCode protocolCode = ctx.channel().attr(AttributeKeys.PROTOCOL).get();
 
             Protocol protocol;
             if (protocolCode != null) {
                 protocol = ProtocolManager.getInstance().getProtocol(protocolCode);
             } else {
                 protocol = ProtocolManager.getInstance().getDefaultProtocol();
-                LOGGER.info("Can not get protocol code from channel, use default protocol. Default protocol:{}", protocol.getProtocolCode());
+                LOGGER.info(
+                    "Can not get protocol code from channel, use default protocol. Default protocol:{}",
+                    protocol.getProtocolCode());
             }
 
             protocol.getHeartbeatTrigger().heartbeatTriggered(ctx);

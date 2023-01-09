@@ -1,6 +1,7 @@
 package cn.zcn.rpc.remoting.connection;
 
 import cn.zcn.rpc.remoting.Url;
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -8,7 +9,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author zicung
  */
 public abstract class AbstractConnectionGroup implements ConnectionGroup {
-
     private volatile long lastAcquiredTimeMillis = System.currentTimeMillis();
 
     protected final Url url;
@@ -42,13 +41,13 @@ public abstract class AbstractConnectionGroup implements ConnectionGroup {
         Promise<Connection> newPromise = executor.newPromise();
 
         if (isClosed.get()) {
-            //当连接组已关闭时返回异常信息
+            // 当连接组已关闭时返回异常信息
             reportGroupClosed(newPromise);
         } else if (executor.inEventLoop()) {
             doAcquireConnection(newPromise);
         } else {
             executor.execute(() -> {
-                if (isClosed.get()) {   //当连接组已关闭时返回异常信息
+                if (isClosed.get()) { // 当连接组已关闭时返回异常信息
                     reportGroupClosed(newPromise);
                 } else {
                     doAcquireConnection(newPromise);
@@ -64,14 +63,14 @@ public abstract class AbstractConnectionGroup implements ConnectionGroup {
         Promise<Void> newPromise = executor.newPromise();
 
         if (isClosed.get()) {
-            //当连接组已关闭时，关闭连接并返回异常信息
+            // 当连接组已关闭时，关闭连接并返回异常信息
             connection.close();
             reportGroupClosed(newPromise);
         } else if (executor.inEventLoop()) {
             doReleaseConnection(newPromise, connection);
         } else {
             executor.execute(() -> {
-                if (isClosed.get()) {   //当连接组已关闭时，关闭连接并返回异常信息
+                if (isClosed.get()) { // 当连接组已关闭时，关闭连接并返回异常信息
                     connection.close();
                     reportGroupClosed(newPromise);
                 } else {
@@ -99,10 +98,10 @@ public abstract class AbstractConnectionGroup implements ConnectionGroup {
     private void afterConnectionCreated(ChannelFuture channelFuture, Promise<Connection> promise) {
         if (channelFuture.isSuccess()) {
             Channel channel = channelFuture.channel();
-            channel.attr(Connection.CONNECTION_GROUP_KEY).set(url);
+            channel.attr(AttributeKeys.CONNECTION_URL).set(url);
 
             Connection connection = new Connection(channel);
-            channel.attr(Connection.CONNECTION_KEY).set(connection);
+            channel.attr(AttributeKeys.CONNECTION).set(connection);
             if (!promise.trySuccess(connection)) {
                 connection.close();
             }
@@ -126,7 +125,7 @@ public abstract class AbstractConnectionGroup implements ConnectionGroup {
     /**
      * 子类应该重写该方法执行释放连接的逻辑
      *
-     * @param promise    release promise
+     * @param promise release promise
      * @param connection 待释放连接
      */
     protected abstract void doReleaseConnection(Promise<Void> promise, Connection connection);

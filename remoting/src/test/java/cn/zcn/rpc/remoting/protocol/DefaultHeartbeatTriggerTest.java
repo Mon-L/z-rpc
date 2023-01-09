@@ -1,23 +1,22 @@
 package cn.zcn.rpc.remoting.protocol;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
 import cn.zcn.rpc.remoting.config.ClientOptions;
 import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.connection.Connection;
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.protocol.v1.RpcProtocolV1;
 import cn.zcn.rpc.remoting.test.TestingChannelHandlerContext;
 import cn.zcn.rpc.remoting.utils.CommandIdGenerator;
 import io.netty.channel.embedded.EmbeddedChannel;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
 public class DefaultHeartbeatTriggerTest {
-
     private HeartbeatTrigger heartbeatTrigger;
 
     @Before
@@ -37,8 +36,8 @@ public class DefaultHeartbeatTriggerTest {
         EmbeddedChannel channel = new EmbeddedChannel();
         Connection conn = new Connection(channel);
 
-        channel.attr(Connection.CONNECTION_KEY).set(conn);
-        channel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).set(clientOptions);
+        channel.attr(AttributeKeys.CONNECTION).set(conn);
+        channel.attr(AttributeKeys.OPTIONS).set(clientOptions);
 
         TestingChannelHandlerContext ctx = new TestingChannelHandlerContext(channel);
         assertThat(conn.isActive()).isTrue();

@@ -1,8 +1,6 @@
 package cn.zcn.rpc.remoting.exception;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public class LifecycleException extends BaseRuntimeException {
 
     public LifecycleException(String msg) {

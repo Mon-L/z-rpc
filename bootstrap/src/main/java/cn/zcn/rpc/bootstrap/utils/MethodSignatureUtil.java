@@ -3,8 +3,10 @@ package cn.zcn.rpc.bootstrap.utils;
 import java.lang.reflect.Method;
 
 /**
- * 获取方法签名。<p>
- * 方法签名格式如下：
+ * 获取方法签名。
+ *
+ * <p>方法签名格式如下：
+ *
  * <pre>
  * 方法：void addUser(String name, int age, boolean locked, Callable<?> callable);
  * 方法签名：addUser:java.lang.String,int,boolean,java.util.concurrent.Callable

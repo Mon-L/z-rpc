@@ -3,7 +3,6 @@ package cn.zcn.rpc.bootstrap.consumer.loadbalance;
 import cn.zcn.rpc.bootstrap.RpcRequest;
 import cn.zcn.rpc.bootstrap.extension.Extension;
 import cn.zcn.rpc.bootstrap.registry.Provider;
-
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -21,7 +20,7 @@ public class RandomLoadBalance extends AbstractLoadBalance {
         int[] weights = new int[len];
         int totalWeight = 0;
 
-        //是否所有节点权重都一样
+        // 是否所有节点权重都一样
         boolean sameWeight = true;
 
         for (int i = 0; i < len; i++) {

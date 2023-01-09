@@ -8,7 +8,6 @@ import cn.zcn.rpc.remoting.exception.SerializationException;
  * @author zicung
  */
 public interface Serializer {
-
     /**
      * 将对象序列化成字节数组
      *
@@ -23,7 +22,7 @@ public interface Serializer {
      *
      * @param bytes 字节数组
      * @param clazz 类名
-     * @param <T>   对象类型
+     * @param <T> 对象类型
      * @return 反序列化后的对象实例
      * @throws SerializationException 反序列化异常
      */

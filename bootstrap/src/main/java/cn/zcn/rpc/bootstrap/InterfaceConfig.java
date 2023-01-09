@@ -3,22 +3,19 @@ package cn.zcn.rpc.bootstrap;
 import java.util.Objects;
 
 /**
- * 包含版本号的接口配置。<p>
- * 重写了 {@code equals} 和 {@code hashCode} ，只要 {@code interfaceClass} 和 {@code version}
- * 相同则认为是相同的 {@code InterfaceConfig}。
+ * 包含版本号的接口配置。
+ *
+ * <p>重写了 {@code equals} 和 {@code hashCode} ， {@code interfaceClass} 和 {@code version} 相同则认为是相同的
+ * {@code InterfaceConfig}。
  *
  * @author zicung
  */
 public class InterfaceConfig {
 
-    /**
-     * 接口类
-     */
+    /** 接口类 */
     private final Class<?> interfaceClass;
 
-    /**
-     * 接口版本
-     */
+    /** 接口版本 */
     private String version;
 
     public InterfaceConfig(Class<?> interfaceClass) {
@@ -30,8 +27,10 @@ public class InterfaceConfig {
     }
 
     /**
-     * 获取接口唯一名称。<p>
-     * 唯一名称的格式如下：
+     * 获取接口唯一名称。
+     *
+     * <p>唯一名称的格式如下：
+     *
      * <pre>
      * 1. 版本号为Null: {interface}， cn.zcn.rpc.example.HelloService
      * 2. 版本号不为Null: {interface} + ":" + {version}， cn.zcn.rpc.example.HelloService:v1.0.0
@@ -81,9 +80,6 @@ public class InterfaceConfig {
 
     @Override
     public String toString() {
-        return "InterfaceConfig{" +
-                "interfaceClazz=" + interfaceClass.getName() +
-                ", version='" + version + '\'' +
-                '}';
+        return "InterfaceConfig{" + "interfaceClazz=" + interfaceClass.getName() + ", version='" + version + '\'' + '}';
     }
 }

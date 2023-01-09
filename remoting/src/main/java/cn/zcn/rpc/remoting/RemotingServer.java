@@ -1,8 +1,8 @@
 package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.config.Option;
-import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.config.ServerOptions;
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
 import cn.zcn.rpc.remoting.protocol.MessageDecoder;
@@ -18,10 +18,9 @@ import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.NettyRuntime;
+import java.net.InetSocketAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.InetSocketAddress;
 
 /**
  * 服务端
@@ -29,19 +28,18 @@ import java.net.InetSocketAddress;
  * @author zicung
  */
 public class RemotingServer extends AbstractLifecycle {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(RemotingServer.class);
 
     private final int port;
     private final String host;
     private final ServerOptions options = new ServerOptions();
 
-    private RpcInboundHandler rpcInboundHandler;
+    private CommandInboundHandler commandInboundHandler;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
 
-    private final RequestDispatcher requestDispatcher = new RequestDispatcher(options);
+    private final RequestCommandDispatcher requestCommandDispatcher = new RequestCommandDispatcher(options);
 
     public RemotingServer(String host, int port) {
         this.host = host;
@@ -73,41 +71,43 @@ public class RemotingServer extends AbstractLifecycle {
         if (isEpollEnable()) {
             channelClass = EpollServerSocketChannel.class;
             bossGroup = new EpollEventLoopGroup(1, new NamedThreadFactory("netty-boss-group"));
-            workerGroup = new EpollEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2,
-                    new NamedThreadFactory("netty-server-worker-group"));
+            workerGroup = new EpollEventLoopGroup(
+                Runtime.getRuntime().availableProcessors() * 2,
+                new NamedThreadFactory("netty-server-worker-group"));
         } else {
             channelClass = NioServerSocketChannel.class;
             bossGroup = new NioEventLoopGroup(1, new NamedThreadFactory("netty-boss-group"));
-            workerGroup = new NioEventLoopGroup(NettyRuntime.availableProcessors() * 2,
-                    new NamedThreadFactory("netty-server-worker-group"));
+            workerGroup = new NioEventLoopGroup(
+                NettyRuntime.availableProcessors() * 2, new NamedThreadFactory("netty-server-worker-group"));
         }
 
-        this.requestDispatcher.start();
+        this.requestCommandDispatcher.start();
 
-        this.rpcInboundHandler = new RpcInboundHandler(requestDispatcher);
+        this.commandInboundHandler = new CommandInboundHandler(requestCommandDispatcher);
         ConnectionEventHandler connectionEventHandler = new ConnectionEventHandler();
 
         ServerBootstrap server = new ServerBootstrap();
         server.group(bossGroup, workerGroup)
-                .channel(channelClass)
-                .option(ChannelOption.SO_BACKLOG, options.getOption(ServerOptions.SO_BACKLOG))
-                .option(ChannelOption.SO_REUSEADDR, options.getOption(ServerOptions.SO_REUSEADDR))
-                .childOption(ChannelOption.TCP_NODELAY, options.getOption(ServerOptions.TCP_NODELAY))
-                .childOption(ChannelOption.SO_KEEPALIVE, options.getOption(ServerOptions.SO_KEEPALIVE))
-                .childOption(ChannelOption.SO_SNDBUF, options.getOption(ServerOptions.SO_SNDBUF))
-                .childOption(ChannelOption.SO_RCVBUF, options.getOption(ServerOptions.SO_RCVBUF))
-                .childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel socketChannel) {
-                        socketChannel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).set(options);
+            .channel(channelClass)
+            .option(ChannelOption.SO_BACKLOG, options.getOption(ServerOptions.SO_BACKLOG))
+            .option(ChannelOption.SO_REUSEADDR, options.getOption(ServerOptions.SO_REUSEADDR))
+            .childOption(ChannelOption.TCP_NODELAY, options.getOption(ServerOptions.TCP_NODELAY))
+            .childOption(ChannelOption.SO_KEEPALIVE, options.getOption(ServerOptions.SO_KEEPALIVE))
+            .childOption(ChannelOption.SO_SNDBUF, options.getOption(ServerOptions.SO_SNDBUF))
+            .childOption(ChannelOption.SO_RCVBUF, options.getOption(ServerOptions.SO_RCVBUF))
+            .childHandler(new ChannelInitializer<SocketChannel>() {
 
-                        ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new MessageDecoder());
-                        pipeline.addLast(new MessageEncoder());
-                        pipeline.addLast(connectionEventHandler);
-                        pipeline.addLast(rpcInboundHandler);
-                    }
-                });
+                @Override
+                protected void initChannel(SocketChannel socketChannel) {
+                    socketChannel.attr(AttributeKeys.OPTIONS).set(options);
+
+                    ChannelPipeline pipeline = socketChannel.pipeline();
+                    pipeline.addLast(new MessageDecoder());
+                    pipeline.addLast(new MessageEncoder());
+                    pipeline.addLast(connectionEventHandler);
+                    pipeline.addLast(commandInboundHandler);
+                }
+            });
 
         this.channelFuture = server.bind(new InetSocketAddress(host, port)).sync();
         return this.channelFuture.isSuccess();
@@ -143,13 +143,13 @@ public class RemotingServer extends AbstractLifecycle {
             }
         }
 
-        this.requestDispatcher.stop();
+        this.requestCommandDispatcher.stop();
 
         return true;
     }
 
     public void registerRequestHandler(RequestHandler<?> handler) {
-        this.requestDispatcher.registerRequestHandler(handler);
+        this.requestCommandDispatcher.registerRequestHandler(handler);
     }
 
     public <T> void option(Option<T> option, T value) {

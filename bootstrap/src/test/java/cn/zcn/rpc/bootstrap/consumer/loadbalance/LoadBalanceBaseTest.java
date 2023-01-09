@@ -3,11 +3,10 @@ package cn.zcn.rpc.bootstrap.consumer.loadbalance;
 import cn.zcn.rpc.bootstrap.RpcRequest;
 import cn.zcn.rpc.bootstrap.extension.ExtensionLoader;
 import cn.zcn.rpc.bootstrap.registry.Provider;
-import org.junit.Before;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
 
 public class LoadBalanceBaseTest {
 

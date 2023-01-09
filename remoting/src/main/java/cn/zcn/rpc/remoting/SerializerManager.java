@@ -2,11 +2,10 @@ package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.serialization.HessianSerializer;
 import cn.zcn.rpc.remoting.serialization.Serializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manage all serializers.
@@ -14,14 +13,13 @@ import java.util.concurrent.ConcurrentMap;
  * @author zicung
  */
 public class SerializerManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SerializerManager.class);
 
     private static final SerializerManager INSTANCE = new SerializerManager();
 
     public static SerializerManager getInstance() {
         return INSTANCE;
     }
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SerializerManager.class);
 
     private final ConcurrentMap<Byte, Serializer> serializers = new ConcurrentHashMap<>();
 
@@ -36,7 +34,7 @@ public class SerializerManager {
     /**
      * 注册序列化器
      *
-     * @param code       serializer code
+     * @param code serializer code
      * @param serializer serializer
      */
     public void registerSerializer(byte code, Serializer serializer) {

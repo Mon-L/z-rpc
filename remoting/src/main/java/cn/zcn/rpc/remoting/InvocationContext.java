@@ -8,9 +8,8 @@ import cn.zcn.rpc.remoting.protocol.RpcStatus;
  * @author zicung
  */
 public interface InvocationContext {
-
     /**
-     * 请求方IP
+     * 请求方
      *
      * @return remote ip
      */
@@ -75,7 +74,7 @@ public interface InvocationContext {
     /**
      * 返回响应
      *
-     * @param obj    响应信息
+     * @param obj 响应信息
      * @param status 响应状态码
      */
     void writeAndFlushResponse(Object obj, RpcStatus status);

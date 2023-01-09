@@ -8,15 +8,16 @@ import cn.zcn.rpc.bootstrap.utils.StringUtils;
 import cn.zcn.rpc.remoting.RemotingClient;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * @author zicung
+ * 服务消费者的接口代理引导器，订阅接口的服务提供者列表、创建接口代理。
+ *
+ * @author zicung 
  */
 public class InterfaceBootstrap extends AbstractLifecycle {
 
@@ -56,15 +57,19 @@ public class InterfaceBootstrap extends AbstractLifecycle {
                 try {
                     providerGroup.updateProviders(registry.loadProviders(interfaceConfig));
                 } catch (Throwable t) {
-                    LOGGER.warn("Failed to load providerInfo. Interface:{}, Registry:{}", interfaceConfig.getUniqueName(),
-                            registryConfig.toString());
+                    LOGGER.warn(
+                        "Failed to load providerInfo. Interface:{}, Registry:{}",
+                        interfaceConfig.getUniqueName(),
+                        registryConfig.toString());
                 }
 
                 try {
                     registry.subscribe(interfaceConfig, providerGroup);
                 } catch (Throwable t) {
-                    LOGGER.warn("Failed to subscribe providerInfo. Interface:{}, Registry:{}", interfaceConfig.getUniqueName(),
-                            registryConfig.toString());
+                    LOGGER.warn(
+                        "Failed to subscribe providerInfo. Interface:{}, Registry:{}",
+                        interfaceConfig.getUniqueName(),
+                        registryConfig.toString());
                 }
 
                 providersHolder.addProviderGroup(providerGroup);
@@ -91,8 +96,10 @@ public class InterfaceBootstrap extends AbstractLifecycle {
             try {
                 registry.unsubscribe(interfaceConfig);
             } catch (Throwable t) {
-                LOGGER.warn("Failed to unsubscribe providerInfo. Interface:{}, Registry:{}", interfaceConfig.getUniqueName(),
-                        registry.toString());
+                LOGGER.warn(
+                    "Failed to unsubscribe providerInfo. Interface:{}, Registry:{}",
+                    interfaceConfig.getUniqueName(),
+                    registry.toString());
             }
 
             registry.release();
@@ -101,8 +108,6 @@ public class InterfaceBootstrap extends AbstractLifecycle {
 
     @Override
     public String toString() {
-        return "InterfaceBootstrap{" +
-                "interfaceConfig=" + interfaceConfig.getUniqueName() +
-                '}';
+        return "InterfaceBootstrap{" + "interfaceConfig=" + interfaceConfig.getUniqueName() + '}';
     }
 }

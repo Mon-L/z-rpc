@@ -3,8 +3,10 @@ package cn.zcn.rpc.bootstrap.registry;
 import java.util.Objects;
 
 /**
- * 注册中心配置。<p>
- * 重写了 {@code equals} 和 {@code hashCode} ，只要 {@code type} 和 {@code url} 相同则认为是相同的 {@code RegistryConfig}。
+ * 注册中心配置。
+ *
+ * <p>重写了 {@code equals} 和 {@code hashCode} ，只要 {@code type} 和 {@code url} 相同则认为是相同的 {@code
+ * RegistryConfig}。
  *
  * @author zicung
  */
@@ -68,9 +70,6 @@ public class RegistryConfig {
 
     @Override
     public String toString() {
-        return "RegistryConfig{" +
-                "type='" + type + '\'' +
-                ", url='" + url + '\'' +
-                '}';
+        return "RegistryConfig{" + "type='" + type + '\'' + ", url='" + url + '\'' + '}';
     }
 }

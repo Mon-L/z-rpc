@@ -1,8 +1,10 @@
 package cn.zcn.rpc.remoting.protocol;
 
+import static org.assertj.core.api.Assertions.*;
+
 import cn.zcn.rpc.remoting.Protocol;
 import cn.zcn.rpc.remoting.ProtocolEncoder;
-import cn.zcn.rpc.remoting.ProtocolManager;
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.EncoderException;
 import org.assertj.core.api.ThrowableAssert;
@@ -10,10 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import static org.assertj.core.api.Assertions.*;
-
 public class MessageEncoderTest {
-
     private MessageEncoder messageEncoder;
     private EmbeddedChannel channel;
 
@@ -31,6 +30,7 @@ public class MessageEncoderTest {
     @Test
     public void testEncodeWhenUnknownProtocol() {
         assertThatExceptionOfType(EncoderException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 channel.writeOutbound("foo");
@@ -40,8 +40,9 @@ public class MessageEncoderTest {
 
     @Test
     public void testEncodeWhenUnmatchedProtocol() {
-        channel.attr(Protocol.PROTOCOL).set(ProtocolCode.from((byte) 100, (byte) 100));
+        channel.attr(AttributeKeys.PROTOCOL).set(ProtocolCode.from((byte) 100, (byte) 100));
         assertThatExceptionOfType(EncoderException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
+
             @Override
             public void call() throws Throwable {
                 channel.writeOutbound("foo");

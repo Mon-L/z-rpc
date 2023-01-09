@@ -1,10 +1,7 @@
 package cn.zcn.rpc.remoting.protocol;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public class ResponseCommand extends BaseCommand {
-
     private RpcStatus status;
 
     public ResponseCommand(ProtocolCode protocolCode) {

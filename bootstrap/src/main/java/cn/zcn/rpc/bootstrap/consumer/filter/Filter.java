@@ -16,13 +16,14 @@ public interface Filter {
 
     /**
      * 运行过滤器的逻辑。
+     *
      * <pre>
      * 使用 {@code nextFilter} 调用下一个过滤器。
-     * 如果需要中断请求则返回 {@code RpcResponse}。
+     * 如果需要中断请求直接需要返回 {@code RpcResponse}。
      * </pre>
      *
-     * @param provider   被选中的服务提供者
-     * @param request    当前请求
+     * @param provider 被选中的服务提供者
+     * @param request 当前请求
      * @param nextFilter 下一个 {@code Filter}
      * @return {@code RpcResponse}
      * @throws RpcException 异常

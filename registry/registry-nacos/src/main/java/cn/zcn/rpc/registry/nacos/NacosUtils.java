@@ -4,14 +4,11 @@ import cn.zcn.rpc.bootstrap.provider.ProviderConfig;
 import cn.zcn.rpc.bootstrap.provider.ProviderInterfaceConfig;
 import cn.zcn.rpc.bootstrap.registry.Provider;
 import com.alibaba.nacos.api.naming.pojo.Instance;
-
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public class NacosUtils {
 
     protected static final String WEIGHT = "weight";
@@ -31,7 +28,8 @@ public class NacosUtils {
         Map<String, String> metadata = new HashMap<>();
         metadata.put(WEIGHT, String.valueOf(providerConfig.getWeight()));
         metadata.put(WARMUP, String.valueOf(providerConfig.getWarmup()));
-        metadata.put(START_TIME, String.valueOf(ManagementFactory.getRuntimeMXBean().getStartTime()));
+        metadata.put(
+            START_TIME, String.valueOf(ManagementFactory.getRuntimeMXBean().getStartTime()));
         instance.setMetadata(metadata);
 
         return instance;

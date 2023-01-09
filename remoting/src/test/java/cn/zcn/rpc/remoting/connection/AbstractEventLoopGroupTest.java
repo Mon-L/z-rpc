@@ -6,7 +6,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 public class AbstractEventLoopGroupTest {
-
     protected static EventLoopGroup eventLoopGroup;
 
     @BeforeClass

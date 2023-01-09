@@ -1,10 +1,9 @@
 package cn.zcn.rpc.bootstrap;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class RpcConfigsTest {
 
@@ -24,7 +23,7 @@ public class RpcConfigsTest {
         String id = RpcConfigs.getString("id");
         assertThat(id).isEqualTo("1234");
 
-        //test returns null if the property is not found.
+        // test returns null if the property is not found.
         String xxx = RpcConfigs.getString("xxx");
         assertThat(xxx).isNull();
     }
@@ -34,7 +33,7 @@ public class RpcConfigsTest {
         Integer age = RpcConfigs.getInteger("age");
         assertThat(age).isEqualTo(19);
 
-        //test returns null if the property is not found.
+        // test returns null if the property is not found.
         Integer xxx = RpcConfigs.getInteger("xxx");
         assertThat(xxx).isNull();
     }
@@ -45,14 +44,14 @@ public class RpcConfigsTest {
         assertThat(isLocked).isNotNull();
         assertThat(isLocked).isEqualTo(false);
 
-        //test returns null if the property is not found.
+        // test returns null if the property is not found.
         Boolean xxx = RpcConfigs.getBool("xxx");
         assertThat(xxx).isNull();
     }
 
     @Test
     public void testGetList() {
-        //a b c
+        // a b c
         List<String> list1 = RpcConfigs.getList("list1");
         assertThat(list1.size()).isEqualTo(3);
         assertThat(list1.get(0)).isEqualTo("a");
@@ -62,7 +61,7 @@ public class RpcConfigsTest {
         List<String> list2 = RpcConfigs.getList("list2");
         assertThat(list2.size()).isEqualTo(0);
 
-        //e f g
+        // e f g
         List<String> list3 = RpcConfigs.getList("list3");
         assertThat(list3.size()).isEqualTo(3);
         assertThat(list3.get(0)).isEqualTo("e");

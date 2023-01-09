@@ -1,27 +1,17 @@
 package cn.zcn.rpc.remoting.protocol;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public enum CommandType {
-    /**
-     * 双向请求，具有返回值
-     */
+    /** 双向请求，具有返回值 */
     REQUEST((byte) 1),
 
-    /**
-     * 单向请求，没有返回值
-     */
+    /** 单向请求，没有返回值 */
     REQUEST_ONEWAY((byte) 2),
 
-    /**
-     * 响应
-     */
+    /** 响应 */
     RESPONSE((byte) 3);
 
-    /**
-     * 命令类型
-     */
+    /** 命令类型 */
     private final short value;
 
     CommandType(short value) {

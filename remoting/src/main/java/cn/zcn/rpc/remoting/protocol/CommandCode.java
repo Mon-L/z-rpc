@@ -1,22 +1,14 @@
 package cn.zcn.rpc.remoting.protocol;
 
-/**
- * @author zicung
- */
+/** @author zicung */
 public enum CommandCode {
-    /**
-     * 心跳命令
-     */
+    /** 心跳命令 */
     HEARTBEAT((short) 1),
 
-    /**
-     * 请求命令
-     */
+    /** 请求命令 */
     REQUEST((short) 2),
 
-    /**
-     * 响应命令
-     */
+    /** 响应命令 */
     RESPONSE((short) 3);
 
     private final short value;

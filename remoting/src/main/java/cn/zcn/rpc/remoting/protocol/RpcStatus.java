@@ -6,65 +6,40 @@ package cn.zcn.rpc.remoting.protocol;
  * @author zicung
  */
 public enum RpcStatus {
-
-    /**
-     * OK
-     */
+    /** OK */
     OK((short) 0x0000, "OK"),
 
-    /**
-     * 框架内部异常
-     */
+    /** 框架内部异常 */
     INTERNAL_SERVER_ERROR((short) 0x0001, "Internal Server Error"),
 
-    /**
-     * 不支持的协议
-     */
+    /** 不支持的协议 */
     UNSUPPORTED_PROTOCOL((short) 0x0002, "Unsupported Protocol"),
 
-    /**
-     * 不支持的命令
-     */
+    /** 不支持的命令 */
     UNSUPPORTED_COMMAND((short) 0x0003, "Unsupported BaseCommand"),
 
-    /**
-     * 不支持的序列化器
-     */
+    /** 不支持的序列化器 */
     UNSUPPORTED_SERIALIZER((short) 0x0004, "Unsupported Serializer"),
 
-    /**
-     * 序列化异常
-     */
+    /** 序列化异常 */
     SERIALIZATION_ERROR((short) 0x0005, "Serialization error"),
 
-    /**
-     * 反序列化异常
-     */
+    /** 反序列化异常 */
     DESERIALIZATION_ERROR((short) 0x0006, "deserialization error"),
 
-    /**
-     * 找不到请求处理器
-     */
+    /** 找不到请求处理器 */
     NO_REQUEST_PROCESSOR((short) 0x0007, "No request processor"),
 
-    /**
-     * 服务异常
-     */
+    /** 服务异常 */
     SERVICE_ERROR((short) 0x0008, "Service error"),
 
-    /**
-     * 请求处理超时
-     */
+    /** 请求处理超时 */
     HANDLE_TIMEOUT((short) 0x0009, "Handle request timeout");
 
-    /**
-     * 响应码
-     */
+    /** 响应码 */
     private final short value;
 
-    /**
-     * 响应信息
-     */
+    /** 响应信息 */
     private final String reasonPhrase;
 
     RpcStatus(short value, String reasonPhrase) {

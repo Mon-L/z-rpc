@@ -3,7 +3,6 @@ package cn.zcn.rpc.bootstrap.consumer;
 import cn.zcn.rpc.bootstrap.InterfaceConfig;
 import cn.zcn.rpc.bootstrap.RpcConfigs;
 import cn.zcn.rpc.bootstrap.registry.RegistryConfig;
-
 import java.util.List;
 import java.util.Set;
 
@@ -14,44 +13,28 @@ import java.util.Set;
  */
 public class ConsumerInterfaceConfig extends InterfaceConfig {
 
-    /**
-     * 服务提供者地址。不通过注册中心获取服务提供者地址。
-     */
+    /** 服务提供者地址。不通过注册中心获取服务提供者地址。 */
     private String providerUrl;
 
-    /**
-     * 注册中心地址
-     */
+    /** 注册中心地址 */
     private Set<RegistryConfig> registryConfigs;
 
-    /**
-     * 与每个服务提供者的最大连接数
-     */
+    /** 与每个服务提供者的最大连接数 */
     private int maxConnectionPerUrl = RpcConfigs.getInteger(RpcConfigs.MAX_CONNECTION_PER_URL, 1);
 
-    /**
-     * 代理方式
-     */
+    /** 代理方式 */
     private String proxy = RpcConfigs.getString(RpcConfigs.PROXY, "jdk");
 
-    /**
-     * 路由器
-     */
+    /** 路由器 */
     private String router = RpcConfigs.getString(RpcConfigs.ROUTER, "default");
 
-    /**
-     * 负载均衡器
-     */
+    /** 负载均衡器 */
     private String loadBalance = RpcConfigs.getString(RpcConfigs.LOAD_BALANCE, "random");
 
-    /**
-     * 请求超时时间，单位毫秒
-     */
+    /** 请求超时时间，单位毫秒 */
     private int timeout = RpcConfigs.getInteger(RpcConfigs.TIMEOUT, 30000);
 
-    /**
-     * 过滤器
-     */
+    /** 过滤器 */
     private List<String> filters = RpcConfigs.getList(RpcConfigs.FILTERS);
 
     public ConsumerInterfaceConfig(Class<?> clazz) {

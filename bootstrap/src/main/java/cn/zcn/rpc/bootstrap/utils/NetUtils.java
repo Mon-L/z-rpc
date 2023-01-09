@@ -17,16 +17,15 @@ package cn.zcn.rpc.bootstrap.utils;
  * limitations under the License.
  */
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.util.Collections.emptyList;
 
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
-
-import static java.util.Collections.emptyList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * IP and Port Helper for RPC
@@ -40,16 +39,14 @@ public final class NetUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(NetUtils.class);
 
-    /**
-     * returned port range is [30000, 39999]
-     */
+    /** returned port range is [30000, 39999] */
     private static final int RND_PORT_START = 30000;
+
     private static final int RND_PORT_RANGE = 10000;
 
-    /**
-     * valid port range is (0, 65535]
-     */
+    /** valid port range is (0, 65535] */
     private static final int MIN_PORT = 1;
+
     private static final int MAX_PORT = 65535;
 
     private static final Pattern IP_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3,5}$");
@@ -63,10 +60,7 @@ public final class NetUtils {
     private static final String PERCENT = "%";
     private static final char PERCENT_CHAR = '%';
 
-    /**
-     * store the used port.
-     * the set used only on the synchronized method.
-     */
+    /** store the used port. the set used only on the synchronized method. */
     private static final BitSet USED_PORT = new BitSet(65536);
 
     private static int getRandomPort() {
@@ -104,10 +98,8 @@ public final class NetUtils {
         }
 
         String name = address.getHostAddress();
-        return (name != null
-                && IP_PATTERN.matcher(name).matches()
-                && !ANY_HOST_VALUE.equals(name)
-                && !LOCAL_HOST_VALUE.equals(name));
+        return (name != null && IP_PATTERN.matcher(name).matches() && !ANY_HOST_VALUE.equals(name) && !LOCAL_HOST_VALUE
+            .equals(name));
     }
 
     /**
@@ -120,15 +112,11 @@ public final class NetUtils {
     }
 
     /**
-     * normalize the ipv6 Address, convert scope name to scope id.
-     * e.g.
-     * convert
-     * fe80:0:0:0:894:aeec:f37d:23e1%en0
-     * to
-     * fe80:0:0:0:894:aeec:f37d:23e1%5
-     * <p>
-     * The %5 after ipv6 address is called scope id.
-     * see java doc of {@link Inet6Address} for more details.
+     * normalize the ipv6 Address, convert scope name to scope id. e.g. convert
+     * fe80:0:0:0:894:aeec:f37d:23e1%en0 to fe80:0:0:0:894:aeec:f37d:23e1%5
+     *
+     * <p>The %5 after ipv6 address is called scope id. see java doc of {@link Inet6Address} for more
+     * details.
      *
      * @param address the input address
      * @return the normalized address, with scope id converted to int
@@ -251,10 +239,11 @@ public final class NetUtils {
             while (addresses.hasMoreElements()) {
                 InetAddress address = addresses.nextElement();
                 if (address instanceof Inet6Address) {
-                    if (!address.isLoopbackAddress() //filter 127.x.x.x
-                            && !address.isAnyLocalAddress() // filter 0.0.0.0
-                            && !address.isLinkLocalAddress() //filter 169.254.0.0/16
-                            && address.getHostAddress().contains(":")) {//filter IPv6
+                    if (!address.isLoopbackAddress() // filter 127.x.x.x
+                        &&
+                        !address.isAnyLocalAddress() // filter 0.0.0.0
+                        && !address.isLinkLocalAddress() // filter 169.254.0.0/16
+                        && address.getHostAddress().contains(":")) { // filter IPv6
                         return (Inet6Address) address;
                     }
                 }

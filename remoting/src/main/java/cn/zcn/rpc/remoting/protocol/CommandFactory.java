@@ -6,7 +6,6 @@ package cn.zcn.rpc.remoting.protocol;
  * @author zicung
  */
 public interface CommandFactory {
-
     /**
      * 创建心跳命令
      *
@@ -35,7 +34,7 @@ public interface CommandFactory {
      * 创建响应
      *
      * @param request 请求
-     * @param status  响应码
+     * @param status 响应码
      * @return {@code ICommand}
      */
     <T extends ICommand> T createResponseCommand(ICommand request, RpcStatus status);

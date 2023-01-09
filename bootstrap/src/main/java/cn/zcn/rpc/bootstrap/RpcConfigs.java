@@ -1,13 +1,13 @@
 package cn.zcn.rpc.bootstrap;
 
 import cn.zcn.rpc.bootstrap.utils.StringUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
 /**
  * RPC 文件配置，配置文件名为 rpc-config.properties。可以有多份该配置文件，配置文件对优先级从高到低为:
+ *
  * <pre>
  * 1. rpc-config.properties
  * 2. META-INF/rpc-config.properties
@@ -19,58 +19,38 @@ public class RpcConfigs {
 
     private static final char EMPTY = ' ';
 
-    /**
-     * 服务提供者权重
-     */
+    /** 服务提供者权重 */
     public static final String WEIGHT = "weight";
 
-    /**
-     * 服务预热时间
-     */
+    /** 服务预热时间 */
     public static final String WARMUP = "warmup";
 
-    /**
-     * 注册中心地址
-     */
+    /** 注册中心地址 */
     public static final String REGISTRY = "registry";
 
-    /**
-     * 代理方式
-     */
+    /** 代理方式 */
     public static final String PROXY = "proxy";
 
-    /**
-     * 路由算法
-     */
+    /** 路由算法 */
     public static final String ROUTER = "router";
 
-    /**
-     * 与每个服务提供者的最大连接数, 默认值为 1
-     */
+    /** 与每个服务提供者的最大连接数, 默认值为 1 */
     public static final String MAX_CONNECTION_PER_URL = "maxConnectionPerUrl";
 
-    /**
-     * 负载均衡算法
-     */
+    /** 负载均衡算法 */
     public static final String LOAD_BALANCE = "loadBalance";
 
-    /**
-     * 请求超时时间，单位秒
-     */
+    /** 请求超时时间，单位秒 */
     public static final String TIMEOUT = "timeout";
 
-    /**
-     * 忽略超时请求
-     */
+    /** 忽略超时请求 */
     public static final String IGNORE_TIMEOUT_REQUEST = "ignoreTimeoutRequest";
 
-    /**
-     * 过滤器列表
-     */
+    /** 过滤器列表 */
     public static final String FILTERS = "filters";
 
-    private static final String[] CONFIG_PATH = new String[]{
-            "META-INF/rpc-config.properties", "rpc-config.properties"};
+    private static final String[] CONFIG_PATH = new String[] { "META-INF/rpc-config.properties",
+                                                              "rpc-config.properties" };
 
     private static volatile Properties CFG;
 
@@ -87,9 +67,7 @@ public class RpcConfigs {
         return CFG;
     }
 
-    /**
-     * 加载 RPC 文件配置。根据 {@code CONFIG_PATH} 顺序读取，后面的文件配置会覆盖前面的文件配置
-     */
+    /** 加载 RPC 文件配置。根据 {@code CONFIG_PATH} 顺序读取，后面的文件配置会覆盖前面的文件配置 */
     private static void loadConfigs() {
         ClassLoader classLoader = RpcConfigs.class.getClassLoader();
 
@@ -182,6 +160,7 @@ public class RpcConfigs {
 
     /**
      * 获取列表，多个值之间使用空格符分割。
+     *
      * <pre>
      * a b c  returns  [a, b, c]
      * </pre>
@@ -203,7 +182,7 @@ public class RpcConfigs {
                     list.add(val.substring(l, r));
                 }
 
-                //remove space
+                // remove space
                 while (++r < len && val.charAt(r) == EMPTY) {
                 }
 

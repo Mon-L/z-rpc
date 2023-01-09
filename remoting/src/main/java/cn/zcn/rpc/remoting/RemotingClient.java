@@ -2,7 +2,7 @@ package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.config.ClientOptions;
 import cn.zcn.rpc.remoting.config.Option;
-import cn.zcn.rpc.remoting.config.RpcOptions;
+import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.exception.RemotingException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
@@ -23,10 +23,9 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.NettyRuntime;
 import io.netty.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * 客户端
@@ -34,14 +33,13 @@ import java.util.concurrent.TimeUnit;
  * @author zicung
  */
 public class RemotingClient extends AbstractLifecycle {
-
-    private final static Logger LOGGER = LoggerFactory.getLogger(RemotingClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RemotingClient.class);
 
     private final ClientOptions options = new ClientOptions();
 
     private EventLoopGroup workerGroup;
-    private RequestDispatcher requestDispatcher;
-    private RpcInboundHandler rpcInboundHandler;
+    private RequestCommandDispatcher requestCommandDispatcher;
+    private CommandInboundHandler commandInboundHandler;
     private RemotingInvoker remotingInvoker;
 
     @Override
@@ -60,49 +58,50 @@ public class RemotingClient extends AbstractLifecycle {
         Class<? extends SocketChannel> channelClazz;
         if (isEpollEnable()) {
             channelClazz = EpollSocketChannel.class;
-            this.workerGroup = new EpollEventLoopGroup(NettyRuntime.availableProcessors() + 1,
-                    new NamedThreadFactory("netty-client-worker-group"));
+            this.workerGroup = new EpollEventLoopGroup(
+                NettyRuntime.availableProcessors() + 1, new NamedThreadFactory("netty-client-worker-group"));
         } else {
             channelClazz = NioSocketChannel.class;
-            this.workerGroup = new NioEventLoopGroup(NettyRuntime.availableProcessors() + 1,
-                    new NamedThreadFactory("netty-client-worker-group"));
+            this.workerGroup = new NioEventLoopGroup(
+                NettyRuntime.availableProcessors() + 1, new NamedThreadFactory("netty-client-worker-group"));
         }
 
-        this.requestDispatcher = new RequestDispatcher(options);
-        this.requestDispatcher.start();
-        this.rpcInboundHandler = new RpcInboundHandler(requestDispatcher);
+        this.requestCommandDispatcher = new RequestCommandDispatcher(options);
+        this.requestCommandDispatcher.start();
+        this.commandInboundHandler = new CommandInboundHandler(requestCommandDispatcher);
 
         ConnectionEventHandler connectionEventHandler = new ConnectionEventHandler();
         IdleStateEventHandler idleStateEventHandler = new IdleStateEventHandler();
 
         Bootstrap bootstrap = new Bootstrap()
-                .channel(channelClazz)
-                .group(workerGroup)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, options.getOption(ClientOptions.CONNECT_TIMEOUT_MILLIS))
-                .option(ChannelOption.TCP_NODELAY, options.getOption(ClientOptions.TCP_NODELAY))
-                .option(ChannelOption.SO_REUSEADDR, options.getOption(ClientOptions.SO_REUSEADDR))
-                .option(ChannelOption.SO_KEEPALIVE, options.getOption(ClientOptions.SO_KEEPALIVE))
-                .option(ChannelOption.SO_SNDBUF, options.getOption(ClientOptions.SO_SNDBUF))
-                .option(ChannelOption.SO_RCVBUF, options.getOption(ClientOptions.SO_RCVBUF))
-                .handler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        socketChannel.attr(RpcOptions.OPTIONS_ATTRIBUTE_KEY).set(options);
+            .channel(channelClazz)
+            .group(workerGroup)
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, options.getOption(ClientOptions.CONNECT_TIMEOUT_MILLIS))
+            .option(ChannelOption.TCP_NODELAY, options.getOption(ClientOptions.TCP_NODELAY))
+            .option(ChannelOption.SO_REUSEADDR, options.getOption(ClientOptions.SO_REUSEADDR))
+            .option(ChannelOption.SO_KEEPALIVE, options.getOption(ClientOptions.SO_KEEPALIVE))
+            .option(ChannelOption.SO_SNDBUF, options.getOption(ClientOptions.SO_SNDBUF))
+            .option(ChannelOption.SO_RCVBUF, options.getOption(ClientOptions.SO_RCVBUF))
+            .handler(new ChannelInitializer<SocketChannel>() {
 
-                        ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new MessageEncoder());
-                        pipeline.addLast(new MessageDecoder());
+                @Override
+                protected void initChannel(SocketChannel socketChannel) throws Exception {
+                    socketChannel.attr(AttributeKeys.OPTIONS).set(options);
 
-                        if (options.getOption(ClientOptions.CHECK_IDLE_STATE)) {
-                            int idleTime = options.getOption(ClientOptions.HEARTBEAT_INTERVAL_MILLIS);
-                            pipeline.addLast(new IdleStateHandler(idleTime, idleTime, 0, TimeUnit.MILLISECONDS));
-                            pipeline.addLast(idleStateEventHandler);
-                        }
+                    ChannelPipeline pipeline = socketChannel.pipeline();
+                    pipeline.addLast(new MessageEncoder());
+                    pipeline.addLast(new MessageDecoder());
 
-                        pipeline.addLast(connectionEventHandler);
-                        pipeline.addLast(rpcInboundHandler);
+                    if (options.getOption(ClientOptions.CHECK_IDLE_STATE)) {
+                        int idleTime = options.getOption(ClientOptions.HEARTBEAT_INTERVAL_MILLIS);
+                        pipeline.addLast(new IdleStateHandler(idleTime, idleTime, 0, TimeUnit.MILLISECONDS));
+                        pipeline.addLast(idleStateEventHandler);
                     }
-                });
+
+                    pipeline.addLast(connectionEventHandler);
+                    pipeline.addLast(commandInboundHandler);
+                }
+            });
 
         this.remotingInvoker = new RemotingInvoker(options, bootstrap);
         this.remotingInvoker.start();
@@ -123,8 +122,8 @@ public class RemotingClient extends AbstractLifecycle {
             }
         }
 
-        if (this.requestDispatcher != null) {
-            this.requestDispatcher.stop();
+        if (this.requestCommandDispatcher != null) {
+            this.requestCommandDispatcher.stop();
         }
 
         LOGGER.warn("Remoting client has stopped.");
@@ -145,7 +144,8 @@ public class RemotingClient extends AbstractLifecycle {
         remotingInvoker.oneWayInvoke(url, obj);
     }
 
-    public <T> Future<T> invoke(Url url, Object obj, int timeoutMillis) throws IllegalStateException, RemotingException {
+    public <T> Future<T> invoke(Url url, Object obj, int timeoutMillis)
+        throws IllegalStateException, RemotingException {
         checkState();
         return remotingInvoker.invoke(url, obj, timeoutMillis);
     }

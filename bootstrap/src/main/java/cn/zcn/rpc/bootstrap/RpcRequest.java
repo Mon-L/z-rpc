@@ -10,24 +10,16 @@ import java.lang.reflect.Method;
  */
 public class RpcRequest implements Serializable {
 
-    /**
-     * 接口名
-     */
+    /** 接口名 */
     private String clazz;
 
-    /**
-     * 方法名
-     */
+    /** 方法名 */
     private String methodName;
 
-    /**
-     * 方法参数
-     */
+    /** 方法参数 */
     private String[] parameterTypes;
 
-    /**
-     * 调用参数
-     */
+    /** 调用参数 */
     private Object[] parameters;
 
     public String getClazz() {
@@ -78,5 +70,4 @@ public class RpcRequest implements Serializable {
 
         return request;
     }
-
 }
