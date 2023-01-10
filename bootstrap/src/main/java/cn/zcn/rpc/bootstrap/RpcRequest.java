@@ -18,10 +18,10 @@ public class RpcRequest implements Serializable {
     private String methodName;
 
     /** 方法参数 */
-    private String[] parameterTypes;
+    private String[] parameterTypes = new String[0];
 
     /** 调用参数 */
-    private Object[] parameters;
+    private Object[] parameters = new String[0];
 
     public String getClazz() {
         return clazz;
