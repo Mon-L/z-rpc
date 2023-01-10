@@ -67,4 +67,111 @@ public class ConsistentHashLoadBalanceTest extends LoadBalanceBaseTest {
         assertThat(counters.get(providers.get(3))).isCloseTo(1000, Offset.offset(200));
         assertThat(counters.get(providers.get(4))).isCloseTo(1000, Offset.offset(200));
     }
+
+    @Test
+    public void testSelectWhenRemoveProvider() {
+        //创建节点
+        int providerNum = 100;
+        List<Provider> providers = new ArrayList<>();
+        for (int i = 0; i < providerNum; i++) {
+            providers.add(createProvider(i + "", 0, System.currentTimeMillis(), 1));
+        }
+
+        //创建请求
+        int requestNum = 10000;
+        List<RpcRequest> requests = new ArrayList<>(requestNum);
+        for (int i = 0; i < requestNum; i++) {
+            String key = i + "abc";
+            RpcRequest request = new RpcRequest();
+            request.setClazz("cn.zcn.rpc.Example");
+            request.setMethodName("method");
+            request.setParameterTypes(new String[] { String.class.getName() });
+            request.setParameters(new Object[] { key });
+
+            requests.add(request);
+        }
+
+        // 第一次负载均衡
+        Map<RpcRequest, Provider> keyToSelect = new HashMap<>();
+        for (RpcRequest req : requests) {
+            Map<Provider, Integer> counter = doSelectWithRequest(1, providers, "consistentHash", req);
+            Provider selected = counter.keySet().iterator().next();
+
+            keyToSelect.put(req, selected);
+        }
+
+        // 随机删除一个节点
+        providers.remove(ThreadLocalRandom.current().nextInt(providerNum));
+
+        // 第二次选中的节点与第一次选中的节点不一致的请求的个数
+        int missHits = 0;
+
+        // 第二次负载均衡
+        for (RpcRequest req : requests) {
+            Map<Provider, Integer> counter = doSelectWithRequest(1, providers, "consistentHash", req);
+            Provider selected = counter.keySet().iterator().next();
+
+            if (!keyToSelect.get(req).equals(selected)) {
+                missHits++;
+            }
+        }
+
+        // 命中率大于98.5%
+        float hitRate = (float) (requestNum - missHits) / (float) requestNum;
+        System.out.println(hitRate);
+        assertThat(hitRate).isGreaterThan(0.985f);
+    }
+
+    @Test
+    public void testSelectWhenAddProvider() {
+        //创建节点
+        int providerNum = 100;
+        List<Provider> providers = new ArrayList<>();
+        for (int i = 0; i < providerNum; i++) {
+            providers.add(createProvider(i + "", 0, System.currentTimeMillis(), 1));
+        }
+
+        //创建请求
+        int requestNum = 10000;
+        List<RpcRequest> requests = new ArrayList<>(requestNum);
+        for (int i = 0; i < requestNum; i++) {
+            String key = i + "abc";
+            RpcRequest request = new RpcRequest();
+            request.setClazz("cn.zcn.rpc.Example");
+            request.setMethodName("method");
+            request.setParameterTypes(new String[] { String.class.getName() });
+            request.setParameters(new Object[] { key });
+
+            requests.add(request);
+        }
+
+        // 第一次负载均衡
+        Map<RpcRequest, Provider> keyToSelect = new HashMap<>();
+        for (RpcRequest req : requests) {
+            Map<Provider, Integer> counter = doSelectWithRequest(1, providers, "consistentHash", req);
+            Provider selected = counter.keySet().iterator().next();
+
+            keyToSelect.put(req, selected);
+        }
+
+        // 增加一个节点
+        providers.add(createProvider("127.1.2.3", 0, System.currentTimeMillis(), 1));
+
+        // 第二次选中的节点与第一次选中的节点不一致的请求的个数
+        int missHits = 0;
+
+        // 第二次负载均衡
+        for (RpcRequest req : requests) {
+            Map<Provider, Integer> counter = doSelectWithRequest(1, providers, "consistentHash", req);
+            Provider selected = counter.keySet().iterator().next();
+
+            if (!keyToSelect.get(req).equals(selected)) {
+                missHits++;
+            }
+        }
+
+        // 命中率大于98.5%
+        float hitRate = (float) (requestNum - missHits) / (float) requestNum;
+        assertThat(hitRate).isGreaterThan(0.985f);
+    }
 }

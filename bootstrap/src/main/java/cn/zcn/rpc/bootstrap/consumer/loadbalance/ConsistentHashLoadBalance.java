@@ -47,7 +47,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
             for (Provider provider : providers) {
                 totalWeight += provider.getWeight();
 
-                if (isSameWeight && firstWeight != totalWeight) {
+                if (isSameWeight && firstWeight != provider.getWeight()) {
                     isSameWeight = false;
                 }
             }
