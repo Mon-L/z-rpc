@@ -1,1 +1,2 @@
 cn.zcn.rpc.bootstrap.consumer.loadbalance.RandomLoadBalance
+cn.zcn.rpc.bootstrap.consumer.loadbalance.RoundRobinLoadBalance

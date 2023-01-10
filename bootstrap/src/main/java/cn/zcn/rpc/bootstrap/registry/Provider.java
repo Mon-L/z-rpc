@@ -64,6 +64,15 @@ public class Provider {
         this.startTime = startTime;
     }
 
+    /**
+     * 获取服务地址，格式为"ip:port"。
+     *
+     * @return 服务提供地址
+     */
+    public String getAddress() {
+        return ip + ":" + port;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

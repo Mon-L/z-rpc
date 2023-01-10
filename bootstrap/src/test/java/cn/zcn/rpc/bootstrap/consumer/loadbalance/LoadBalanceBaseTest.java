@@ -15,6 +15,9 @@ public class LoadBalanceBaseTest {
     @Before
     public void beforeEach() {
         request = new RpcRequest();
+        request.setClazz("cn.zcn.rpc.Example");
+        request.setMethodName("method");
+        request.setParameterTypes(new String[] { "int", "java.lang.String" });
     }
 
     protected Provider createProvider(String ip, int warmup, long startTime, int weight) {
