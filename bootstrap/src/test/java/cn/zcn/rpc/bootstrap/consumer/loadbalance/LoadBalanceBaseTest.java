@@ -17,7 +17,7 @@ public class LoadBalanceBaseTest {
         request = new RpcRequest();
         request.setClazz("cn.zcn.rpc.Example");
         request.setMethodName("method");
-        request.setParameterTypes(new String[] { "int", "java.lang.String" });
+        request.setParameterTypes(new String[] { int.class.getName(), String.class.getName() });
         request.setParameters(new Object[] { 1, "s" });
     }
 
@@ -31,12 +31,21 @@ public class LoadBalanceBaseTest {
     }
 
     protected Map<Provider, Integer> doSelect(int times, List<Provider> providers, String loadBalance) {
+        return doSelectWithRequest(times, providers, loadBalance, request);
+    }
+
+    protected Map<Provider, Integer> doSelectWithRequest(int times,
+                                                         List<Provider> providers,
+                                                         String loadBalance,
+                                                         RpcRequest request) {
         Map<Provider, Integer> counter = new HashMap<>();
         LoadBalance lb = ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(loadBalance);
+
         for (int i = 0; i < times; i++) {
             Provider provider = lb.select(providers, request);
             counter.put(provider, counter.getOrDefault(provider, 0) + 1);
         }
+
         return counter;
     }
 
