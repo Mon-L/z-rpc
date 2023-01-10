@@ -28,6 +28,10 @@ public class NetUtil {
         }
 
         if (address instanceof InetSocketAddress) {
+            if (((InetSocketAddress) address).getAddress() == null) {
+                return StringUtil.EMPTY_STRING;
+            }
+
             return ((InetSocketAddress) address).getAddress().getHostAddress();
         } else {
             String addr = address.toString().trim();

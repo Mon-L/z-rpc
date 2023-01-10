@@ -42,8 +42,7 @@ public class InterfaceBootstrap extends AbstractLifecycle {
         ProvidersHolder providersHolder = new ProvidersHolder();
 
         if (!StringUtils.isEmptyOrNull(interfaceConfig.getProviderUrl())) {
-            Provider directProvider = new Provider();
-            directProvider.setIp(interfaceConfig.getProviderUrl());
+            Provider directProvider = urlToProvider(interfaceConfig.getProviderUrl());
 
             ProviderGroup directProviderGroup = new ProviderGroup();
             directProviderGroup.updateProviders(Collections.singletonList(directProvider));
@@ -80,6 +79,19 @@ public class InterfaceBootstrap extends AbstractLifecycle {
         }
 
         return providersHolder;
+    }
+
+    private Provider urlToProvider(String url) {
+        int colon = url.indexOf(':');
+
+        if (colon != -1) {
+            Provider provider = new Provider();
+            provider.setIp(url.substring(0, colon));
+            provider.setPort(Integer.parseInt(url.substring(colon + 1)));
+            return provider;
+        }
+
+        throw new IllegalArgumentException("Invalid provider url:" + url);
     }
 
     public Object createProxy() {

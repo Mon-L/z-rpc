@@ -51,7 +51,7 @@ public class RemotingServer extends AbstractLifecycle {
         try {
             LOGGER.warn("Prepare to start remoting server.");
             if (doStartup()) {
-                LOGGER.warn("Remoting server has started on port {}.", port);
+                LOGGER.warn("Remoting server has started on {}:{}.", host, port);
             } else {
                 LOGGER.warn("Failed start remoting server on port {}.", port);
                 throw new LifecycleException("Failed start remoting server on port " + port);
