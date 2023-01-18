@@ -16,6 +16,8 @@ import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
+
+import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +79,7 @@ public class RemotingInvoker extends AbstractLifecycle {
         CommandFactory commandFactory = protocol.getCommandFactory();
         RequestCommand req = commandFactory.createRequestCommand(commandType, CommandCode.REQUEST);
 
-        byte[] clazz = payload.getClass().getName().getBytes(options.getOption(ClientOptions.CHARSET));
+        byte[] clazz = payload.getClass().getName().getBytes(Charset.forName(options.getOption(ClientOptions.CHARSET)));
         req.setClazz(clazz);
 
         byte serializer = SerializerManager.DEFAULT_SERIALIZER;
@@ -100,7 +102,8 @@ public class RemotingInvoker extends AbstractLifecycle {
             throw new SerializationException("Unknown serializer with " + responseCommand.getSerializer());
         }
 
-        String clazz = new String(responseCommand.getClazz(), options.getOption(ClientOptions.CHARSET));
+        String clazz = new String(responseCommand.getClazz(),
+            Charset.forName(options.getOption(ClientOptions.CHARSET)));
         return serializer.deserialize(responseCommand.getContent(), clazz);
     }
 

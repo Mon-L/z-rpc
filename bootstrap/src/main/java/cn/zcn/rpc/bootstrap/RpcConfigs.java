@@ -1,6 +1,7 @@
 package cn.zcn.rpc.bootstrap;
 
-import cn.zcn.rpc.bootstrap.utils.StringUtils;
+import cn.zcn.rpc.remoting.utils.PropertiesUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -16,8 +17,6 @@ import java.util.*;
  * @author zicung
  */
 public class RpcConfigs {
-
-    private static final char EMPTY = ' ';
 
     /** 服务提供者权重 */
     public static final String WEIGHT = "weight";
@@ -50,7 +49,7 @@ public class RpcConfigs {
     public static final String FILTERS = "filters";
 
     private static final String[] CONFIG_PATH = new String[] { "META-INF/rpc-config.properties",
-                                                              "rpc-config.properties" };
+                                                               "rpc-config.properties" };
 
     private static volatile Properties CFG;
 
@@ -89,10 +88,6 @@ public class RpcConfigs {
         }
     }
 
-    public static Object getProperty(String key) {
-        return getConfigs().get(key);
-    }
-
     /**
      * 获取字符串配置，如果配置不存在返回 null
      *
@@ -100,7 +95,7 @@ public class RpcConfigs {
      * @return value
      */
     public static String getString(String key) {
-        return getConfigs().getProperty(key);
+        return PropertiesUtils.getString(getConfigs(), key);
     }
 
     /**
@@ -110,8 +105,7 @@ public class RpcConfigs {
      * @return value
      */
     public static String getString(String key, String defaultValue) {
-        String val = getString(key);
-        return val == null ? defaultValue : val;
+        return PropertiesUtils.getString(getConfigs(), key, defaultValue);
     }
 
     /**
@@ -121,8 +115,7 @@ public class RpcConfigs {
      * @return value
      */
     public static Boolean getBool(String key) {
-        String val = getConfigs().getProperty(key);
-        return val == null ? null : Boolean.valueOf(val);
+        return PropertiesUtils.getBool(getConfigs(), key);
     }
 
     /**
@@ -132,8 +125,7 @@ public class RpcConfigs {
      * @return value
      */
     public static Boolean getBool(String key, boolean defaultValue) {
-        String val = getConfigs().getProperty(key);
-        return val == null ? defaultValue : Boolean.parseBoolean(val);
+        return PropertiesUtils.getBool(getConfigs(), key, defaultValue);
     }
 
     /**
@@ -143,8 +135,7 @@ public class RpcConfigs {
      * @return value
      */
     public static Integer getInteger(String key) {
-        String val = getConfigs().getProperty(key);
-        return val == null ? null : Integer.valueOf(val);
+        return PropertiesUtils.getInteger(getConfigs(), key);
     }
 
     /**
@@ -154,8 +145,7 @@ public class RpcConfigs {
      * @return value
      */
     public static Integer getInteger(String key, int defaultValue) {
-        String val = getConfigs().getProperty(key);
-        return val == null ? defaultValue : Integer.parseInt(val);
+        return PropertiesUtils.getInteger(getConfigs(), key, defaultValue);
     }
 
     /**
@@ -169,33 +159,6 @@ public class RpcConfigs {
      * @return list
      */
     public static List<String> getList(String key) {
-        String val = getConfigs().getProperty(key);
-        if (StringUtils.isEmptyOrNull(val)) {
-            return Collections.emptyList();
-        }
-
-        List<String> list = new ArrayList<>();
-        int l = 0, r = 0, len = val.length();
-        while (r < len) {
-            if (val.charAt(r) == EMPTY) {
-                if (l != r) {
-                    list.add(val.substring(l, r));
-                }
-
-                // remove space
-                while (++r < len && val.charAt(r) == EMPTY) {
-                }
-
-                l = r;
-            } else {
-                r++;
-            }
-        }
-
-        if (l != r) {
-            list.add(val.substring(l, r));
-        }
-
-        return Collections.unmodifiableList(list);
+        return PropertiesUtils.getList(getConfigs(), key);
     }
 }
