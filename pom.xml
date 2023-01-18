@@ -12,7 +12,7 @@
     <modules>
 
         <module>registry</module>
-        <module>examples</module>
+        <module>test</module>
         <module>bootstrap</module>
         <module>all</module>
         <module>remoting</module>

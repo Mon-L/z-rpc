@@ -3,9 +3,11 @@ package cn.zcn.rpc.bootstrap.provider;
 import cn.zcn.rpc.bootstrap.RpcException;
 import cn.zcn.rpc.bootstrap.RpcRequest;
 import cn.zcn.rpc.bootstrap.RpcResponse;
+import cn.zcn.rpc.bootstrap.filter.*;
 import cn.zcn.rpc.bootstrap.utils.MethodSignatureUtil;
 import cn.zcn.rpc.remoting.InvocationContext;
 import cn.zcn.rpc.remoting.RequestHandler;
+import cn.zcn.rpc.remoting.protocol.RpcStatus;
 import io.netty.util.concurrent.Future;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -28,6 +30,7 @@ public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
 
     private static final class RegisteredInterface {
         private Object instance;
+        private FilterChain<ProviderInvocation> filterChain;
         private final Map<String, RegisteredMethod> methods = new HashMap<>();
     }
 
@@ -35,10 +38,9 @@ public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
         private Method method;
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProviderRequestHandler.class);
-
     private final ProviderConfig providerConfig;
     private final Supplier<Boolean> isServerStarted;
+    private final ReflectInvocationFilter reflectInvocationFilter = new ReflectInvocationFilter();
     private final Map<String, RegisteredInterface> registeredInterfaces = new HashMap<>();
 
     public ProviderRequestHandler(ProviderConfig providerConfig, Supplier<Boolean> isServerStarted) {
@@ -64,6 +66,11 @@ public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
 
                 registeredInterface.methods.put(MethodSignatureUtil.getMethodSignature(method), registeredMethod);
             }
+
+            FilterChain<ProviderInvocation> filterChain = FilterChainBuilder
+                .buildProviderFilterChain(config.getFilters());
+            filterChain.addLast(reflectInvocationFilter);
+            registeredInterface.filterChain = filterChain;
 
             registeredInterfaces.put(config.getInterfaceClass().getName(), registeredInterface);
         }
@@ -91,7 +98,7 @@ public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
         String clazz = request.getClazz();
         RegisteredInterface registeredInterface = registeredInterfaces.get(clazz);
         if (registeredInterface == null) {
-            response.setException(new RpcException("Interface can not be found. Interface:{0}", clazz));
+            response.setException(new RpcException("Interface can not be found. Interface:{}", clazz));
             ctx.writeAndFlushResponse(response);
             return;
         }
@@ -100,39 +107,38 @@ public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
             request.getParameterTypes());
         RegisteredMethod registeredMethod = registeredInterface.methods.get(methodSignature);
         if (registeredMethod == null) {
-            response.setException(new RpcException("Method can not be found. Method:{0}", methodSignature));
+            response.setException(new RpcException("Method can not be found. Method:{}", methodSignature));
             ctx.writeAndFlushResponse(response);
             return;
         }
 
-        doInvoke(ctx, request, response, registeredInterface.instance, registeredMethod.method);
+        ProviderInvocation invocation = new ProviderInvocation(request);
+        invocation.setInvocationContext(ctx);
+        invocation.setInstance(registeredInterface.instance);
+        invocation.setMethod(registeredMethod.method);
+
+        registeredInterface.filterChain.doFilter(invocation);
     }
 
-    /** 调用业务处理方法 */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void doInvoke(
-                          InvocationContext ctx, RpcRequest request, RpcResponse response, Object instance,
-                          Method method) {
-        try {
-            Object result = method.invoke(instance, request.getParameters());
-            if (result instanceof Future) {
-                // 异步响应
-                ((Future) result).addListener(future -> {
-                    if (future.isSuccess()) {
-                        response.set(result);
-                    } else {
-                        response.setException(future.cause());
-                    }
-                    ctx.writeAndFlushResponse(response);
-                });
-            } else {
-                // 同步响应
+    private static class ReflectInvocationFilter implements ProviderFilter {
+
+        @Override
+        public void doFilter(ProviderInvocation invocation, FilterContext<ProviderInvocation> context)
+            throws RpcException {
+            RpcResponse response = invocation.getResponse();
+            InvocationContext ctx = invocation.getInvocationContext();
+
+            try {
+                Object result = invocation.getMethod()
+                    .invoke(invocation.getInstance(), invocation.getRequest().getParameters());
                 response.set(result);
                 ctx.writeAndFlushResponse(response);
+
+                context.doFilter(invocation);
+            } catch (Throwable t) {
+                response.setException(t.getCause());
+                ctx.writeAndFlushResponse(response, RpcStatus.SERVICE_ERROR);
             }
-        } catch (Throwable t) {
-            response.setException(t);
-            ctx.writeAndFlushResponse(response);
         }
     }
 }

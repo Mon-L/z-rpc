@@ -1,15 +1,19 @@
 package cn.zcn.rpc.bootstrap.registry;
 
-import cn.zcn.rpc.remoting.exception.BaseRuntimeException;
+import cn.zcn.rpc.remoting.exception.PatternMessageException;
 
 /** @author zicung */
-public class RegistryException extends BaseRuntimeException {
+public class RegistryException extends PatternMessageException {
 
-    public RegistryException(Throwable t, String msg) {
-        super(t, msg);
+    public RegistryException(String msg) {
+        super(msg);
     }
 
-    public RegistryException(Throwable t, String pattern, Object... args) {
-        super(t, pattern, args);
+    public RegistryException(String msg, Throwable t) {
+        super(msg, t);
+    }
+
+    public RegistryException(String pattern, Object... args) {
+        super(pattern, args);
     }
 }

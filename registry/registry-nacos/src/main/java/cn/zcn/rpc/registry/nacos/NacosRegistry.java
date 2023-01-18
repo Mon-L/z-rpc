@@ -91,7 +91,7 @@ public class NacosRegistry extends Registry {
                 instances.put(interfaceConfig, instance);
             }
         } catch (NacosException e) {
-            throw new RegistryException(e, "Error occurred when register instances.");
+            throw new RegistryException("Error occurred when register instances.", e);
         }
     }
 
@@ -108,7 +108,7 @@ public class NacosRegistry extends Registry {
                 namingService.deregisterInstance(instance.getServiceName(), instance.getClusterName(), instance);
             }
         } catch (NacosException e) {
-            throw new RegistryException(e, "Error occurred when unregister instances.");
+            throw new RegistryException("Error occurred when unregister instances.", e);
         }
     }
 
@@ -133,9 +133,9 @@ public class NacosRegistry extends Registry {
             listens.put(consumerInterfaceConfig, eventListener);
         } catch (NacosException e) {
             throw new RegistryException(
-                e,
                 "Error occurred when subscribe instances. Interface:{}",
-                consumerInterfaceConfig.getUniqueName());
+                consumerInterfaceConfig.getUniqueName(),
+                e);
         }
     }
 
@@ -151,9 +151,9 @@ public class NacosRegistry extends Registry {
             namingService.unsubscribe(consumerInterfaceConfig.getUniqueName(), eventListener);
         } catch (NacosException e) {
             throw new RegistryException(
-                e,
                 "Error occurred when unsubscribe instances. Interface:{}",
-                consumerInterfaceConfig.getUniqueName());
+                consumerInterfaceConfig.getUniqueName(),
+                e);
         }
     }
 
@@ -171,8 +171,8 @@ public class NacosRegistry extends Registry {
             }
             return providers;
         } catch (NacosException e) {
-            throw new RegistryException(
-                e, "Error occurred when load provider. Interface:{}", consumerInterfaceConfig.getUniqueName());
+            throw new RegistryException("Error occurred when load provider. Interface:{}",
+                consumerInterfaceConfig.getUniqueName(), e);
         }
     }
 

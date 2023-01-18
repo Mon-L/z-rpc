@@ -12,6 +12,8 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
+import java.util.List;
+
 /**
  * {@link ICommand} 入站处理器，根据 {@code ICommand} 的 {@code Protocol} 获取 {@link CommandHandler} 进行处理。
  *
@@ -32,11 +34,9 @@ class CommandInboundHandler extends ChannelInboundHandlerAdapter {
         ProtocolCode protocolCode = channelContext.channel().attr(AttributeKeys.PROTOCOL).get();
         Protocol protocol = ProtocolManager.getInstance().getProtocol(protocolCode);
 
+        ICommand request = (ICommand) msg;
         CommandContext commandContext = new CommandContext(channelContext, protocol, requestCommandDispatcher);
-        ICommand request = null;
         try {
-            request = (ICommand) msg;
-
             CommandHandler<ICommand> commandHandler = protocol.getCommandHandler(request.getCommandCode());
             if (commandHandler == null) {
                 writeAndFlushWithRpcStatus(commandContext, protocol, request, RpcStatus.UNSUPPORTED_COMMAND);
@@ -61,7 +61,10 @@ class CommandInboundHandler extends ChannelInboundHandlerAdapter {
     private void writeAndFlushWithRpcStatus(CommandContext commandContext, Protocol protocol, ICommand request,
                                             RpcStatus rpcStatus) {
         if (request.getCommandType() != CommandType.REQUEST_ONEWAY) {
-            commandContext.writeAndFlush(protocol.getCommandFactory().createResponseCommand(request, rpcStatus));
+            ICommand response = protocol.getCommandFactory().createResponseCommand(request, rpcStatus);
+            if (response != null) {
+                commandContext.writeAndFlush(response);
+            }
         }
     }
 }

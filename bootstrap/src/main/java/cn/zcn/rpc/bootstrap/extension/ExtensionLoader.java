@@ -154,7 +154,7 @@ public class ExtensionLoader<T> {
         Class<?> klass = cachedClasses.get(name);
         if (klass == null) {
             throw new ExtensionException(
-                "Extension can not be found. Extension point:{0}, Extension name:{1}", type.getName(), name);
+                "Extension can not be found. Extension point:{}, Extension name:{}", type.getName(), name);
         }
 
         try {
@@ -165,7 +165,7 @@ public class ExtensionLoader<T> {
                 holder.instance = constructor.newInstance(args);
             }
         } catch (Exception e) {
-            throw new ExtensionException(e, "Error occurred when create extension instance");
+            throw new ExtensionException("Error occurred when create extension instance", e);
         }
     }
 
@@ -182,7 +182,7 @@ public class ExtensionLoader<T> {
                 classes.putAll(loadResource(urls.nextElement()));
             }
         } catch (IOException e) {
-            throw new ExtensionException("Error occur when analyse extension file. File:{0}", fileName);
+            throw new ExtensionException("Error occur when analyse extension file. File:{}", fileName);
         }
 
         return classes;
@@ -203,7 +203,7 @@ public class ExtensionLoader<T> {
                 Class<?> klass = Class.forName(className);
                 if (!type.isAssignableFrom(klass)) {
                     throw new ExtensionException(
-                        "Extension class is not subtype of interface. Extension Class:{0}, Interface:{1}",
+                        "Extension class is not subtype of interface. Extension Class:{}, Interface:{}",
                         className, type.getName());
                 }
 
@@ -211,14 +211,14 @@ public class ExtensionLoader<T> {
                 Extension anno = klass.getDeclaredAnnotation(Extension.class);
                 if (anno == null) {
                     throw new ExtensionException(
-                        "Extension class {0} must be annotated by {1}", className, Extension.class.getSimpleName());
+                        "Extension class {} must be annotated by {}", className, Extension.class.getSimpleName());
                 }
 
                 classes.put(anno.value(), klass);
             }
             return classes;
         } catch (ClassNotFoundException e) {
-            throw new ExtensionException(e, e.getMessage());
+            throw new ExtensionException(e.getMessage(), e);
         }
     }
 }

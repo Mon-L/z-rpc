@@ -10,37 +10,38 @@ import io.netty.channel.ChannelHandlerContext;
 
 /**
  * Rpc invocation context.
- *
+ * 
  * @author zicung
  */
 public class CommandContext {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommandContext.class);
+	private static final Logger LOGGER = LoggerFactory
+			.getLogger(CommandContext.class);
 
-    private final Protocol protocol;
-    private final ChannelHandlerContext channelContext;
-    private final RequestCommandDispatcher requestCommandDispatcher;
+	private final Protocol protocol;
+	private final ChannelHandlerContext channelContext;
+	private final RequestCommandDispatcher requestCommandDispatcher;
 
-    public CommandContext(ChannelHandlerContext channelContext, Protocol protocol,
-                          RequestCommandDispatcher requestCommandDispatcher) {
-        this.channelContext = channelContext;
-        this.protocol = protocol;
-        this.requestCommandDispatcher = requestCommandDispatcher;
-    }
+	public CommandContext(ChannelHandlerContext channelContext,
+			Protocol protocol, RequestCommandDispatcher requestCommandDispatcher) {
+		this.channelContext = channelContext;
+		this.protocol = protocol;
+		this.requestCommandDispatcher = requestCommandDispatcher;
+	}
 
-    public ChannelHandlerContext getChannelContext() {
-        return channelContext;
-    }
+	public ChannelHandlerContext getChannelContext() {
+		return channelContext;
+	}
 
-    public Protocol getProtocol() {
-        return protocol;
-    }
+	public Protocol getProtocol() {
+		return protocol;
+	}
 
-    public RequestCommandDispatcher getRequestCommandDispatcher() {
-        return requestCommandDispatcher;
-    }
+	public RequestCommandDispatcher getRequestCommandDispatcher() {
+		return requestCommandDispatcher;
+	}
 
-    public void writeAndFlush(ICommand response) {
-        channelContext.channel().writeAndFlush(response).addListener((ChannelFutureListener) future -> {
+	public void writeAndFlush(ICommand response) {
+        channelContext.writeAndFlush(response).addListener((ChannelFutureListener) future -> {
             if (!future.isSuccess()) {
                 LOGGER.error(
                     "Failed to send response. Request id:{}, To:{}",

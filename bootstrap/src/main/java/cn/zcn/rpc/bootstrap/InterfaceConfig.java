@@ -1,5 +1,7 @@
 package cn.zcn.rpc.bootstrap;
 
+import cn.zcn.rpc.bootstrap.utils.StringUtils;
+
 import java.util.Objects;
 
 /**
@@ -13,18 +15,10 @@ import java.util.Objects;
 public class InterfaceConfig {
 
     /** 接口类 */
-    private final Class<?> interfaceClass;
+    private String interfaceName;
 
     /** 接口版本 */
     private String version;
-
-    public InterfaceConfig(Class<?> interfaceClass) {
-        if (!interfaceClass.isInterface()) {
-            throw new IllegalArgumentException("InterfaceClass must be an interface.");
-        }
-
-        this.interfaceClass = interfaceClass;
-    }
 
     /**
      * 获取接口唯一名称。
@@ -37,11 +31,30 @@ public class InterfaceConfig {
      * </pre>
      */
     public String getUniqueName() {
-        return getInterfaceClass().getName() + (getVersion() != null ? ":" + getVersion() : "");
+        return interfaceName + (getVersion() != null ? ":" + getVersion() : "");
+    }
+
+    public void setInterfaceName(String interfaceName) {
+        this.interfaceName = interfaceName;
     }
 
     public Class<?> getInterfaceClass() {
-        return interfaceClass;
+        if (StringUtils.isEmptyOrNull(interfaceName)) {
+            throw new IllegalArgumentException("InterfaceName must not be null.");
+        }
+
+        Class<?> klass;
+        try {
+            klass = Class.forName(interfaceName);
+        } catch (ClassNotFoundException e) {
+            throw new RpcException(e.getMessage(), e);
+        }
+
+        if (!klass.isInterface()) {
+            throw new IllegalArgumentException("InterfaceClass must be an interface.");
+        }
+
+        return klass;
     }
 
     public void setVersion(String version) {
@@ -64,7 +77,7 @@ public class InterfaceConfig {
 
         InterfaceConfig that = (InterfaceConfig) o;
 
-        if (!Objects.equals(interfaceClass, that.interfaceClass)) {
+        if (!Objects.equals(interfaceName, that.interfaceName)) {
             return false;
         }
 
@@ -73,13 +86,13 @@ public class InterfaceConfig {
 
     @Override
     public int hashCode() {
-        int result = interfaceClass != null ? interfaceClass.hashCode() : 0;
+        int result = interfaceName != null ? interfaceName.hashCode() : 0;
         result = 31 * result + (version != null ? version.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "InterfaceConfig{" + "interfaceClazz=" + interfaceClass.getName() + ", version='" + version + '\'' + '}';
+        return "InterfaceConfig{" + "interface=" + interfaceName + ", version='" + version + '\'' + '}';
     }
 }

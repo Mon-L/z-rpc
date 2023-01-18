@@ -46,7 +46,7 @@ public class Connection {
                 InvocationPromise<ResponseCommand> promise = entry.getValue();
                 promise.cancelTimeout();
                 promise.setFailure(new TransportException(
-                    "Connection was closed. Request id:{0}, Remoting address:{1}",
+                    "Connection was closed. Request id:{}, Remoting address:{}",
                     entry.getKey(), NetUtil.getRemoteAddress(channel)));
             }
         });

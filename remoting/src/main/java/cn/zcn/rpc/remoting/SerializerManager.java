@@ -2,78 +2,39 @@ package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.serialization.HessianSerializer;
 import cn.zcn.rpc.remoting.serialization.Serializer;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Manage all serializers.
- *
+ * 
  * @author zicung
  */
 public class SerializerManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SerializerManager.class);
 
-    private static final SerializerManager INSTANCE = new SerializerManager();
+	public static final byte HESSIAN = 1;
+	public static byte DEFAULT_SERIALIZER = HESSIAN;
 
-    public static SerializerManager getInstance() {
-        return INSTANCE;
-    }
+	private static Serializer[] SERIALIZERS = new Serializer[5];
 
-    private final ConcurrentMap<Byte, Serializer> serializers = new ConcurrentHashMap<>();
+	static {
+		registerSerializer(HESSIAN, new HessianSerializer());
+	}
 
-    private volatile byte defaultSerializerCode;
+	public static void registerSerializer(int code, Serializer serializer) {
+		if (SERIALIZERS.length <= code) {
+			Serializer[] newSerializers = new Serializer[code + 5];
+			System.arraycopy(SERIALIZERS, 0, newSerializers, 0,
+					SERIALIZERS.length);
+			SERIALIZERS = newSerializers;
+		}
 
-    private SerializerManager() {
-        registerSerializer((byte) 1, new HessianSerializer());
+		SERIALIZERS[code] = serializer;
+	}
 
-        setDefaultSerializerCode((byte) 1);
-    }
+	public static Serializer getSerializer(int code) {
+		if (code >= SERIALIZERS.length) {
+			return null;
+		}
 
-    /**
-     * 注册序列化器
-     *
-     * @param code serializer code
-     * @param serializer serializer
-     */
-    public void registerSerializer(byte code, Serializer serializer) {
-        if (serializer == null) {
-            throw new IllegalArgumentException("Serializer should not be null!");
-        }
-
-        Serializer exist = serializers.put(code, serializer);
-        if (exist != null) {
-            LOGGER.warn("Replace serializer by code {}", code);
-        }
-    }
-
-    /**
-     * 卸载序列化器
-     *
-     * @param code serializer code
-     */
-    public void unregisterSerializer(byte code) {
-        if (defaultSerializerCode == code) {
-            throw new IllegalArgumentException("Should not unregister default serializer.");
-        }
-
-        serializers.remove(code);
-    }
-
-    public Serializer getSerializer(byte code) {
-        return serializers.get(code);
-    }
-
-    public byte getDefaultSerializerCode() {
-        return defaultSerializerCode;
-    }
-
-    public void setDefaultSerializerCode(byte code) {
-        if (!serializers.containsKey(code)) {
-            throw new IllegalArgumentException("Unknown serializer: " + code);
-        } else {
-            defaultSerializerCode = code;
-        }
-    }
+		return SERIALIZERS[code];
+	}
 }

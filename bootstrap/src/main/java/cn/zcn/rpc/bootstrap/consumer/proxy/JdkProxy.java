@@ -4,6 +4,8 @@ import cn.zcn.rpc.bootstrap.RpcRequest;
 import cn.zcn.rpc.bootstrap.RpcResponse;
 import cn.zcn.rpc.bootstrap.consumer.RpcInvoker;
 import cn.zcn.rpc.bootstrap.extension.Extension;
+import cn.zcn.rpc.remoting.exception.RemotingException;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -54,7 +56,8 @@ public class JdkProxy implements Proxy {
             try {
                 return response.get();
             } catch (ExecutionException e) {
-                throw e.getCause();
+                Throwable cause = e.getCause();
+                throw new RemotingException("Remoting method error. ErrorMsg: {}", cause.getMessage(), cause);
             }
         }
     }

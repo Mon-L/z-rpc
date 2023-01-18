@@ -37,26 +37,23 @@ public class HeartbeatCommandHandler implements CommandHandler<BaseCommand> {
             HeartbeatAckCommand heartbeatAckCommand = context.getProtocol().getCommandFactory()
                 .createHeartbeatAckCommand(heartbeatCommand);
 
-            context.getChannelContext()
-                .channel()
-                .writeAndFlush(heartbeatAckCommand)
-                .addListener(future -> {
-                    if (future.isSuccess()) {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(
-                                "Sent heartbeat ack successfully. Id:{}, To:{}",
-                                heartbeatCommand.getId(),
-                                NetUtil.getRemoteAddress(context.getChannelContext().channel()));
-                        }
-                    } else {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(
-                                "Failed to send heartbeat ack. Id:{}, To:{}",
-                                heartbeatCommand.getId(),
-                                NetUtil.getRemoteAddress(context.getChannelContext().channel()));
-                        }
+            context.getChannelContext().writeAndFlush(heartbeatAckCommand).addListener(future -> {
+                if (future.isSuccess()) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(
+                            "Sent heartbeat ack successfully. Id:{}, To:{}",
+                            heartbeatCommand.getId(),
+                            NetUtil.getRemoteAddress(context.getChannelContext().channel()));
                     }
-                });
+                } else {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(
+                            "Failed to send heartbeat ack. Id:{}, To:{}",
+                            heartbeatCommand.getId(),
+                            NetUtil.getRemoteAddress(context.getChannelContext().channel()));
+                    }
+                }
+            });
         } else if (command instanceof HeartbeatAckCommand) {
             HeartbeatAckCommand heartbeatAckCommand = (HeartbeatAckCommand) command;
 

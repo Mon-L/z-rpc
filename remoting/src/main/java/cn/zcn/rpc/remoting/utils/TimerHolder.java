@@ -6,32 +6,33 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 定时任务调度器
- *
+ * 
  * @author zicung
  */
 public class TimerHolder {
-    private static volatile TimerHolder instance;
+	private static volatile TimerHolder instance;
 
-    private final Timer timer;
+	private final Timer timer;
 
-    private TimerHolder() {
-        this.timer = new HashedWheelTimer(new NamedThreadFactory("rpc-timer"), 10, TimeUnit.MILLISECONDS);
-    }
+	private TimerHolder() {
+		this.timer = new HashedWheelTimer(new NamedThreadFactory("rpc-timer"),
+				10, TimeUnit.MILLISECONDS);
+	}
 
-    /**
-     * 获取定时任务调度器
-     *
-     * @return {@code Timer}, 定时任务调度器
-     */
-    public static Timer getTimer() {
-        if (instance == null) {
-            synchronized (TimerHolder.class) {
-                if (instance == null) {
-                    instance = new TimerHolder();
-                }
-            }
-        }
+	/**
+	 * 获取定时任务调度器
+	 * 
+	 * @return {@code Timer}, 定时任务调度器
+	 */
+	public static Timer getTimer() {
+		if (instance == null) {
+			synchronized (TimerHolder.class) {
+				if (instance == null) {
+					instance = new TimerHolder();
+				}
+			}
+		}
 
-        return instance.timer;
-    }
+		return instance.timer;
+	}
 }

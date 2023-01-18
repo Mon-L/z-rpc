@@ -80,9 +80,9 @@ public class RemotingInvoker extends AbstractLifecycle {
         byte[] clazz = payload.getClass().getName().getBytes(options.getOption(ClientOptions.CHARSET));
         req.setClazz(clazz);
 
-        byte serializer = SerializerManager.getInstance().getDefaultSerializerCode();
+        byte serializer = SerializerManager.DEFAULT_SERIALIZER;
         req.setSerializer(serializer);
-        req.setContent(SerializerManager.getInstance().getSerializer(serializer).serialize(payload));
+        req.setContent(SerializerManager.getSerializer(serializer).serialize(payload));
 
         ProtocolSwitch protocolSwitch = ProtocolSwitch.parse((byte) 0);
         if (options.getOption(ClientOptions.USE_CRC32)) {
@@ -95,7 +95,7 @@ public class RemotingInvoker extends AbstractLifecycle {
     }
 
     private Object deserialize(ResponseCommand responseCommand) throws SerializationException {
-        Serializer serializer = SerializerManager.getInstance().getSerializer(responseCommand.getSerializer());
+        Serializer serializer = SerializerManager.getSerializer(responseCommand.getSerializer());
         if (serializer == null) {
             throw new SerializationException("Unknown serializer with " + responseCommand.getSerializer());
         }
@@ -148,10 +148,10 @@ public class RemotingInvoker extends AbstractLifecycle {
                 } else {
                     // 获取连接失败
                     promise.setFailure(new TransportException(
-                        connFuture.cause(),
-                        "Failed to acquire connection. " + "Request id:{0}, To:{1}",
+                        "Failed to acquire connection. " + "Request id:{}, To:{}",
                         req.getId(),
-                        NetUtil.getRemoteAddress(url.getAddress())));
+                        NetUtil.getRemoteAddress(url.getAddress()),
+                        connFuture.cause()));
                 }
             });
         } catch (Throwable t) {
@@ -191,26 +191,19 @@ public class RemotingInvoker extends AbstractLifecycle {
                     try {
                         ResponseCommand response = future.get();
                         if (response.getStatus() == RpcStatus.OK) {
-                            if (response.getContent() != null) {
+                            if (response.getContent() != null && response.getContent().length > 0) {
                                 promise.setSuccess((T) deserialize(response));
                             } else {
                                 promise.setSuccess(null);
                             }
                         } else {
-                            RemotingException exception;
-                            if (response.getContent() != null) {
-                                Throwable cause = (Throwable) deserialize(response);
-                                exception = new RemotingException(
-                                    "Remoting server error. ResponseStatus: {0}, ErrorMsg: {1}",
-                                    response.getStatus().name(), cause.getMessage());
-                                exception.setStackTrace(cause.getStackTrace());
+                            if (response.getContent() != null && response.getContent().length > 0) {
+                                promise.setSuccess((T) deserialize(response));
                             } else {
-                                exception = new RemotingException(
-                                    "Remoting server error. ResponseStatus: {0}",
-                                    response.getStatus().name());
+                                promise.setFailure(new RemotingException(
+                                    "Remoting server error. ResponseStatus: {}",
+                                    response.getStatus().name()));
                             }
-
-                            promise.setFailure(exception);
                         }
                     } catch (Throwable t) {
                         promise.setFailure(t);
@@ -223,7 +216,7 @@ public class RemotingInvoker extends AbstractLifecycle {
             // 判断请求是否已超时
             if (getRemainingTime(startMillis, timeoutMillis) <= 0) {
                 invocationPromise.setFailure(new TimeoutException(
-                    "Send request timeout. Request id:{0}, To:{1}",
+                    "Send request timeout. Request id:{}, To:{}",
                     req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
                 return promise;
             }
@@ -233,7 +226,7 @@ public class RemotingInvoker extends AbstractLifecycle {
                 if (remainingTime <= 0) {
                     // 请求已超时，返回超时异常
                     invocationPromise.setFailure(new TimeoutException(
-                        "Send request timeout. Request id:{0}, To:{1}",
+                        "Send request timeout. Request id:{}, To:{}",
                         req.getId(), NetUtil.getRemoteAddress(url.getAddress())));
 
                     // 释放连接
@@ -256,7 +249,7 @@ public class RemotingInvoker extends AbstractLifecycle {
                                     InvocationPromise<?> p = conn.removePromise(req.getId());
                                     if (p != null) {
                                         p.setFailure(new TimeoutException(
-                                            "Wait for response timeout. Request id:{0}, To:{1}",
+                                            "Wait for response timeout. Request id:{}, To:{}",
                                             req.getId(), NetUtil.getRemoteAddress(conn.getChannel())));
                                     }
                                 },
@@ -296,10 +289,10 @@ public class RemotingInvoker extends AbstractLifecycle {
                 } else {
                     // 获取连接失败
                     invocationPromise.setFailure(new TransportException(
-                        connFuture.cause(),
-                        "Failed to acquire connection. Request id:{0}, To:{1}",
+                        "Failed to acquire connection. Request id:{}, To:{}",
                         req.getId(),
-                        NetUtil.getRemoteAddress(url.getAddress())));
+                        NetUtil.getRemoteAddress(url.getAddress()),
+                        connFuture.cause()));
                 }
             });
         } catch (Throwable t) {

@@ -2,10 +2,7 @@ package cn.zcn.rpc.remoting.protocol.v1;
 
 import static org.assertj.core.api.Assertions.*;
 
-import cn.zcn.rpc.remoting.ProtocolDecoder;
-import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.protocol.*;
-import cn.zcn.rpc.remoting.test.TestingChannelHandlerContext;
 import cn.zcn.rpc.remoting.utils.Crc32Util;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -14,21 +11,12 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.assertj.core.api.ThrowableAssert;
-import org.junit.Before;
+
+import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.DecoderException;
 import org.junit.Test;
 
 public class RpcProtocolDecoderTest {
-    private EmbeddedChannel channel;
-    private ChannelHandlerContext context;
-    private ProtocolDecoder protocolDecoder;
-
-    @Before
-    public void before() {
-        this.channel = new EmbeddedChannel();
-        this.context = new TestingChannelHandlerContext(channel);
-        this.protocolDecoder = new RpcProtocolDecoder();
-    }
 
     @Test
     public void testDecodeWithUnmatchedProtocolCode() {
@@ -40,15 +28,15 @@ public class RpcProtocolDecoderTest {
             in.writeByte(i);
         }
 
-        assertThatExceptionOfType(ProtocolException.class)
-                .isThrownBy(new ThrowableAssert.ThrowingCallable() {
+        EmbeddedChannel channel = new EmbeddedChannel(new ByteToMessageDecoder() {
+            @Override
+            protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+                new RpcProtocolDecoder().decode(ctx, in, new ArrayList<>());
+            }
+        });
 
-                    @Override
-                    public void call() throws Throwable {
-                        protocolDecoder.decode(context, in, new ArrayList<>());
-                    }
-                })
-                .withMessageContaining("Excepted protocol ");
+        assertThatExceptionOfType(DecoderException.class)
+            .isThrownBy(() -> channel.writeInbound(in)).havingCause().withMessageContaining("Excepted protocol ");
     }
 
     @Test
@@ -62,15 +50,15 @@ public class RpcProtocolDecoderTest {
             in.writeByte(i);
         }
 
-        assertThatExceptionOfType(ProtocolException.class)
-                .isThrownBy(new ThrowableAssert.ThrowingCallable() {
+        EmbeddedChannel channel = new EmbeddedChannel(new ByteToMessageDecoder() {
+            @Override
+            protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+                new RpcProtocolDecoder().decode(ctx, in, new ArrayList<>());
+            }
+        });
 
-                    @Override
-                    public void call() throws Throwable {
-                        protocolDecoder.decode(context, in, new ArrayList<>());
-                    }
-                })
-                .withMessageContaining("Unknown command type ");
+        assertThatExceptionOfType(DecoderException.class)
+            .isThrownBy(() -> channel.writeInbound(in)).havingCause().withMessageContaining("Unknown command type ");
     }
 
     @Test
@@ -89,8 +77,6 @@ public class RpcProtocolDecoderTest {
         in.writeByte(protocolSwitch.toByte());
         in.writeInt(400); // timeout
 
-        testDecodeWithIncompleteMessage(in);
-
         byte[] clazz = new byte[20];
         Arrays.fill(clazz, (byte) 2);
         in.writeShort(clazz.length);
@@ -102,31 +88,35 @@ public class RpcProtocolDecoderTest {
         in.writeBytes(clazz);
         in.writeBytes(content);
 
-        testDecodeWithIncompleteMessage(in);
-
         byte[] msg = new byte[in.readableBytes()];
         in.getBytes(0, msg, 0, msg.length);
         in.writeInt(Crc32Util.calculate(msg));
 
-        try {
-            List<Object> out = new ArrayList<>();
-            protocolDecoder.decode(context, in, out);
+        EmbeddedChannel channel = new EmbeddedChannel(new ByteToMessageDecoder() {
+            @Override
+            protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+                new RpcProtocolDecoder().decode(ctx, in, out);
 
-            assertThat(out.size()).isEqualTo(1);
-            RequestCommand command = (RequestCommand) out.get(0);
+                try {
+                    assertThat(out.size()).isEqualTo(1);
+                    RequestCommand command = (RequestCommand) out.get(0);
 
-            assertThat(command.getProtocolCode()).isEqualTo(RpcProtocolV1.PROTOCOL_CODE);
-            assertThat(command.getCommandType()).isEqualTo(CommandType.REQUEST);
-            assertThat(command.getCommandCode()).isEqualTo(CommandCode.REQUEST);
-            assertThat(command.getId()).isEqualTo(1000);
-            assertThat(command.getSerializer()).isEqualTo((byte) 6);
-            assertThat(command.getTimeout()).isEqualTo(400);
-            assertThat(command.getProtocolSwitch()).isEqualTo(protocolSwitch);
-            assertThat(command.getClazz()).isEqualTo(clazz);
-            assertThat(command.getContent()).isEqualTo(content);
-        } catch (Exception e) {
-            fail("Should not reach here!");
-        }
+                    assertThat(command.getProtocolCode()).isEqualTo(RpcProtocolV1.PROTOCOL_CODE);
+                    assertThat(command.getCommandType()).isEqualTo(CommandType.REQUEST);
+                    assertThat(command.getCommandCode()).isEqualTo(CommandCode.REQUEST);
+                    assertThat(command.getId()).isEqualTo(1000);
+                    assertThat(command.getSerializer()).isEqualTo((byte) 6);
+                    assertThat(command.getTimeout()).isEqualTo(400);
+                    assertThat(command.getProtocolSwitch()).isEqualTo(protocolSwitch);
+                    assertThat(command.getClazz()).isEqualTo(clazz);
+                    assertThat(command.getContent()).isEqualTo(content);
+                } catch (Exception e) {
+                    fail("Should not reach here!");
+                }
+            }
+        });
+
+        channel.writeInbound(in);
     }
 
     @Test
@@ -145,8 +135,6 @@ public class RpcProtocolDecoderTest {
         in.writeByte(protocolSwitch.toByte());
         in.writeShort(RpcStatus.OK.getValue());
 
-        testDecodeWithIncompleteMessage(in);
-
         byte[] clazz = new byte[20];
         Arrays.fill(clazz, (byte) 2);
         in.writeShort(clazz.length);
@@ -158,31 +146,35 @@ public class RpcProtocolDecoderTest {
         in.writeBytes(clazz);
         in.writeBytes(content);
 
-        testDecodeWithIncompleteMessage(in);
-
         byte[] msg = new byte[in.readableBytes()];
         in.getBytes(0, msg, 0, msg.length);
         in.writeInt(Crc32Util.calculate(msg));
 
-        try {
-            List<Object> out = new ArrayList<>();
-            protocolDecoder.decode(context, in, out);
+        EmbeddedChannel channel = new EmbeddedChannel(new ByteToMessageDecoder() {
+            @Override
+            protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+                new RpcProtocolDecoder().decode(ctx, in, out);
 
-            assertThat(out.size()).isEqualTo(1);
-            ResponseCommand command = (ResponseCommand) out.get(0);
+                try {
+                    assertThat(out.size()).isEqualTo(1);
+                    ResponseCommand command = (ResponseCommand) out.get(0);
 
-            assertThat(command.getProtocolCode()).isEqualTo(RpcProtocolV1.PROTOCOL_CODE);
-            assertThat(command.getCommandType()).isEqualTo(CommandType.RESPONSE);
-            assertThat(command.getCommandCode()).isEqualTo(CommandCode.RESPONSE);
-            assertThat(command.getId()).isEqualTo(1000);
-            assertThat(command.getSerializer()).isEqualTo((byte) 6);
-            assertThat(command.getProtocolSwitch()).isEqualTo(protocolSwitch);
-            assertThat(command.getStatus()).isEqualTo(RpcStatus.OK);
-            assertThat(command.getClazz()).isEqualTo(clazz);
-            assertThat(command.getContent()).isEqualTo(content);
-        } catch (Exception e) {
-            fail("Should not reach here!");
-        }
+                    assertThat(command.getProtocolCode()).isEqualTo(RpcProtocolV1.PROTOCOL_CODE);
+                    assertThat(command.getCommandType()).isEqualTo(CommandType.RESPONSE);
+                    assertThat(command.getCommandCode()).isEqualTo(CommandCode.RESPONSE);
+                    assertThat(command.getId()).isEqualTo(1000);
+                    assertThat(command.getSerializer()).isEqualTo((byte) 6);
+                    assertThat(command.getProtocolSwitch()).isEqualTo(protocolSwitch);
+                    assertThat(command.getStatus()).isEqualTo(RpcStatus.OK);
+                    assertThat(command.getClazz()).isEqualTo(clazz);
+                    assertThat(command.getContent()).isEqualTo(content);
+                } catch (Exception e) {
+                    fail("Should not reach here!");
+                }
+            }
+        });
+
+        channel.writeInbound(in);
     }
 
     @Test
@@ -201,8 +193,6 @@ public class RpcProtocolDecoderTest {
         in.writeByte(protocolSwitch.toByte());
         in.writeInt(400); // timeout
 
-        testDecodeWithIncompleteMessage(in);
-
         byte[] contentClass = new byte[20];
         Arrays.fill(contentClass, (byte) 2);
         in.writeShort(contentClass.length);
@@ -214,31 +204,17 @@ public class RpcProtocolDecoderTest {
         in.writeBytes(contentClass);
         in.writeBytes(content);
 
-        testDecodeWithIncompleteMessage(in);
-
         byte[] msg = new byte[in.readableBytes()];
         in.getBytes(0, msg, 0, msg.length - 1);
         in.writeInt(Crc32Util.calculate(msg));
 
-        assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
-
+        EmbeddedChannel channel = new EmbeddedChannel(new ByteToMessageDecoder() {
             @Override
-            public void call() throws Throwable {
-                List<Object> out = new ArrayList<>();
-                protocolDecoder.decode(context, in, out);
+            protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+                new RpcProtocolDecoder().decode(ctx, in, out);
             }
         });
-    }
 
-    private void testDecodeWithIncompleteMessage(ByteBuf in) {
-        int readableBytes = in.readableBytes();
-        try {
-            protocolDecoder.decode(context, in, new ArrayList<>());
-        } catch (Exception e) {
-            fail("Should not reach here!");
-        }
-
-        // should reset reader index
-        assertThat(in.readableBytes()).isEqualTo(readableBytes);
+        assertThatExceptionOfType(DecoderException.class).isThrownBy(() -> channel.writeInbound(in));
     }
 }

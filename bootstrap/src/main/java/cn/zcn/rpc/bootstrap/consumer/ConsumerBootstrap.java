@@ -29,7 +29,7 @@ public class ConsumerBootstrap extends AbstractLifecycle {
     }
 
     protected void configRemotingClient(RemotingClient remotingClient) {
-        remotingClient.option(ClientOptions.USE_CRC32, true);
+        remotingClient.option(ClientOptions.USE_CRC32, false);
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -43,6 +43,13 @@ public class ConsumerBootstrap extends AbstractLifecycle {
         LOGGER.info("Interface proxy created，{}", interfaceConfig.getUniqueName());
 
         return (T) proxy;
+    }
+
+    public void destroyProxy(ConsumerInterfaceConfig interfaceConfig) {
+        InterfaceBootstrap interfaceBootstrap = interfaceBootstraps.remove(interfaceConfig);
+        if (interfaceBootstrap != null) {
+            interfaceBootstrap.stop();
+        }
     }
 
     @Override

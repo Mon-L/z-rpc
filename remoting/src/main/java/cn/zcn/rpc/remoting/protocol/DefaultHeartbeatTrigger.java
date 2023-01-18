@@ -91,7 +91,7 @@ public class DefaultHeartbeatTrigger implements HeartbeatTrigger {
                     InvocationPromise<ResponseCommand> p = conn.removePromise(heartbeatCommand.getId());
                     if (p != null) {
                         p.setFailure(new TimeoutException(
-                            "Wait for heartbeat ack timeout. Id:{0}, To:{1}",
+                            "Wait for heartbeat ack timeout. Id:{}, To:{}",
                             heartbeatCommand.getId(), NetUtil.getRemoteAddress(ctx.channel())));
                     }
                 },
@@ -101,7 +101,7 @@ public class DefaultHeartbeatTrigger implements HeartbeatTrigger {
         conn.addPromise(heartbeatCommand.getId(), promise);
 
         // send heartbeat
-        ctx.channel().writeAndFlush(heartbeatCommand).addListener((GenericFutureListener<Future<Void>>) future -> {
+        ctx.writeAndFlush(heartbeatCommand).addListener((GenericFutureListener<Future<Void>>) future -> {
             if (!future.isSuccess()) {
                 // 发送失败，移除 promise、timeout
                 InvocationPromise<ResponseCommand> p = conn.removePromise(heartbeatCommand.getId());

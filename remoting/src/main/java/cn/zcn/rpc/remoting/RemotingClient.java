@@ -10,6 +10,7 @@ import cn.zcn.rpc.remoting.protocol.MessageDecoder;
 import cn.zcn.rpc.remoting.protocol.MessageEncoder;
 import cn.zcn.rpc.remoting.utils.NamedThreadFactory;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
@@ -76,6 +77,7 @@ public class RemotingClient extends AbstractLifecycle {
         Bootstrap bootstrap = new Bootstrap()
             .channel(channelClazz)
             .group(workerGroup)
+            .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, options.getOption(ClientOptions.CONNECT_TIMEOUT_MILLIS))
             .option(ChannelOption.TCP_NODELAY, options.getOption(ClientOptions.TCP_NODELAY))
             .option(ChannelOption.SO_REUSEADDR, options.getOption(ClientOptions.SO_REUSEADDR))

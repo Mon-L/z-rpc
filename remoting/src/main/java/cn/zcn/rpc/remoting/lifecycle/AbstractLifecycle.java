@@ -23,7 +23,7 @@ public abstract class AbstractLifecycle implements Lifecycle {
                 if (e instanceof LifecycleException) {
                     throw e;
                 } else {
-                    throw new LifecycleException(e, "Failed to start {0}. Error Msg: {1}", toString(), e.getMessage());
+                    throw new LifecycleException("Failed to start {}. Error Msg: {}", toString(), e.getMessage(), e);
                 }
             }
         }

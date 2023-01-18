@@ -1,5 +1,6 @@
 package cn.zcn.rpc.remoting;
 
+import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,18 +22,18 @@ import io.netty.channel.ChannelFutureListener;
 public class DefaultInvocationContext implements InvocationContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultInvocationContext.class);
 
-    private final Channel channel;
     private final RequestCommand request;
+    private final ChannelHandlerContext channelContext;
 
-    private int timeout;
+    private int timeout = -1;
     private long startTimeMillis;
     private long readyTimeMillis;
     private Serializer serializer;
     private CommandFactory commandFactory;
 
-    public DefaultInvocationContext(Channel channel, RequestCommand request) {
+    public DefaultInvocationContext(ChannelHandlerContext channelContext, RequestCommand request) {
         this.request = request;
-        this.channel = channel;
+        this.channelContext = channelContext;
     }
 
     @Override
@@ -42,12 +43,12 @@ public class DefaultInvocationContext implements InvocationContext {
 
     @Override
     public String getRemoteHost() {
-        return NetUtil.getRemoteHost(channel);
+        return NetUtil.getRemoteHost(channelContext.channel());
     }
 
     @Override
     public int getRemotePort() {
-        return NetUtil.getRemotePort(channel);
+        return NetUtil.getRemotePort(channelContext.channel());
     }
 
     @Override
@@ -70,7 +71,7 @@ public class DefaultInvocationContext implements InvocationContext {
 
     @Override
     public boolean isTimeout() {
-        if (timeout <= 0 || request.getCommandType() == CommandType.REQUEST_ONEWAY) {
+        if (timeout < 0 || request.getCommandType() == CommandType.REQUEST_ONEWAY) {
             return false;
         }
 
@@ -105,15 +106,8 @@ public class DefaultInvocationContext implements InvocationContext {
     }
 
     @Override
-    public void writeAndFlushException(Throwable throwable) {
-        ServiceException serviceException = new ServiceException(throwable.getMessage());
-        serviceException.setStackTrace(throwable.getStackTrace());
-        writeAndFlushResponse(serviceException, RpcStatus.SERVICE_ERROR);
-    }
-
-    @Override
     public void writeAndFlushResponse(Object obj, RpcStatus status) {
-        if (obj == null || request.getCommandType() == CommandType.REQUEST_ONEWAY) {
+        if (obj == null || request.getCommandType() == CommandType.REQUEST_ONEWAY || isTimeout()) {
             return;
         }
 
@@ -121,36 +115,34 @@ public class DefaultInvocationContext implements InvocationContext {
             throw new IllegalArgumentException("RpcStatus should not be null.");
         }
 
-        if (!isTimeout()) {
-            Options options = channel.attr(AttributeKeys.OPTIONS).get();
-            BaseCommand response = commandFactory.createResponseCommand(request, status);
-            if (response == null) {
-                return;
-            }
+        Channel channel = channelContext.channel();
 
-            try {
-                byte[] content = serializer.serialize(obj);
-                response.setContent(content);
-                response.setClazz(obj.getClass().getName().getBytes(options.getOption(ServerOptions.CHARSET)));
-            } catch (Throwable t) {
-                response = commandFactory.createResponseCommand(request, RpcStatus.SERIALIZATION_ERROR);
-            }
+        BaseCommand response = commandFactory.createResponseCommand(request, status);
+        if (response == null) {
+            return;
+        }
 
-            channel.writeAndFlush(response).addListener((ChannelFutureListener) future -> {
-                if (!future.isSuccess()) {
-                    LOGGER.error(
-                        "Failed to send response. Request id:{}, To:{}",
+        try {
+            byte[] content = serializer.serialize(obj);
+            response.setContent(content);
+        } catch (Throwable t) {
+            response = commandFactory.createResponseCommand(request, RpcStatus.SERIALIZATION_ERROR);
+        }
+
+        channelContext.writeAndFlush(response).addListener((ChannelFutureListener) future -> {
+            if (!future.isSuccess()) {
+                LOGGER.error(
+                    "Failed to send response. Request id:{}, To:{}",
+                    request.getId(),
+                    NetUtil.getRemoteAddress(channel));
+            } else {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(
+                        "Sent response. Request id:{},  To:{}",
                         request.getId(),
                         NetUtil.getRemoteAddress(channel));
-                } else {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(
-                            "Sent response. Request id:{},  To:{}",
-                            request.getId(),
-                            NetUtil.getRemoteAddress(channel));
-                    }
                 }
-            });
-        }
+            }
+        });
     }
 }

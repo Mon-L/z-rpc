@@ -1,21 +1,17 @@
 package cn.zcn.rpc.remoting.exception;
 
 /** @author zicung */
-public class TransportException extends BaseRuntimeException {
+public class TransportException extends PatternMessageException {
 
     public TransportException(String msg) {
         super(msg);
     }
 
-    public TransportException(Throwable t, String msg) {
-        super(t, msg);
+    public TransportException(String msg, Throwable t) {
+        super(msg, t);
     }
 
     public TransportException(String pattern, Object... args) {
         super(pattern, args);
-    }
-
-    public TransportException(Throwable t, String pattern, Object... args) {
-        super(t, pattern, args);
     }
 }

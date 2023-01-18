@@ -11,13 +11,13 @@ import java.util.Map;
 /** @author zicung */
 public class NacosUtils {
 
-    protected static final String WEIGHT = "weight";
-    protected static final String WARMUP = "warmup";
-    protected static final String START_TIME = "startTime";
-    protected static final String DEFAULT_CLUSTER = "DEFAULT-CLUSTER";
-    protected static final String DEFAULT_NAMESPACE = "z-rpc";
+	protected static final String WEIGHT = "weight";
+	protected static final String WARMUP = "warmup";
+	protected static final String START_TIME = "startTime";
+	protected static final String DEFAULT_CLUSTER = "DEFAULT-CLUSTER";
+	protected static final String DEFAULT_NAMESPACE = "z-rpc";
 
-    protected static Instance toInstance(ProviderConfig providerConfig, ProviderInterfaceConfig interfaceConfig) {
+	protected static Instance toInstance(ProviderConfig providerConfig, ProviderInterfaceConfig interfaceConfig) {
         Instance instance = new Instance();
 
         instance.setServiceName(interfaceConfig.getUniqueName());
@@ -34,8 +34,7 @@ public class NacosUtils {
 
         return instance;
     }
-
-    protected static Provider toProvider(Instance instance) {
+	protected static Provider toProvider(Instance instance) {
         Provider provider = new Provider();
         provider.setIp(instance.getIp());
         provider.setPort(instance.getPort());

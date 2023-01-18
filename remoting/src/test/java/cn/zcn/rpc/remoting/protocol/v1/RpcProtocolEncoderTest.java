@@ -2,48 +2,28 @@ package cn.zcn.rpc.remoting.protocol.v1;
 
 import static org.assertj.core.api.Assertions.*;
 
-import cn.zcn.rpc.remoting.ProtocolEncoder;
-import cn.zcn.rpc.remoting.exception.ProtocolException;
 import cn.zcn.rpc.remoting.protocol.*;
-import cn.zcn.rpc.remoting.test.TestingChannelHandlerContext;
 import cn.zcn.rpc.remoting.utils.Crc32Util;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.Arrays;
-import org.assertj.core.api.ThrowableAssert;
-import org.junit.Before;
+import io.netty.handler.codec.EncoderException;
+import io.netty.handler.codec.MessageToByteEncoder;
 import org.junit.Test;
 
 public class RpcProtocolEncoderTest {
-    private EmbeddedChannel channel;
-    private ChannelHandlerContext context;
-    private ProtocolEncoder protocolEncoder;
-
-    @Before
-    public void before() {
-        this.channel = new EmbeddedChannel();
-        this.context = new TestingChannelHandlerContext(channel);
-        this.protocolEncoder = new RpcProtocolEncoder();
-    }
 
     @Test
     public void testEncodeWithInvalidMessage() {
-        ByteBuf out = Unpooled.buffer();
-        Object msg = new Object();
-
-        assertThatExceptionOfType(ProtocolException.class).isThrownBy(new ThrowableAssert.ThrowingCallable() {
-
+        EmbeddedChannel channel = new EmbeddedChannel(new MessageToByteEncoder<Object>() {
             @Override
-            public void call() throws Throwable {
-                protocolEncoder.encode(context, msg, out);
+            protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
+                new RpcProtocolEncoder().encode(ctx, msg, out);
             }
         });
 
-        assertThat(out.readableBytes()).isEqualTo(0);
-        assertThat(out.readerIndex()).isEqualTo(0);
-        assertThat(out.writerIndex()).isEqualTo(0);
+        assertThatExceptionOfType(EncoderException.class).isThrownBy(() -> channel.writeOutbound(new Object()));
     }
 
     @Test
@@ -68,30 +48,32 @@ public class RpcProtocolEncoderTest {
         Arrays.fill(content, (byte) 5);
         req.setContent(content);
 
-        ByteBuf out = Unpooled.buffer();
-        try {
-            protocolEncoder.encode(context, req, out);
-        } catch (Exception e) {
-            fail("Should not reach here!", e);
-        }
+        EmbeddedChannel channel = new EmbeddedChannel(new MessageToByteEncoder<Object>() {
+            @Override
+            protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
+                new RpcProtocolEncoder().encode(ctx, msg, out);
 
-        byte[] bytes = new byte[out.readableBytes()];
-        out.getBytes(0, bytes);
+                byte[] bytes = new byte[out.readableBytes()];
+                out.getBytes(0, bytes);
 
-        assertThat(out.readByte()).isEqualTo(protocolCode.getCode());
-        assertThat(out.readByte()).isEqualTo(protocolCode.getVersion());
-        assertThat(out.readShort()).isEqualTo(req.getCommandType().getValue());
-        assertThat(out.readShort()).isEqualTo(req.getCommandCode().getValue());
-        assertThat(out.readInt()).isEqualTo(req.getId());
-        assertThat(out.readByte()).isEqualTo(req.getSerializer());
-        assertThat(out.readByte()).isEqualTo(protocolSwitch.toByte());
-        assertThat(out.readInt()).isEqualTo(req.getTimeout());
-        assertThat(out.readShort()).isEqualTo((short) clazz.length);
-        assertThat(out.readInt()).isEqualTo(content.length);
-        assertThat(getBytes(out, clazz.length)).isEqualTo(clazz);
-        assertThat(getBytes(out, content.length)).isEqualTo(content);
+                assertThat(out.readByte()).isEqualTo(protocolCode.getCode());
+                assertThat(out.readByte()).isEqualTo(protocolCode.getVersion());
+                assertThat(out.readShort()).isEqualTo(req.getCommandType().getValue());
+                assertThat(out.readShort()).isEqualTo(req.getCommandCode().getValue());
+                assertThat(out.readInt()).isEqualTo(req.getId());
+                assertThat(out.readByte()).isEqualTo(req.getSerializer());
+                assertThat(out.readByte()).isEqualTo(protocolSwitch.toByte());
+                assertThat(out.readInt()).isEqualTo(req.getTimeout());
+                assertThat(out.readShort()).isEqualTo((short) clazz.length);
+                assertThat(out.readInt()).isEqualTo(content.length);
+                assertThat(getBytes(out, clazz.length)).isEqualTo(clazz);
+                assertThat(getBytes(out, content.length)).isEqualTo(content);
 
-        checkCRC32(bytes, out.readInt());
+                checkCRC32(bytes, out.readInt());
+            }
+        });
+
+        channel.writeOutbound(req);
     }
 
     @Test
@@ -115,30 +97,32 @@ public class RpcProtocolEncoderTest {
         Arrays.fill(content, (byte) 5);
         req.setContent(content);
 
-        ByteBuf out = Unpooled.buffer();
-        try {
-            protocolEncoder.encode(context, req, out);
-        } catch (Exception e) {
-            fail("Should not reach here!", e);
-        }
+        EmbeddedChannel channel = new EmbeddedChannel(new MessageToByteEncoder<Object>() {
+            @Override
+            protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
+                new RpcProtocolEncoder().encode(ctx, msg, out);
 
-        byte[] bytes = new byte[out.readableBytes()];
-        out.getBytes(0, bytes);
+                byte[] bytes = new byte[out.readableBytes()];
+                out.getBytes(0, bytes);
 
-        assertThat(out.readByte()).isEqualTo(protocolCode.getCode());
-        assertThat(out.readByte()).isEqualTo(protocolCode.getVersion());
-        assertThat(out.readShort()).isEqualTo(req.getCommandType().getValue());
-        assertThat(out.readShort()).isEqualTo(req.getCommandCode().getValue());
-        assertThat(out.readInt()).isEqualTo(req.getId());
-        assertThat(out.readByte()).isEqualTo(req.getSerializer());
-        assertThat(out.readByte()).isEqualTo(protocolSwitch.toByte());
-        assertThat(out.readShort()).isEqualTo(req.getStatus().getValue());
-        assertThat(out.readShort()).isEqualTo((short) clazz.length);
-        assertThat(out.readInt()).isEqualTo(content.length);
-        assertThat(getBytes(out, clazz.length)).isEqualTo(clazz);
-        assertThat(getBytes(out, content.length)).isEqualTo(content);
+                assertThat(out.readByte()).isEqualTo(protocolCode.getCode());
+                assertThat(out.readByte()).isEqualTo(protocolCode.getVersion());
+                assertThat(out.readShort()).isEqualTo(req.getCommandType().getValue());
+                assertThat(out.readShort()).isEqualTo(req.getCommandCode().getValue());
+                assertThat(out.readInt()).isEqualTo(req.getId());
+                assertThat(out.readByte()).isEqualTo(req.getSerializer());
+                assertThat(out.readByte()).isEqualTo(protocolSwitch.toByte());
+                assertThat(out.readShort()).isEqualTo(req.getStatus().getValue());
+                assertThat(out.readShort()).isEqualTo((short) clazz.length);
+                assertThat(out.readInt()).isEqualTo(content.length);
+                assertThat(getBytes(out, clazz.length)).isEqualTo(clazz);
+                assertThat(getBytes(out, content.length)).isEqualTo(content);
 
-        checkCRC32(bytes, out.readInt());
+                checkCRC32(bytes, out.readInt());
+            }
+        });
+
+        channel.writeOutbound(req);
     }
 
     private void checkCRC32(byte[] bytes, int i) {

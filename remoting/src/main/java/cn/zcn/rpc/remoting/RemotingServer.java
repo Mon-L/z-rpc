@@ -9,6 +9,7 @@ import cn.zcn.rpc.remoting.protocol.MessageDecoder;
 import cn.zcn.rpc.remoting.protocol.MessageEncoder;
 import cn.zcn.rpc.remoting.utils.NamedThreadFactory;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -33,13 +34,12 @@ public class RemotingServer extends AbstractLifecycle {
     private final int port;
     private final String host;
     private final ServerOptions options = new ServerOptions();
+    private final RequestCommandDispatcher requestCommandDispatcher = new RequestCommandDispatcher(options);
 
     private CommandInboundHandler commandInboundHandler;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ChannelFuture channelFuture;
-
-    private final RequestCommandDispatcher requestCommandDispatcher = new RequestCommandDispatcher(options);
 
     public RemotingServer(String host, int port) {
         this.host = host;
@@ -58,7 +58,7 @@ public class RemotingServer extends AbstractLifecycle {
             }
         } catch (Throwable t) {
             stop();
-            throw new LifecycleException(t, "Failed to start remoting server!");
+            throw new LifecycleException("Failed to start remoting server!", t);
         }
     }
 
@@ -89,8 +89,10 @@ public class RemotingServer extends AbstractLifecycle {
         ServerBootstrap server = new ServerBootstrap();
         server.group(bossGroup, workerGroup)
             .channel(channelClass)
+            .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .option(ChannelOption.SO_BACKLOG, options.getOption(ServerOptions.SO_BACKLOG))
             .option(ChannelOption.SO_REUSEADDR, options.getOption(ServerOptions.SO_REUSEADDR))
+            .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
             .childOption(ChannelOption.TCP_NODELAY, options.getOption(ServerOptions.TCP_NODELAY))
             .childOption(ChannelOption.SO_KEEPALIVE, options.getOption(ServerOptions.SO_KEEPALIVE))
             .childOption(ChannelOption.SO_SNDBUF, options.getOption(ServerOptions.SO_SNDBUF))

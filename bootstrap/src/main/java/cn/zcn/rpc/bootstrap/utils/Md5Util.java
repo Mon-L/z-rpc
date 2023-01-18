@@ -8,19 +8,19 @@ import java.security.NoSuchAlgorithmException;
  * @author zicung
  */
 public class Md5Util {
-    private static final String CHARSET = "UTF-8";
+	private static final String CHARSET = "UTF-8";
 
-    private static final MessageDigest MD5;
+	private static final MessageDigest MD5;
 
-    static {
-        try {
-            MD5 = MessageDigest.getInstance("md5");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	static {
+		try {
+			MD5 = MessageDigest.getInstance("md5");
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    public static byte[] computeMd5(String key) {
+	public static byte[] computeMd5(String key) {
         MessageDigest md5;
         try {
             md5 = (MessageDigest) MD5.clone();

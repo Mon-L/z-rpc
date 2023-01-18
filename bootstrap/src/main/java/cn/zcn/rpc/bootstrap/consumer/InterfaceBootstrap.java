@@ -26,6 +26,8 @@ public class InterfaceBootstrap extends AbstractLifecycle {
     private final RemotingClient remotingClient;
     private final ConsumerInterfaceConfig interfaceConfig;
     private final List<Registry> registries = new ArrayList<>();
+
+    private DefaultRpcInvoker rpcInvoker;
     private ProvidersHolder providersHolder;
 
     public InterfaceBootstrap(ConsumerInterfaceConfig interfaceConfig, RemotingClient remotingClient) {
@@ -95,8 +97,8 @@ public class InterfaceBootstrap extends AbstractLifecycle {
     }
 
     public Object createProxy() {
-        DefaultRpcInvoker rpcInvoker = new DefaultRpcInvoker(interfaceConfig, remotingClient, providersHolder);
-        rpcInvoker.init();
+        this.rpcInvoker = new DefaultRpcInvoker(interfaceConfig, remotingClient, providersHolder);
+        rpcInvoker.start();
 
         Proxy proxy = ExtensionLoader.getExtensionLoader(Proxy.class).getExtension(interfaceConfig.getProxy());
         return proxy.createProxy(interfaceConfig.getInterfaceClass(), rpcInvoker);
@@ -104,6 +106,8 @@ public class InterfaceBootstrap extends AbstractLifecycle {
 
     @Override
     protected void doStop() throws LifecycleException {
+        rpcInvoker.stop();
+
         for (Registry registry : registries) {
             try {
                 registry.unsubscribe(interfaceConfig);

@@ -21,7 +21,7 @@ public class RpcProtocolCommandFactory implements CommandFactory {
         HeartbeatCommand heartbeatCommand = new HeartbeatCommand(protocolCode);
         heartbeatCommand.setId(CommandIdGenerator.getInstance().nextId());
         heartbeatCommand.setProtocolSwitch(ProtocolSwitch.parse((byte) 0));
-        heartbeatCommand.setSerializer(SerializerManager.getInstance().getDefaultSerializerCode());
+        heartbeatCommand.setSerializer(SerializerManager.DEFAULT_SERIALIZER);
         return heartbeatCommand;
     }
 

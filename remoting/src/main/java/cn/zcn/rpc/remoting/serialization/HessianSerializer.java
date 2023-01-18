@@ -27,7 +27,7 @@ public class HessianSerializer implements Serializer {
             hessian.close();
             return out.toByteArray();
         } catch (IOException e) {
-            throw new SerializationException(e, "Exception occurred when hessian serializer object.");
+            throw new SerializationException("Exception occurred when hessian serializer object.", e);
         }
     }
 
@@ -43,7 +43,7 @@ public class HessianSerializer implements Serializer {
             hessian.close();
             return (T) obj;
         } catch (IOException e) {
-            throw new SerializationException(e, "Exception occurred when hessian deserialize bytes.");
+            throw new SerializationException("Exception occurred when hessian deserialize bytes.", e);
         }
     }
 }

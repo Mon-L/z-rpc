@@ -1,6 +1,5 @@
 package cn.zcn.rpc.remoting.config;
 
-import io.netty.util.AttributeKey;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;

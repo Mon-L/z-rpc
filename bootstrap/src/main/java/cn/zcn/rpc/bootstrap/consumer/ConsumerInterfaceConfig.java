@@ -25,9 +25,6 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
     /** 代理方式 */
     private String proxy = RpcConfigs.getString(RpcConfigs.PROXY, "jdk");
 
-    /** 路由器 */
-    private String router = RpcConfigs.getString(RpcConfigs.ROUTER, "default");
-
     /** 负载均衡器 */
     private String loadBalance = RpcConfigs.getString(RpcConfigs.LOAD_BALANCE, "random");
 
@@ -36,10 +33,6 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
 
     /** 过滤器 */
     private List<String> filters = RpcConfigs.getList(RpcConfigs.FILTERS);
-
-    public ConsumerInterfaceConfig(Class<?> clazz) {
-        super(clazz);
-    }
 
     public String getProviderUrl() {
         return providerUrl;
@@ -63,14 +56,6 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
 
     public void setProxy(String proxy) {
         this.proxy = proxy;
-    }
-
-    public String getRouter() {
-        return router;
-    }
-
-    public void setRouter(String router) {
-        this.router = router;
     }
 
     public String getLoadBalance() {
