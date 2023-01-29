@@ -1,9 +1,13 @@
 package cn.zcn.rpc.test.simple;
 
+import cn.zcn.rpc.bootstrap.InvokeType;
+import cn.zcn.rpc.bootstrap.RpcResponse;
+import cn.zcn.rpc.bootstrap.consumer.AsyncContext;
 import cn.zcn.rpc.bootstrap.consumer.ConsumerBootstrap;
 import cn.zcn.rpc.bootstrap.consumer.ConsumerInterfaceConfig;
 import cn.zcn.rpc.bootstrap.registry.RegistryConfig;
 import java.util.Collections;
+import java.util.concurrent.Future;
 
 import cn.zcn.rpc.test.student.Student;
 import cn.zcn.rpc.test.student.StudentService;
@@ -11,33 +15,62 @@ import org.apache.http.util.Asserts;
 
 public class Consumer {
 
-	public static void main(String[] args) {
-		ConsumerBootstrap bootstrap = new ConsumerBootstrap();
-		bootstrap.start();
+    public static void main(String[] args) throws Throwable {
+        //syncInvoke();
+        asyncInvoke();
+    }
 
-		ConsumerInterfaceConfig interfaceConfig = new ConsumerInterfaceConfig();
-		interfaceConfig.setInterfaceName(StudentService.class.getName());
+    private static void asyncInvoke() throws Throwable {
+        ConsumerBootstrap bootstrap = new ConsumerBootstrap();
+        bootstrap.start();
 
-		withDirectUrl(interfaceConfig);
-		// withRegistry(interfaceConfig);
+        ConsumerInterfaceConfig interfaceConfig = new ConsumerInterfaceConfig();
+        interfaceConfig.setInterfaceName(StudentService.class.getName());
+        interfaceConfig.setInvokeType(InvokeType.FUTURE);
 
-		StudentService studentService = bootstrap.createProxy(interfaceConfig);
-		Student student = studentService.getStudentByName("foo");
-		Asserts.check(student != null && student.getName().equals("foo"),
-				"error invocation");
+        withDirectUrl(interfaceConfig);
+        // withRegistry(interfaceConfig);
 
-		bootstrap.stop();
-	}
+        StudentService studentService = bootstrap.createProxy(interfaceConfig);
+        Student student = studentService.getStudentByName("foo");
+        Asserts.check(student == null, "error invocation");
 
-	private static void withDirectUrl(ConsumerInterfaceConfig interfaceConfig) {
-		interfaceConfig.setProviderUrl("10.20.4.108:8008");
-	}
+        Future<RpcResponse> future = AsyncContext.getFuture();
+        RpcResponse rpcResponse = future.get();
+        student = (Student) rpcResponse.get();
+        Asserts.check(student != null && student.getName().equals("foo"),
+            "error invocation");
 
-	private static void withRegistry(ConsumerInterfaceConfig interfaceConfig) {
-		RegistryConfig nacosRegistryConfig = new RegistryConfig();
-		nacosRegistryConfig.setType("nacos");
-		nacosRegistryConfig.setUrl("127.0.0.1:8848");
-		interfaceConfig.setRegistryConfigs(Collections
-				.singleton(nacosRegistryConfig));
-	}
+        bootstrap.stop();
+    }
+
+    private static void syncInvoke() {
+        ConsumerBootstrap bootstrap = new ConsumerBootstrap();
+        bootstrap.start();
+
+        ConsumerInterfaceConfig interfaceConfig = new ConsumerInterfaceConfig();
+        interfaceConfig.setInterfaceName(StudentService.class.getName());
+
+        withDirectUrl(interfaceConfig);
+        // withRegistry(interfaceConfig);
+
+        StudentService studentService = bootstrap.createProxy(interfaceConfig);
+        Student student = studentService.getStudentByName("foo");
+        Asserts.check(student != null && student.getName().equals("foo"),
+            "error invocation");
+
+        bootstrap.stop();
+    }
+
+    private static void withDirectUrl(ConsumerInterfaceConfig interfaceConfig) {
+        interfaceConfig.setProviderUrl("10.20.4.108:8008");
+    }
+
+    private static void withRegistry(ConsumerInterfaceConfig interfaceConfig) {
+        RegistryConfig nacosRegistryConfig = new RegistryConfig();
+        nacosRegistryConfig.setType("nacos");
+        nacosRegistryConfig.setUrl("127.0.0.1:8848");
+        interfaceConfig.setRegistryConfigs(Collections
+            .singleton(nacosRegistryConfig));
+    }
 }

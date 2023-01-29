@@ -72,6 +72,8 @@ public class DefaultRpcInvoker implements RpcInvoker {
         }
 
         ConsumerInvocation invocation = new ConsumerInvocation(request);
+        invocation.setTimeout(interfaceConfig.getTimeout());
+        invocation.setInvokeType(interfaceConfig.getInvokeType());
         invocation.setProvider(provider);
 
         try {
@@ -80,16 +82,17 @@ public class DefaultRpcInvoker implements RpcInvoker {
             throw new RpcException(t.getMessage(), t);
         }
 
-        if (request.getInvokeType() == InvokeType.FUTURE) {
+        if (invocation.getInvokeType() == InvokeType.FUTURE) {
             //异步调用，返回空响应
-            RpcResponse empty = new RpcResponse();
-            empty.set(null);
-            return empty;
+            RpcResponse asyncResponse = new RpcResponse();
+            asyncResponse.set(null);
+            AsyncContext.setFuture(invocation.getResponsePromise());
+            return asyncResponse;
         } else {
             //同步调用，等待服务端响应
-            RpcResponse response;
+            RpcResponse syncResponse;
             try {
-                response = invocation.getResponsePromise().get();
+                syncResponse = invocation.getResponsePromise().get();
             } catch (Throwable t) {
                 if (t instanceof ExecutionException) {
                     Throwable cause = t.getCause();
@@ -99,7 +102,7 @@ public class DefaultRpcInvoker implements RpcInvoker {
                 }
                 throw new RpcException(t.getMessage(), t);
             }
-            return response;
+            return syncResponse;
         }
     }
 
@@ -120,7 +123,7 @@ public class DefaultRpcInvoker implements RpcInvoker {
 
             try {
                 Future<RpcResponse> invokeFuture = remotingClient.invoke(url, invocation.getRequest(),
-                    interfaceConfig.getTimeout());
+                    invocation.getTimeout());
 
                 invokeFuture.addListener((GenericFutureListener<Future<RpcResponse>>) future -> {
                     // TODO cancel?

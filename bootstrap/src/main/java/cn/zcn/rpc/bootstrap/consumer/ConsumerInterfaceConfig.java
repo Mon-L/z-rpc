@@ -1,6 +1,7 @@
 package cn.zcn.rpc.bootstrap.consumer;
 
 import cn.zcn.rpc.bootstrap.InterfaceConfig;
+import cn.zcn.rpc.bootstrap.InvokeType;
 import cn.zcn.rpc.bootstrap.RpcConfigs;
 import cn.zcn.rpc.bootstrap.registry.RegistryConfig;
 import java.util.List;
@@ -33,6 +34,9 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
 
     /** 过滤器 */
     private List<String> filters = RpcConfigs.getList(RpcConfigs.FILTERS);
+
+    /** 调用类型 */
+    private InvokeType invokeType = InvokeType.SYNC;
 
     public String getProviderUrl() {
         return providerUrl;
@@ -80,6 +84,14 @@ public class ConsumerInterfaceConfig extends InterfaceConfig {
 
     public void setFilters(List<String> filters) {
         this.filters = filters;
+    }
+
+    public InvokeType getInvokeType() {
+        return invokeType;
+    }
+
+    public void setInvokeType(InvokeType invokeType) {
+        this.invokeType = invokeType;
     }
 
     public int getMaxConnectionPerUrl() {

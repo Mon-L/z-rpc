@@ -23,9 +23,6 @@ public class RpcRequest implements Serializable {
 	/** 调用参数 */
 	private Object[] parameters = new String[0];
 
-	/** 调用类型 */
-	private InvokeType invokeType = InvokeType.SYNC;
-
 	public String getClazz() {
 		return clazz;
 	}
@@ -56,14 +53,6 @@ public class RpcRequest implements Serializable {
 
 	public void setParameterTypes(String[] parameterTypes) {
 		this.parameterTypes = parameterTypes;
-	}
-
-	public InvokeType getInvokeType() {
-		return invokeType;
-	}
-
-	public void setInvokeType(InvokeType invokeType) {
-		this.invokeType = invokeType;
 	}
 
 	/**
