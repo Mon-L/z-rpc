@@ -2,6 +2,7 @@ package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.config.ClientOptions;
 import cn.zcn.rpc.remoting.config.Option;
+import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.exception.RemotingException;
@@ -11,10 +12,7 @@ import cn.zcn.rpc.remoting.protocol.MessageEncoder;
 import cn.zcn.rpc.remoting.utils.NamedThreadFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
@@ -104,6 +102,10 @@ public class RemotingClient extends AbstractLifecycle {
                     pipeline.addLast(commandInboundHandler);
                 }
             });
+
+        bootstrap.option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(
+            options.getOption(RpcOptions.LOW_WRITE_BUFFER_WATER_MARK),
+            options.getOption(RpcOptions.HIGH_WRITE_BUFFER_WATER_MARK)));
 
         this.remotingInvoker = new RemotingInvoker(options, bootstrap);
         this.remotingInvoker.start();

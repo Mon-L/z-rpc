@@ -33,11 +33,13 @@ public class RemotingInvoker extends AbstractLifecycle {
     private final Options options;
     private final EventExecutor eventExecutor;
     private final Bootstrap bootstrap;
+    private final Charset charset;
 
     private ConnectionGroupManager connectionGroupManager;
 
     public RemotingInvoker(Options options, Bootstrap bootstrap) {
         this.options = options;
+        this.charset = Charset.forName(options.getOption(ClientOptions.CHARSET));
         this.bootstrap = bootstrap;
         this.eventExecutor = bootstrap.config().group().next();
     }
@@ -56,7 +58,7 @@ public class RemotingInvoker extends AbstractLifecycle {
     }
 
     /**
-     * 距离超时还剩多少时间
+     * 离超时还剩多少时间
      *
      * @param start 开始时间
      * @param timeout 超时时间
@@ -79,12 +81,17 @@ public class RemotingInvoker extends AbstractLifecycle {
         CommandFactory commandFactory = protocol.getCommandFactory();
         RequestCommand req = commandFactory.createRequestCommand(commandType, CommandCode.REQUEST);
 
-        byte[] clazz = payload.getClass().getName().getBytes(Charset.forName(options.getOption(ClientOptions.CHARSET)));
+        byte[] clazz = payload.getClass().getName().getBytes(charset);
         req.setClazz(clazz);
 
-        byte serializer = SerializerManager.DEFAULT_SERIALIZER;
-        req.setSerializer(serializer);
-        req.setContent(SerializerManager.getSerializer(serializer).serialize(payload));
+        byte serializerCode = SerializerManager.DEFAULT_SERIALIZER;
+        Serializer serializer = SerializerManager.getSerializer(SerializerManager.DEFAULT_SERIALIZER);
+        if (serializer == null) {
+            throw new SerializationException("Unknown serializer with " + serializerCode);
+        }
+
+        req.setSerializer(serializerCode);
+        req.setContent(serializer.serialize(payload));
 
         ProtocolSwitch protocolSwitch = ProtocolSwitch.parse((byte) 0);
         if (options.getOption(ClientOptions.USE_CRC32)) {
@@ -102,8 +109,8 @@ public class RemotingInvoker extends AbstractLifecycle {
             throw new SerializationException("Unknown serializer with " + responseCommand.getSerializer());
         }
 
-        String clazz = new String(responseCommand.getClazz(),
-            Charset.forName(options.getOption(ClientOptions.CHARSET)));
+        String clazz = new String(responseCommand.getClazz(), charset);
+
         return serializer.deserialize(responseCommand.getContent(), clazz);
     }
 
@@ -116,7 +123,7 @@ public class RemotingInvoker extends AbstractLifecycle {
      */
     public Future<Void> oneWayInvoke(Url url, Object obj) {
         if (!isStarted()) {
-            return eventExecutor.newFailedFuture(new IllegalStateException("RemotingInvoker is closed."));
+            return eventExecutor.newFailedFuture(new TransportException("RemotingInvoker is closed."));
         }
 
         Promise<Void> promise = eventExecutor.newPromise();
@@ -132,6 +139,11 @@ public class RemotingInvoker extends AbstractLifecycle {
                 if (connFuture.isSuccess()) {
                     // 获取连接成功
                     Connection conn = connFuture.get();
+
+                    if (checkInvalidOrNot(promise, conn)) {
+                        return;
+                    }
+
                     try {
                         conn.getChannel().writeAndFlush(req).addListener(future -> {
                             if (!future.isSuccess()) {
@@ -140,7 +152,7 @@ public class RemotingInvoker extends AbstractLifecycle {
                                     req.getId(),
                                     NetUtil.getRemoteAddress(conn.getChannel()),
                                     future.cause());
-                                promise.setFailure(future.cause());
+                                promise.setFailure(new TransportException(future.cause().getMessage(), future.cause()));
                             } else {
                                 promise.setSuccess(null);
                             }
@@ -158,7 +170,7 @@ public class RemotingInvoker extends AbstractLifecycle {
                 }
             });
         } catch (Throwable t) {
-            promise.setFailure(t);
+            promise.setFailure(new TransportException(t.getMessage(), t));
         }
 
         return promise;
@@ -174,7 +186,7 @@ public class RemotingInvoker extends AbstractLifecycle {
     @SuppressWarnings({ "unchecked" })
     public <T> Future<T> invoke(Url url, Object obj, int timeoutMillis) {
         if (!isStarted()) {
-            return eventExecutor.newFailedFuture(new IllegalStateException("RemotingInvoker is closed."));
+            return eventExecutor.newFailedFuture(new TransportException("RemotingInvoker is closed."));
         }
 
         long startMillis = System.currentTimeMillis();
@@ -189,32 +201,6 @@ public class RemotingInvoker extends AbstractLifecycle {
 
             InvocationPromise<ResponseCommand> invocationPromise = new DefaultInvocationPromise(
                 eventExecutor.newPromise());
-            invocationPromise.addListener((GenericFutureListener<Future<ResponseCommand>>) future -> {
-                if (future.isSuccess()) {
-                    try {
-                        ResponseCommand response = future.get();
-                        if (response.getStatus() == RpcStatus.OK) {
-                            if (response.getContent() != null && response.getContent().length > 0) {
-                                promise.setSuccess((T) deserialize(response));
-                            } else {
-                                promise.setSuccess(null);
-                            }
-                        } else {
-                            if (response.getContent() != null && response.getContent().length > 0) {
-                                promise.setSuccess((T) deserialize(response));
-                            } else {
-                                promise.setFailure(new RemotingException(
-                                    "Remoting server error. ResponseStatus: {}",
-                                    response.getStatus().name()));
-                            }
-                        }
-                    } catch (Throwable t) {
-                        promise.setFailure(t);
-                    }
-                } else {
-                    promise.setFailure(future.cause());
-                }
-            });
 
             // 判断请求是否已超时
             if (getRemainingTime(startMillis, timeoutMillis) <= 0) {
@@ -224,6 +210,7 @@ public class RemotingInvoker extends AbstractLifecycle {
                 return promise;
             }
 
+            //获取连接
             connectionGroup.acquireConnection().addListener((GenericFutureListener<Future<Connection>>) connFuture -> {
                 long remainingTime = getRemainingTime(startMillis, timeoutMillis);
                 if (remainingTime <= 0) {
@@ -242,6 +229,11 @@ public class RemotingInvoker extends AbstractLifecycle {
                 if (connFuture.isSuccess()) {
                     // 获取连接成功
                     Connection conn = connFuture.get();
+
+                    if (checkInvalidOrNot(invocationPromise, conn)) {
+                        return;
+                    }
+
                     try {
                         // 设置超时定时器
                         invocationPromise.setTimeout(TimerHolder.getTimer()
@@ -266,7 +258,8 @@ public class RemotingInvoker extends AbstractLifecycle {
                                 InvocationPromise<?> p = conn.removePromise(req.getId());
                                 if (p != null) {
                                     p.cancelTimeout();
-                                    p.setFailure(future.cause());
+                                    promise.setFailure(
+                                        new TransportException(future.cause().getMessage(), future.cause()));
                                 }
 
                                 LOGGER.error(
@@ -298,10 +291,66 @@ public class RemotingInvoker extends AbstractLifecycle {
                         connFuture.cause()));
                 }
             });
+
+            //处理请求响应
+            invocationPromise.addListener((GenericFutureListener<Future<ResponseCommand>>) future -> {
+                if (future.isSuccess()) {
+                    try {
+                        ResponseCommand response = future.get();
+                        if (response.getStatus() == RpcStatus.OK) {
+                            if (response.getContent() != null && response.getContent().length > 0) {
+                                promise.setSuccess((T) deserialize(response));
+                            } else {
+                                promise.setSuccess(null);
+                            }
+                        } else {
+                            if (response.getContent() != null && response.getContent().length > 0) {
+                                promise.setSuccess((T) deserialize(response));
+                            } else {
+                                promise.setFailure(new RemotingException(
+                                    "Remoting server error. ResponseStatus: {}",
+                                    response.getStatus().name()));
+                            }
+                        }
+                    } catch (Throwable t) {
+                        reportException(promise, t);
+                    }
+                } else {
+                    reportException(promise, future.cause());
+                }
+            });
         } catch (Throwable t) {
-            promise.setFailure(t);
+            reportException(promise, t);
         }
 
         return promise;
+    }
+
+    private void reportException(Promise<?> promise, Throwable t) {
+        if (t instanceof TransportException) {
+            promise.setFailure(t);
+        } else {
+            promise.setFailure(new TransportException(t.getMessage(), t));
+        }
+    }
+
+    /**
+     * 检查连接是否不可用
+     * @param promise promise
+     * @param connection connection
+     * @return {@code true}，连接不可用。{@code false}，连接可用。
+     */
+    private boolean checkInvalidOrNot(Promise<?> promise, Connection connection) {
+        if (!connection.isActive()) {
+            promise.setFailure(new TransportException("Connection is not active."));
+            return true;
+        }
+
+        if (!connection.getChannel().isWritable()) {
+            promise.setFailure(new TransportException("Channel has reached high water mark."));
+            return true;
+        }
+
+        return false;
     }
 }

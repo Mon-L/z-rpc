@@ -1,6 +1,7 @@
 package cn.zcn.rpc.remoting;
 
 import cn.zcn.rpc.remoting.config.Option;
+import cn.zcn.rpc.remoting.config.RpcOptions;
 import cn.zcn.rpc.remoting.config.ServerOptions;
 import cn.zcn.rpc.remoting.constants.AttributeKeys;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
@@ -110,6 +111,10 @@ public class RemotingServer extends AbstractLifecycle {
                     pipeline.addLast(commandInboundHandler);
                 }
             });
+
+        server.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(
+            options.getOption(RpcOptions.LOW_WRITE_BUFFER_WATER_MARK),
+            options.getOption(RpcOptions.HIGH_WRITE_BUFFER_WATER_MARK)));
 
         this.channelFuture = server.bind(new InetSocketAddress(host, port)).sync();
         return this.channelFuture.isSuccess();

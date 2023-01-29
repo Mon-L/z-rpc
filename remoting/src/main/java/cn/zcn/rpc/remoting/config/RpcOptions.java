@@ -36,6 +36,12 @@ public class RpcOptions implements Options {
     public static final Option<Boolean> SYNC_SHUTDOWN = Option.valueOf("rpc.sync.shutdown",
         getBool("rpc.sync.shutdown", false));
 
+    public static final Option<Integer> LOW_WRITE_BUFFER_WATER_MARK = Option.valueOf("rpc.low.water.mark",
+        getInteger("rpc.low.water.mark", 32 * 1024));
+
+    public static final Option<Integer> HIGH_WRITE_BUFFER_WATER_MARK = Option.valueOf("rpc.low.water.mark",
+        getInteger("rpc.low.water.mark", 64 * 1024));
+
     public static final Option<String> CHARSET = Option.valueOf("rpc.charset",
         getString("rpc.charset", "UTF-8"));
 
