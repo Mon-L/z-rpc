@@ -10,31 +10,35 @@ import cn.zcn.rpc.remoting.serialization.Serializer;
  */
 public class SerializerManager {
 
-	public static final byte HESSIAN = 1;
-	public static byte DEFAULT_SERIALIZER = HESSIAN;
+    public static final byte HESSIAN = 1;
+    public static byte DEFAULT_SERIALIZER = HESSIAN;
 
-	private static Serializer[] SERIALIZERS = new Serializer[5];
+    private static Serializer[] SERIALIZERS = new Serializer[5];
 
-	static {
-		registerSerializer(HESSIAN, new HessianSerializer());
-	}
+    static {
+        registerSerializer(HESSIAN, new HessianSerializer());
+    }
 
-	public static void registerSerializer(int code, Serializer serializer) {
-		if (SERIALIZERS.length <= code) {
-			Serializer[] newSerializers = new Serializer[code + 5];
-			System.arraycopy(SERIALIZERS, 0, newSerializers, 0,
-					SERIALIZERS.length);
-			SERIALIZERS = newSerializers;
-		}
+    public static void registerSerializer(int code, Serializer serializer) {
+        if (serializer == null) {
+            throw new IllegalArgumentException("Serializer must not be null.");
+        }
 
-		SERIALIZERS[code] = serializer;
-	}
+        if (SERIALIZERS.length <= code) {
+            Serializer[] newSerializers = new Serializer[code + 5];
+            System.arraycopy(SERIALIZERS, 0, newSerializers, 0,
+                SERIALIZERS.length);
+            SERIALIZERS = newSerializers;
+        }
 
-	public static Serializer getSerializer(int code) {
-		if (code >= SERIALIZERS.length) {
-			return null;
-		}
+        SERIALIZERS[code] = serializer;
+    }
 
-		return SERIALIZERS[code];
-	}
+    public static Serializer getSerializer(int code) {
+        if (code >= SERIALIZERS.length) {
+            return null;
+        }
+
+        return SERIALIZERS[code];
+    }
 }

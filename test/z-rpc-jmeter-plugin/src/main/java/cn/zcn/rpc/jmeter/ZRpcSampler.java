@@ -111,14 +111,14 @@ public class ZRpcSampler extends AbstractJavaSamplerClient implements Interrupti
     }
 
     private String getRequestData(JavaSamplerContext context) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Interface: ").append(context.getParameter("class")).append("\n");
-        sb.append("Method: ").append(context.getParameter("method")).append("\n");
-        sb.append("Proxy: ").append(interfaceConfig.getProxy()).append("\n");
-        sb.append("Timeout: ").append(interfaceConfig.getTimeout()).append("\n");
-        sb.append("LoadBalance: ").append(interfaceConfig.getLoadBalance()).append("\n");
-        sb.append("ConnectionNums: ").append(interfaceConfig.getMaxConnectionPerUrl()).append("\n");
-        return sb.toString();
+        return new StringBuilder()
+            .append("Interface: ").append(context.getParameter("class")).append("\n")
+            .append("Method: ").append(context.getParameter("method")).append("\n")
+            .append("Proxy: ").append(interfaceConfig.getProxy()).append("\n")
+            .append("Timeout: ").append(interfaceConfig.getTimeout()).append("\n")
+            .append("LoadBalance: ").append(interfaceConfig.getLoadBalance()).append("\n")
+            .append("ConnectionNums: ").append(interfaceConfig.getMaxConnectionPerUrl()).append("\n")
+            .toString();
     }
 
     public boolean notNullOrBlank(String str) {
