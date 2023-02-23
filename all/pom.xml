@@ -31,7 +31,7 @@
 
         <dependency>
             <groupId>cn.zcn</groupId>
-            <artifactId>z-rpc-registry-consul</artifactId>
+            <artifactId>z-rpc-registry-zookeeper</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

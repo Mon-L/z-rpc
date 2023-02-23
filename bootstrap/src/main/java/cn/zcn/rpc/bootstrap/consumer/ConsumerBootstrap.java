@@ -24,12 +24,7 @@ public class ConsumerBootstrap extends AbstractLifecycle {
     @Override
     protected void doStart() throws LifecycleException {
         remotingClient = new RemotingClient();
-        configRemotingClient(remotingClient);
         remotingClient.start();
-    }
-
-    protected void configRemotingClient(RemotingClient remotingClient) {
-        remotingClient.option(ClientOptions.USE_CRC32, false);
     }
 
     @SuppressWarnings({ "unchecked" })

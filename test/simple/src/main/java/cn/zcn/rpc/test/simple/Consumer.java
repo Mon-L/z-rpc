@@ -16,8 +16,8 @@ import org.apache.http.util.Asserts;
 public class Consumer {
 
     public static void main(String[] args) throws Throwable {
-        //syncInvoke();
-        asyncInvoke();
+        syncInvoke();
+        // asyncInvoke();
     }
 
     private static void asyncInvoke() throws Throwable {
@@ -52,7 +52,7 @@ public class Consumer {
         interfaceConfig.setInterfaceName(StudentService.class.getName());
 
         withDirectUrl(interfaceConfig);
-        // withRegistry(interfaceConfig);
+        //withRegistry(interfaceConfig);
 
         StudentService studentService = bootstrap.createProxy(interfaceConfig);
         Student student = studentService.getStudentByName("foo");
@@ -63,13 +63,13 @@ public class Consumer {
     }
 
     private static void withDirectUrl(ConsumerInterfaceConfig interfaceConfig) {
-        interfaceConfig.setProviderUrl("10.20.4.108:8008");
+        interfaceConfig.setProviderUrl("10.8.1.59:8008");
     }
 
     private static void withRegistry(ConsumerInterfaceConfig interfaceConfig) {
         RegistryConfig nacosRegistryConfig = new RegistryConfig();
-        nacosRegistryConfig.setType("nacos");
-        nacosRegistryConfig.setUrl("127.0.0.1:8848");
+        nacosRegistryConfig.setType("zookeeper");
+        nacosRegistryConfig.setUrl("127.0.0.1:2181");
         interfaceConfig.setRegistryConfigs(Collections
             .singleton(nacosRegistryConfig));
     }

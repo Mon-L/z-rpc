@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  *
  * <pre>
- * 服务提供者在 Nacos 的存储结构：
+ * 服务提供者列表在 Nacos 的存储结构：
  *    --| z-rpc (namespace)
  *    ----| cn.zcn.rpc.example.service.PingService:v1.0.0 (interface:version)
  *    ------| cluster1 (cluster)
@@ -37,8 +37,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author zicung
  */
-@Extension("nacos")
+@Extension(NacosRegistry.NACOS)
 public class NacosRegistry extends Registry {
+
+    public static final String NACOS = "nacos";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NacosRegistry.class);
 
@@ -96,7 +98,8 @@ public class NacosRegistry extends Registry {
     }
 
     @Override
-    public void unregister(Collection<ProviderInterfaceConfig> providerInterfaceConfig) throws RegistryException {
+    public void unregister(ProviderConfig providerConfig, Collection<ProviderInterfaceConfig> providerInterfaceConfig)
+        throws RegistryException {
         try {
             for (ProviderInterfaceConfig itf : providerInterfaceConfig) {
                 if (!instances.containsKey(itf)) {
@@ -122,6 +125,7 @@ public class NacosRegistry extends Registry {
                     List<Provider> providers = new ArrayList<>(namingEvent.getInstances().size());
                     for (Instance instance : namingEvent.getInstances()) {
                         Provider provider = NacosUtils.toProvider(instance);
+                        provider.setService(consumerInterfaceConfig.getInterfaceName());
                         providers.add(provider);
                     }
 
@@ -178,8 +182,6 @@ public class NacosRegistry extends Registry {
 
     @Override
     protected void doStop() throws LifecycleException {
-        unregister(instances.keySet());
-
         for (ConsumerInterfaceConfig itf : listens.keySet()) {
             unsubscribe(itf);
         }

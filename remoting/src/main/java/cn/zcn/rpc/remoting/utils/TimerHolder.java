@@ -15,8 +15,8 @@ public class TimerHolder {
 	private final Timer timer;
 
 	private TimerHolder() {
-		this.timer = new HashedWheelTimer(new NamedThreadFactory("rpc-timer", true),
-				10, TimeUnit.MILLISECONDS);
+		this.timer = new HashedWheelTimer(new NamedThreadFactory("rpc-timer",
+				true), 10, TimeUnit.MILLISECONDS);
 	}
 
 	/**

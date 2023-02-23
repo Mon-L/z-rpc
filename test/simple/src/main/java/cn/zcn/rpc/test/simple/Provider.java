@@ -9,35 +9,35 @@ import cn.zcn.rpc.test.student.StudentService;
 
 public class Provider {
 
-	public static void main(String[] args) {
-		ProviderConfig providerConfig = new ProviderConfig();
-		providerConfig.port(8008);
+    public static void main(String[] args) {
+        ProviderConfig providerConfig = new ProviderConfig();
+        providerConfig.setPort(8008);
 
-		StudentService studentServiceImpl = new StudentServiceImpl();
-		ProviderInterfaceConfig studentServiceConfig = new ProviderInterfaceConfig();
-		studentServiceConfig.setInterfaceName(StudentService.class.getName());
-		studentServiceConfig.setImpl(studentServiceImpl);
-		providerConfig.addInterfaceConfig(studentServiceConfig);
+        StudentService studentServiceImpl = new StudentServiceImpl();
+        ProviderInterfaceConfig studentServiceConfig = new ProviderInterfaceConfig();
+        studentServiceConfig.setVersion("1.0.1");
+        studentServiceConfig.setInterfaceName(StudentService.class.getName());
+        studentServiceConfig.setImpl(studentServiceImpl);
 
-		start(providerConfig);
-		// startWithRegistry(providerConfig);
-	}
-
-	private static void start(ProviderConfig providerConfig) {
         ProviderBootstrap bootstrap = new ProviderBootstrap(providerConfig);
-        bootstrap.start();
+        bootstrap.addInterface(studentServiceConfig);
 
+        start(bootstrap);
+        //startWithRegistry(bootstrap, providerConfig);
+    }
+
+    private static void start(ProviderBootstrap bootstrap) {
+        bootstrap.start();
         Runtime.getRuntime().addShutdownHook(new Thread(bootstrap::stop));
     }
-	private static void startWithRegistry(ProviderConfig providerConfig) {
+
+    private static void startWithRegistry(ProviderBootstrap bootstrap, ProviderConfig providerConfig) {
         RegistryConfig nacosRegistryConfig = new RegistryConfig();
-        nacosRegistryConfig.setType("nacos");
-        nacosRegistryConfig.setUrl("127.0.0.1:8848");
+        nacosRegistryConfig.setType("zookeeper");
+        nacosRegistryConfig.setUrl("127.0.0.1:2181");
         providerConfig.addRegistryConfig(nacosRegistryConfig);
 
-        ProviderBootstrap bootstrap = new ProviderBootstrap(providerConfig);
         bootstrap.start();
-
         Runtime.getRuntime().addShutdownHook(new Thread(bootstrap::stop));
     }
 }

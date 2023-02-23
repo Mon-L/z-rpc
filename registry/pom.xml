@@ -12,8 +12,8 @@
     <artifactId>z-rpc-registry</artifactId>
 
     <modules>
-        <module>registry-consul</module>
         <module>registry-nacos</module>
+        <module>registry-zookeeper</module>
     </modules>
 
     <properties>

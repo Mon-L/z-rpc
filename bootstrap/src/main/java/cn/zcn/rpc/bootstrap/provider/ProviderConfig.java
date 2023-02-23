@@ -29,15 +29,13 @@ public class ProviderConfig {
 
     private boolean ignoreTimeoutRequest = RpcConfigs.getBool(RpcConfigs.IGNORE_TIMEOUT_REQUEST, false);
 
-    private final Set<ProviderInterfaceConfig> interfaceConfigs = new HashSet<>();
-
     private final Set<RegistryConfig> registryConfigs = new HashSet<>();
 
     public String getName() {
         return name;
     }
 
-    public ProviderConfig name(String name) {
+    public ProviderConfig setName(String name) {
         this.name = name;
         return this;
     }
@@ -46,7 +44,7 @@ public class ProviderConfig {
         return host;
     }
 
-    public ProviderConfig host(String host) {
+    public ProviderConfig setHost(String host) {
         this.host = host;
         return this;
     }
@@ -55,7 +53,7 @@ public class ProviderConfig {
         return port;
     }
 
-    public ProviderConfig port(int port) {
+    public ProviderConfig setPort(int port) {
         if (port <= 0) {
             throw new IllegalArgumentException("Provider port must not be negative.");
         }
@@ -68,7 +66,7 @@ public class ProviderConfig {
         return weight;
     }
 
-    public ProviderConfig weight(int weight) {
+    public ProviderConfig setWeight(int weight) {
         if (weight < 0) {
             throw new IllegalArgumentException("Provider weight must not be negative.");
         }
@@ -97,15 +95,6 @@ public class ProviderConfig {
     public ProviderConfig ignoreTimeoutRequest(boolean ignoreTimeoutRequest) {
         this.ignoreTimeoutRequest = ignoreTimeoutRequest;
         return this;
-    }
-
-    public ProviderConfig addInterfaceConfig(ProviderInterfaceConfig providerInterfaceConfig) {
-        interfaceConfigs.add(providerInterfaceConfig);
-        return this;
-    }
-
-    public Set<ProviderInterfaceConfig> getInterfaceConfigs() {
-        return interfaceConfigs;
     }
 
     public ProviderConfig addRegistryConfig(RegistryConfig registry) {

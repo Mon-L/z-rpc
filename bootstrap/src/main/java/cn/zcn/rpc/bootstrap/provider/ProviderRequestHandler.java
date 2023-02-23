@@ -48,32 +48,34 @@ public class ProviderRequestHandler implements RequestHandler<RpcRequest> {
         this.isServerStarted = isServerStarted;
     }
 
-    /** 解析服务提供者注册的接口，获取服务端注册的所有的接口信息 */
-    public void resolve() {
-        for (ProviderInterfaceConfig config : providerConfig.getInterfaceConfigs()) {
-            RegisteredInterface registeredInterface = new RegisteredInterface();
-            registeredInterface.instance = config.getImpl();
+    /**
+     * 添加接口
+     *
+     * @param providerInterfaceConfig 服务提供者接口信息
+     */
+    public void addInterface(ProviderInterfaceConfig providerInterfaceConfig) {
+        RegisteredInterface registeredInterface = new RegisteredInterface();
+        registeredInterface.instance = providerInterfaceConfig.getImpl();
 
-            Class<?> clazz = config.getInterfaceClass();
-            for (Method method : clazz.getMethods()) {
-                if (method.isDefault() || Modifier.isStatic(method.getModifiers())) {
-                    // jdk1.8, default methods in interface, static methods in interface
-                    continue;
-                }
-
-                RegisteredMethod registeredMethod = new RegisteredMethod();
-                registeredMethod.method = method;
-
-                registeredInterface.methods.put(MethodSignatureUtil.getMethodSignature(method), registeredMethod);
+        Class<?> clazz = providerInterfaceConfig.getInterfaceClass();
+        for (Method method : clazz.getMethods()) {
+            if (method.isDefault() || Modifier.isStatic(method.getModifiers())) {
+                // jdk1.8, default methods in interface, static methods in interface
+                continue;
             }
 
-            FilterChain<ProviderInvocation> filterChain = FilterChainBuilder
-                .buildProviderFilterChain(config.getFilters());
-            filterChain.addLast(reflectInvocationFilter);
-            registeredInterface.filterChain = filterChain;
+            RegisteredMethod registeredMethod = new RegisteredMethod();
+            registeredMethod.method = method;
 
-            registeredInterfaces.put(config.getInterfaceClass().getName(), registeredInterface);
+            registeredInterface.methods.put(MethodSignatureUtil.getMethodSignature(method), registeredMethod);
         }
+
+        FilterChain<ProviderInvocation> filterChain = FilterChainBuilder
+            .buildProviderFilterChain(providerInterfaceConfig.getFilters());
+        filterChain.addLast(reflectInvocationFilter);
+        registeredInterface.filterChain = filterChain;
+
+        registeredInterfaces.put(providerInterfaceConfig.getInterfaceClass().getName(), registeredInterface);
     }
 
     @Override

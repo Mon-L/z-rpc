@@ -44,10 +44,11 @@ public class InterfaceBootstrap extends AbstractLifecycle {
         ProvidersHolder providersHolder = new ProvidersHolder();
 
         if (!StringUtils.isEmptyOrNull(interfaceConfig.getProviderUrl())) {
-            Provider directProvider = urlToProvider(interfaceConfig.getProviderUrl());
+            Provider directProvider = Provider.parseProvider(interfaceConfig.getProviderUrl());
 
             ProviderGroup directProviderGroup = new ProviderGroup();
-            directProviderGroup.updateProviders(Collections.singletonList(directProvider));
+            directProviderGroup.addProvider(directProvider);
+
             providersHolder.addProviderGroup(directProviderGroup);
         } else if (!CollectionUtils.isEmptyOrNull(interfaceConfig.getRegistryConfigs())) {
             for (RegistryConfig registryConfig : interfaceConfig.getRegistryConfigs()) {
@@ -81,19 +82,6 @@ public class InterfaceBootstrap extends AbstractLifecycle {
         }
 
         return providersHolder;
-    }
-
-    private Provider urlToProvider(String url) {
-        int colon = url.indexOf(':');
-
-        if (colon != -1) {
-            Provider provider = new Provider();
-            provider.setIp(url.substring(0, colon));
-            provider.setPort(Integer.parseInt(url.substring(colon + 1)));
-            return provider;
-        }
-
-        throw new IllegalArgumentException("Invalid provider url:" + url);
     }
 
     public Object createProxy() {

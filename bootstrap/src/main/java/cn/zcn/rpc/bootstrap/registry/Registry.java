@@ -48,22 +48,23 @@ public abstract class Registry extends AbstractLifecycle {
     /**
      * 批量注册接口提供者
      *
-     * @param providerConfig 接口提供者
+     * @param providerConfig 服务提供者
      * @param providerInterfaceConfigs 待注册的接口
      * @throws RegistryException 失败异常
      */
-    public abstract void register(
-                                  ProviderConfig providerConfig,
+    public abstract void register(ProviderConfig providerConfig,
                                   Collection<ProviderInterfaceConfig> providerInterfaceConfigs)
         throws RegistryException;
 
     /**
      * 批量注销接口提供者
      *
+     * @param providerConfig 服务提供者
      * @param providerInterfaceConfigs 待注销的接口
      * @throws RegistryException 失败异常
      */
-    public abstract void unregister(Collection<ProviderInterfaceConfig> providerInterfaceConfigs)
+    public abstract void unregister(ProviderConfig providerConfig,
+                                    Collection<ProviderInterfaceConfig> providerInterfaceConfigs)
         throws RegistryException;
 
     /**

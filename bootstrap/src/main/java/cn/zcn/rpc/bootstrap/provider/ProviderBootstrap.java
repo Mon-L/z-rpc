@@ -8,6 +8,8 @@ import cn.zcn.rpc.bootstrap.utils.StringUtils;
 import cn.zcn.rpc.remoting.RemotingServer;
 import cn.zcn.rpc.remoting.exception.LifecycleException;
 import cn.zcn.rpc.remoting.lifecycle.AbstractLifecycle;
+
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -26,7 +28,11 @@ public class ProviderBootstrap extends AbstractLifecycle {
 
     private final Set<Registry> registries = new HashSet<>();
 
+    private final Set<ProviderInterfaceConfig> interfaceConfigs = new HashSet<>();
+
     private RemotingServer remotingServer;
+
+    private ProviderRequestHandler providerRequestHandler;
 
     public ProviderBootstrap(ProviderConfig providerConfig) {
         this.providerConfig = providerConfig;
@@ -37,55 +43,86 @@ public class ProviderBootstrap extends AbstractLifecycle {
         checkConfig();
 
         // init request handler
-        ProviderRequestHandler providerRequestHandler = new ProviderRequestHandler(providerConfig,
+        this.providerRequestHandler = new ProviderRequestHandler(providerConfig,
             ProviderBootstrap.this::isStarted);
-        providerRequestHandler.resolve();
 
         this.remotingServer = new RemotingServer(providerConfig.getHost(), providerConfig.getPort());
-        configRemotingServer(remotingServer);
 
         // register rpc handler
         remotingServer.registerRequestHandler(providerRequestHandler);
 
-        // start up port
-        remotingServer.start();
+        // init register
+        initRegister();
 
         // register interfaces
-        register();
+        for (ProviderInterfaceConfig interfaceConfig : interfaceConfigs) {
+            registerInterface(interfaceConfig);
+        }
+
+        // start up port
+        remotingServer.start();
     }
 
-    protected void configRemotingServer(RemotingServer remotingServer) {
-        // do nothing
+    /**
+     * 添加 RPC 接口，使用该方法只能在服务未启动前调用。服务启动时会注册接口到注册中心。
+     */
+    public void addInterface(ProviderInterfaceConfig interfaceConfig) {
+        if (isStarted()) {
+            throw new IllegalStateException(
+                "ProviderBootstrap is started, should use registerInterface() to registry providerInterfaceConfig.");
+        }
+
+        if (interfaceConfigs.contains(interfaceConfig)) {
+            throw new IllegalArgumentException(
+                "Do not add providerInterfaceConfig repeatedly, " + interfaceConfig.getUniqueName());
+        }
+
+        interfaceConfigs.add(interfaceConfig);
+    }
+
+    /**
+     * 注册 RPC 接口，使用该方法只能在服务启动后调用。
+     */
+    public void registerInterface(ProviderInterfaceConfig interfaceConfig) {
+        if (!isStarted()) {
+            throw new IllegalStateException(
+                "ProviderBootstrap is not started, should use addInterface() to add providerInterfaceConfig.");
+        }
+
+        providerRequestHandler.addInterface(interfaceConfig);
+
+        for (Registry registry : registries) {
+            try {
+                registry.register(providerConfig, Collections.singletonList(interfaceConfig));
+            } catch (Throwable t) {
+                LOGGER.warn(
+                    "Failed to register provider interfaces. Registry : {}",
+                    registry.toString(),
+                    t);
+            }
+        }
     }
 
     private void checkConfig() {
         if (StringUtils.isEmptyOrNull(providerConfig.getHost())) {
-            providerConfig.host(NetUtils.getLocalHost());
+            providerConfig.setHost(NetUtils.getLocalHost());
             LOGGER.warn("No host is specified. Auto assign host: {}", providerConfig.getHost());
         }
 
         if (providerConfig.getPort() == 0) {
-            providerConfig.port(NetUtils.getAvailablePort());
+            providerConfig.setPort(NetUtils.getAvailablePort());
             LOGGER.warn("No port is specified. Auto assign port: {}", providerConfig.getPort());
         }
     }
 
-    /** 将接口信息注册到注册中心 */
-    private void register() {
+    /**
+     * 初始化注册中心
+     */
+    private void initRegister() {
         for (RegistryConfig registryConfig : providerConfig.getRegistryConfigs()) {
             Registry registry = RegistryFactory.get().getOrCreateRegistry(registryConfig);
             registry.retain();
             registries.add(registry);
-
-            try {
-                registry.register(providerConfig, providerConfig.getInterfaceConfigs());
-            } catch (Throwable t) {
-                LOGGER.warn(
-                    "Failed to register provider interfaces. Registry type: {}, Registry url: {}",
-                    registryConfig.getType(),
-                    registryConfig.getUrl(),
-                    t);
-            }
         }
     }
 
@@ -93,7 +130,7 @@ public class ProviderBootstrap extends AbstractLifecycle {
     protected void doStop() throws LifecycleException {
         for (Registry registry : registries) {
             try {
-                registry.unregister(providerConfig.getInterfaceConfigs());
+                registry.unregister(providerConfig, interfaceConfigs);
             } catch (Throwable t) {
                 LOGGER.warn("Failed to unregister provider interfaces.Registry:{}", registry.toString(), t);
             }

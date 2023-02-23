@@ -3,10 +3,11 @@ package cn.zcn.rpc.bootstrap.filter;
 import cn.zcn.rpc.bootstrap.RpcException;
 
 /**
- * 由一个或多个 {@link Filter}s 组成的过滤器链。让用户可以在请求调用过程中处理 {@code RpcRequest}。
+ * 由一个或多个 {@link Filter}s 组成的过滤器链。 在 filterChain 中处理 {@code RpcRequest}。
  * <h3>请求流动</h3>
- * 每个请求在执行前都会在 filterChain 中流动。下图展示了请求的流动过程，可以使用 {@link FilterContext} 控制请求在 filterChain
+ * 每个请求都会从 filterChain 的 head 节点开始流动，可以使用 {@link FilterContext} 控制请求在 filterChain
  * 的流动。
+ * 下图展示了请求的流动过程：
  *
  * <pre>
  *                +--------+     +--------+     +--------+     +----------+     +--------+    +--------+
